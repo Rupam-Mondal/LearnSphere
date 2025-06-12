@@ -1,10 +1,12 @@
 import Navbar from "./Components/Navbar/Navbar";
+import Stylebar from "./Components/Stylebar/Stylebar";
 
 function App(){
   return (
     <>
-      <div className="relative w-full min-h-screen">
-        <Navbar/>
+      <Navbar/>
+      <div className="relative py-10 bg-red-400 w-full h-auto flex justify-center items-center">
+        <Stylebar/>
       </div>
       
     </>

@@ -30,9 +30,6 @@ function Navbar() {
           <button className="px-5 cursor-pointer py-2 bg-[#7F00FF] text-white rounded-md text-base font-semibold cursor-pointer hover:bg-indigo-700 transition">
             Sign In
           </button>
-          <button className="px-5 cursor-pointer py-2 bg-gray-100 text-gray-800 rounded-md text-base font-semibold cursor-pointer hover:bg-gray-200 transition border border-gray-300">
-            Login
-          </button>
         </div>
       </NavBody>
 
