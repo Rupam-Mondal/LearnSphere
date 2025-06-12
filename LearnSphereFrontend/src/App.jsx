@@ -5,7 +5,7 @@ function App(){
   return (
     <>
       <Navbar/>
-      <div className="relative py-10 bg-red-400 w-full h-auto flex justify-center items-center">
+      <div className="relative py-10 w-full h-auto flex justify-center items-center">
         <Stylebar/>
       </div>
       
