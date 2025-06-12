@@ -21,18 +21,23 @@ function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <ComplexNavbar className="bg-white dark:bg-black">
+    <ComplexNavbar>
       {/* Desktop Navbar */}
-      <NavBody>
+      <NavBody className="bg-white shadow-md">
         <NavbarLogo />
         <NavItems items={menuItems} />
-        <button className="hidden lg:block px-4 py-2 bg-blue-600 text-white rounded-md">
-          Sign In
-        </button>
+        <div className="hidden lg:flex space-x-4">
+          <button className="px-5 cursor-pointer py-2 bg-indigo-600 text-white rounded-md text-base font-semibold cursor-pointer hover:bg-indigo-700 transition">
+            Sign In
+          </button>
+          <button className="px-5 cursor-pointer py-2 bg-gray-100 text-gray-800 rounded-md text-base font-semibold cursor-pointer hover:bg-gray-200 transition border border-gray-300">
+            Login
+          </button>
+        </div>
       </NavBody>
 
       {/* Mobile Navbar */}
-      <MobileNav visible={false}>
+      <MobileNav visible={false} className="bg-white shadow-md">
         <MobileNavHeader>
           <NavbarLogo />
           <MobileNavToggle
@@ -40,13 +45,17 @@ function Navbar() {
             onClick={() => setMobileOpen(!mobileOpen)}
           />
         </MobileNavHeader>
-        <MobileNavMenu isOpen={mobileOpen} onClose={() => setMobileOpen(false)}>
+        <MobileNavMenu
+          isOpen={mobileOpen}
+          onClose={() => setMobileOpen(false)}
+          className="bg-white"
+        >
           {menuItems.map((item, i) => (
             <a
               key={i}
               href={item.link}
               onClick={() => setMobileOpen(false)}
-              className="block w-full py-2 px-4 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+              className="block w-full py-2 px-4 rounded hover:bg-gray-200"
             >
               {item.name}
             </a>

@@ -3,7 +3,10 @@ import Navbar from "./Components/Navbar/Navbar";
 function App(){
   return (
     <>
-      <Navbar/>
+      <div className="relative w-full">
+        <Navbar/>
+      </div>
+      
     </>
   )
 }
