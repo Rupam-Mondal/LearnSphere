@@ -27,7 +27,7 @@ export const Navbar = ({ children, className }) => {
   return (
     <motion.div
       ref={ref}
-      className={cn("sticky inset-x-0 top-20 z-40 w-full", className)}
+      className={cn("sticky inset-x-0 top-5 z-40 w-full", className)}
     >
       {React.Children.map(children, (child) =>
         React.isValidElement(child) ? React.cloneElement(child, { visible }) : child
