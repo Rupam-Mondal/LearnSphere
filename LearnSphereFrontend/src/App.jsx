@@ -1,5 +1,6 @@
 import LandingSection from "./Components/Landing/Landingsection";
 import Navbar from "./Components/Navbar/Navbar";
+
 import Stylebar from "./Components/Stylebar/Stylebar";
 
 function App(){
