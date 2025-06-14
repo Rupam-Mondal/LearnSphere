@@ -12,15 +12,16 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-await connectDB();
-
 app.get("/", (req, res) => {
-    console.log("Received a request at the root endpoint.");
+  console.log("Received a request at the root endpoint.");
   res.send("Welcome to the LearnSphere Backend!");
 });
 
-app.use("/api/ai",router);
+app.use("/api/ai", router);
 
-
+app.listen(3000, async () => {
+  console.log("Server is running");
+  await connectDB();
+});
 
 export default app;
