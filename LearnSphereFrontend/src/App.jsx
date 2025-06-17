@@ -1,20 +1,18 @@
-import LandingSection from "./Components/Landing/Landingsection";
-import Navbar from "./Components/Navbar/Navbar";
+import ReactDOM from "react-dom/client";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import "./App.css";
+import Home from "./pages/Home";
+import TeacherDashBoard from "./pages/TeacherDashBoard";
 
-import Stylebar from "./Components/Stylebar/Stylebar";
-import './App.css';
-
-function App(){
+function App() {
   return (
     <>
-      <Navbar/>
-      <div className="relative py-10 w-full h-auto flex flex-col justify-center items-center">
-        <Stylebar/>
-        <LandingSection/>
-      </div>
-      
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/teacher-dashboard" element={<TeacherDashBoard />} />
+      </Routes>
     </>
-  )
+  );
 }
 
 export default App;
