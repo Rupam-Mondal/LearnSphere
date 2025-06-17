@@ -8,6 +8,7 @@ const TeacherDashBoard = () => {
   const [courseDescription, setCourseDescription] = useState("");
   const [courseThumbnail, setCourseThumbnail] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [courseVideo, setCourseVideo] = useState(null);
 
   const ImageHandler = async (e) => {
     setLoading(true);
@@ -16,6 +17,7 @@ const TeacherDashBoard = () => {
       alert("Please select a file");
       return;
     }
+    console.log(file);
 
     const form = new FormData();
     form.append("file", file);
@@ -27,11 +29,39 @@ const TeacherDashBoard = () => {
           "https://api.cloudinary.com/v1_1/dyjzfkkxl/image/upload",
           form
         );
+        console.log(response.data);
         setCourseThumbnail(response.data.secure_url);
     } catch (error) {}
 
     setLoading(false);
   };
+
+  const VideoHandler = async (e) => {
+    setLoading(true);
+    const file = e.target.files[0];
+    if (!file) {
+      alert("Please select a file");
+      return;
+    }
+    console.log(file);
+
+    const form = new FormData();
+    form.append("file", file);
+    form.append("upload_preset", "LearnSphereVideo_Preset");
+    form.append("cloud_name", "dyjzfkkxl");
+
+    try {
+      const response = await axios.post(
+        "https://api.cloudinary.com/v1_1/dyjzfkkxl/video/upload",
+        form
+      );
+      console.log(response.data);
+      setCourseVideo(response.data.secure_url);
+      // setCourseThumbnail(response.data.secure_url);
+    } catch (error) {}
+
+    setLoading(false);
+  }
 
   const handleSubmit = (e) => {
     alert("Course created successfully");
@@ -94,21 +124,36 @@ const TeacherDashBoard = () => {
           accept="image/*"
           onChange={ImageHandler}
         />
-        {
-            courseThumbnail && (
-                <img
-                src={courseThumbnail}
-                alt="Course Thumbnail"
-                className="mt-2 mb-2 w-full h-48 object-cover rounded"
-                />
-            )
-        }
+        {courseThumbnail && (
+          <img
+            src={courseThumbnail}
+            alt="Course Thumbnail"
+            className="mt-2 mb-2 w-full h-48 object-cover rounded"
+          />
+        )}
+
+        <label className="block mb-2 text-sm font-medium text-gray-700 mt-4">
+          Course Video
+        </label>
+        <input
+          type="file"
+          className="mt-4 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 mb-2"
+          accept="video/*"
+          onChange={VideoHandler}
+        />
+        {courseVideo && (
+          <video
+            src={courseVideo}
+            controls
+            className="mt-2 mb-2 w-full h-48 object-cover rounded"
+          />
+        )}
 
         <button
           type="submit"
           className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
         >
-          {loading ? "Loading Image..." : "Create Course"}
+          {loading ? "Loading ..." : "Create Course"}
         </button>
       </form>
     </div>
