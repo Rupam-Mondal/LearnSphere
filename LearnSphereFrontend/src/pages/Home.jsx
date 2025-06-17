@@ -5,9 +5,9 @@ import LandingSection from '../Components/Landing/Landingsection';
 
 const Home = () => {
   return (
-    <div>
+    <div className=" ">
       <Navbar />
-      <div className="relative py-10 w-full h-auto flex flex-col justify-center items-center">
+      <div className="relative py-10 w-full h-auto flex flex-col justify-center items-center border border-red-500 min-h-screen">
         <Stylebar />
         <LandingSection />
       </div>

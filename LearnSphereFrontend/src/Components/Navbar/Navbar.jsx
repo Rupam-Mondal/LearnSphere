@@ -1,6 +1,6 @@
 function Navbar() {
   return (
-    <div className="w-full flex justify-center mt-4">
+    <div className="fixed w-full flex justify-center mt-6">
       <div className="w-[90%] max-w-6xl h-16 bg-white rounded-full shadow-[8px_8px_15px_rgba(0,0,0,0.1)] px-6 flex items-center justify-between">
         <div className="text-xl font-bold text-[#59168B]">LearnSphere</div>
 
