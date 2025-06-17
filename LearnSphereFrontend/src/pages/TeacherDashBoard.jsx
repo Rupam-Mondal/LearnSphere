@@ -16,7 +16,6 @@ const TeacherDashBoard = () => {
       alert("Please select a file");
       return;
     }
-    console.log(file);
 
     const form = new FormData();
     form.append("file", file);
@@ -28,7 +27,6 @@ const TeacherDashBoard = () => {
           "https://api.cloudinary.com/v1_1/dyjzfkkxl/image/upload",
           form
         );
-        console.log(response.data.secure_url);
         setCourseThumbnail(response.data.secure_url);
     } catch (error) {}
 
@@ -96,6 +94,15 @@ const TeacherDashBoard = () => {
           accept="image/*"
           onChange={ImageHandler}
         />
+        {
+            courseThumbnail && (
+                <img
+                src={courseThumbnail}
+                alt="Course Thumbnail"
+                className="mt-2 mb-2 w-full h-48 object-cover rounded"
+                />
+            )
+        }
 
         <button
           type="submit"
