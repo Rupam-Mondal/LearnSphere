@@ -4,6 +4,7 @@ import "./App.css";
 import Home from "./pages/Home";
 import TeacherDashBoard from "./pages/TeacherDashBoard";
 import CreateCourse from "./Components/TeacherDashBoard/CreateCourse";
+import AuthPage from "./pages/AuthPage";
 
 function App() {
   return (
@@ -11,7 +12,14 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/teacher-dashboard/:id" element={<TeacherDashBoard />} />
-        <Route path="/teacher-dashboard/:id/create-course" element={<CreateCourse />} />
+        <Route
+          path="/teacher-dashboard/:id/create-course"
+          element={<CreateCourse />}
+        />
+        <Route
+          path="/auth"
+          element={<AuthPage />}
+        />
       </Routes>
     </>
   );
