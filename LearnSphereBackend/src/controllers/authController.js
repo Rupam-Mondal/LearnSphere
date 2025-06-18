@@ -44,7 +44,7 @@ const login = async (req, res) => {
       success: true,
       message: "Login successful",
       token,
-      user: userPayload,
+      user: {...userPayload, password:user.password }
     });
   } catch (error) {
     console.error("Login error:", error);

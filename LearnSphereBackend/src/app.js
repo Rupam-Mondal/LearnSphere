@@ -4,7 +4,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import airouter from "./routes/aiRoute.js";
 import authrouter from "./routes/authRoute.js";
-import connectDB from "./configs/db.js";
+import teacherRouter from "./routes/teacherRoute.js";
 
 const app = express();
 
@@ -20,10 +20,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/ai", airouter);
 app.use("/api/auth", authrouter);
+app.use("/api/teacher", teacherRouter);
 
-app.listen(3000, async () => {
-  console.log("Server is running");
-  await connectDB();
-});
 
 export default app;
