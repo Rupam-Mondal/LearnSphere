@@ -27,7 +27,6 @@ function Navbar() {
     localStorage.removeItem("token");
     setUser(null);
     setToken(null);
-    navigate("/auth");
   };
 
   return (
