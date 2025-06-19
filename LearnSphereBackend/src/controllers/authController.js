@@ -44,7 +44,7 @@ const login = async (req, res) => {
       success: true,
       message: "Login successful",
       token,
-      user: {...userPayload, password:user.password }
+      user: userPayload
     });
   } catch (error) {
     console.error("Login error:", error);
@@ -90,6 +90,7 @@ const register = async (req, res) => {
         username: user.username,
         email: user.email,
         role: user.role,
+        profilePicture: user.profilePicture
       },
       process.env.JWT_SECRET,
       {
@@ -97,7 +98,7 @@ const register = async (req, res) => {
       }
     );
 
-    res.status(201).json({
+    res.status(200).json({
       success: true,
       message: "User registered successfully",
       token,
@@ -106,6 +107,7 @@ const register = async (req, res) => {
         username: user.username,
         email: user.email,
         role: user.role,
+        profilePicture: user.profilePicture,
       },
     });
   } catch (error) {

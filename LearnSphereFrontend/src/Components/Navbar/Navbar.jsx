@@ -1,19 +1,35 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect } from "react";
 import { UserContext } from "../../contexts/userContext";
 import { useNavigate } from "react-router-dom";
 
 function Navbar() {
-  // const [token, setToken] = useState(null);
   const navigate = useNavigate();
-  const { token, setToken } = useContext(UserContext);
+  const { token, setToken, user, setUser } = useContext(UserContext);
+
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+
+    if (storedUser) {
+      setUser(storedUser);
+    }
+
     if (storedToken) {
       setToken(storedToken);
     } else {
       setToken(null);
     }
+
+    console.log("user from localStorage:", storedUser);
   }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    setUser(null);
+    setToken(null);
+    navigate("/auth");
+  };
 
   return (
     <div className="fixed w-full flex justify-center mt-6 z-10">
@@ -26,15 +42,25 @@ function Navbar() {
           <button className="hover:text-black">Practice</button>
           <button className="hover:text-black">Dashboard</button>
         </div>
+
         <div className="flex items-center space-x-4">
           {token ? (
-            <img
-              src={
-                "https://t4.ftcdn.net/jpg/03/64/21/11/360_F_364211147_1qgLVxv1Tcq0Ohz3FawUfrtONzz8nq3e.jpg"
-              }
-              alt="profile icon"
-              className="w-10 h-10 rounded-full cursor-pointer hover:opacity-80 transition border-2 border-[#591688]"
-            />
+            <>
+              <img
+                src={
+                  user?.profilePicture ||
+                  "https://plus.unsplash.com/premium_photo-1689568126014-06fea9d5d341?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8cHJvZmlsZXxlbnwwfHwwfHx8MA%3D%3D"
+                }
+                alt="profile icon"
+                className="w-10 h-10 rounded-full cursor-pointer hover:opacity-80 transition border-2 border-[#591688]"
+              />
+              <button
+                className="text-sm text-[#59168B] underline hover:text-black ml-2"
+                onClick={handleLogout}
+              >
+                Logout
+              </button>
+            </>
           ) : (
             <button
               className="bg-[#59168B] text-white px-5 py-2 rounded-full hover:bg-[#4b1278] transition cursor-pointer"

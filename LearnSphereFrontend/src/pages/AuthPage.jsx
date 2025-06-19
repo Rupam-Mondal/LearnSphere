@@ -1,7 +1,41 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState("student");
+
+  const navigate = useNavigate();
+
+  const login = async (e) => {
+    e.preventDefault();
+    try {
+      let response = await axios.post("http://localhost:4000/api/auth/login", {
+        email: email,
+        password: password,
+      });
+
+      console.log(response.data);
+
+      if(response.data.success) {
+        alert(response.data.message);
+      }
+      if(response.status === 401) {
+        alert(response.data.error);
+      }
+
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+      navigate("/");
+
+    } catch (error) {
+      alert("Login failed. Please check your credentials.");
+    }
+  };
 
   const inputStyle =
     "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#59168B] transition";
@@ -29,7 +63,7 @@ const AuthPage = () => {
         </div>
 
         {isLogin ? (
-          <form className="space-y-5">
+          <form className="space-y-5" onSubmit={(e)=>login(e)}>
             <div>
               <label
                 htmlFor="login-email"
@@ -42,6 +76,8 @@ const AuthPage = () => {
                 id="login-email"
                 className={inputStyle}
                 placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
             <div>
@@ -56,6 +92,8 @@ const AuthPage = () => {
                 id="login-password"
                 className={inputStyle}
                 placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
               />
             </div>
             <button
@@ -79,6 +117,8 @@ const AuthPage = () => {
                 id="signup-username"
                 className={inputStyle}
                 placeholder="Enter your username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
               />
             </div>
             <div>
@@ -93,6 +133,8 @@ const AuthPage = () => {
                 id="signup-email"
                 className={inputStyle}
                 placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
             <div>
@@ -107,6 +149,8 @@ const AuthPage = () => {
                 id="signup-password"
                 className={inputStyle}
                 placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
               />
             </div>
             <div>
@@ -116,7 +160,14 @@ const AuthPage = () => {
               >
                 Role
               </label>
-              <select id="signup-role" className={inputStyle}>
+              <select
+                id="signup-role"
+                className={inputStyle}
+                value={role}
+                onChange={(e) => {
+                  setRole(e.target.value);
+                }}
+              >
                 <option value="student">Student</option>
                 <option value="teacher">Teacher</option>
                 <option value="admin">Admin</option>
