@@ -20,12 +20,12 @@ const CreateCourse = ({id}) => {
 
     const form = new FormData();
     form.append("file", file);
-    form.append("upload_preset", "LearnSphereImage_Preset");
-    form.append("cloud_name", "dyjzfkkxl");
+    form.append("upload_preset", import.meta.env.VITE_COLUDINARY_UPLOAD_PRESET);
+    form.append("cloud_name", import.meta.env.VITE_COLUDINARY_CLOUD_NAME);
 
     try {
       const response = await axios.post(
-        "https://api.cloudinary.com/v1_1/dyjzfkkxl/image/upload",
+        import.meta.env.VITE_COLUDINARY_URL + "/image/upload",
         form
       );
       console.log(response.data);
@@ -51,7 +51,7 @@ const CreateCourse = ({id}) => {
 
     try {
       const response = await axios.post(
-        "https://api.cloudinary.com/v1_1/dyjzfkkxl/video/upload",
+        import.meta.env.VITE_COLUDINARY_URL + "/video/upload",
         form
       );
       console.log(response.data);

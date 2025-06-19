@@ -20,7 +20,6 @@ function Navbar() {
       setToken(null);
     }
 
-    console.log("user from localStorage:", storedUser);
   }, []);
 
   const handleLogout = () => {

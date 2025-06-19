@@ -57,7 +57,7 @@ const login = async (req, res) => {
 
 const register = async (req, res) => {
   try {
-    const { username, email, password, role } = req.body;
+    const { username, email, password, role,profilePicture } = req.body;
 
     if (!username || !email || !password) {
       return res
@@ -80,6 +80,7 @@ const register = async (req, res) => {
       email,
       password: hashedPassword,
       role: role?.toUpperCase() || "STUDENT",
+      profilePicture: profilePicture
     });
 
     await user.save();
