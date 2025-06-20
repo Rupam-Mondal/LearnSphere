@@ -84,7 +84,6 @@ const TeacherDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white px-4 py-8 md:px-10">
-     
       <header className="text-center mb-12">
         <h1 className="text-4xl md:text-5xl font-extrabold text-blue-900">
           Teacher Dashboard
@@ -95,9 +94,7 @@ const TeacherDashboard = () => {
         </p>
       </header>
 
-   
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid gap-6 mb-12 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-       
         <div className="bg-white shadow-xl rounded-2xl p-6 text-center">
           <h2 className="text-lg font-medium text-gray-600">Total Earnings</h2>
           <p className="text-4xl font-bold text-green-600 mt-3">
@@ -105,7 +102,6 @@ const TeacherDashboard = () => {
           </p>
         </div>
 
-        
         <div className="bg-white shadow-xl rounded-2xl p-6 text-center">
           <h2 className="text-lg font-medium text-gray-600">Total Students</h2>
           <p className="text-4xl font-bold text-indigo-600 mt-3">
@@ -113,13 +109,11 @@ const TeacherDashboard = () => {
           </p>
         </div>
 
-        
         <div className="bg-white shadow-xl rounded-2xl p-6 text-center">
           <h2 className="text-lg font-medium text-gray-600">Total Courses</h2>
           <p className="text-4xl font-bold text-black mt-3">{courses.length}</p>
         </div>
 
-        
         <div className="bg-white shadow-xl rounded-2xl p-6 text-center">
           <h2 className="text-lg font-medium text-gray-600">Total Pendings</h2>
           <p className="text-4xl font-bold text-red-600 mt-3">
@@ -127,7 +121,6 @@ const TeacherDashboard = () => {
           </p>
         </div>
 
-        
         <div className="sm:col-span-2 md:col-span-3 xl:col-span-4 flex justify-center">
           <button
             onClick={() => navigate(`/teacher-dashboard/${id}/create-course`)}
@@ -138,7 +131,6 @@ const TeacherDashboard = () => {
         </div>
       </section>
 
-      
       {loading ? (
         <div className="text-center text-xl text-gray-500 mt-10 animate-pulse">
           Loading Courses...
@@ -162,6 +154,16 @@ const TeacherDashboard = () => {
                 {course.status === "PENDING" && (
                   <span className="absolute top-2 left-2 bg-yellow-400 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">
                     Pending
+                  </span>
+                )}
+                {course.status === "APPROVED" && (
+                  <span className="absolute top-2 left-2 bg-green-400 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">
+                    Approved
+                  </span>
+                )}
+                {course.status === "REJECTED" && (
+                  <span className="absolute top-2 left-2 bg-red-400 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">
+                    Rejected
                   </span>
                 )}
                 <div className="p-5">

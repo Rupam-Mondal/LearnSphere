@@ -24,6 +24,41 @@ const pendingCourses = async (req, res) => {
     }
 }
 
+const approveCourse = async (req, res) => {
+    const { courseId } = req.body;
 
+    try {
+        const course = await Course.findById(courseId);
+        if (!course) {
+            return res.status(404).json({ success: false, message: "Course not found" });
+        }
 
-export { adminLogin, pendingCourses };
+        course.status = "APPROVED";
+        await course.save();
+
+        res.status(200).json({ success: true, message: "Course approved successfully" });
+    } catch (error) {
+        console.error("Error approving course:", error);
+        res.status(500).json({ success: false, message: "Internal server error" });
+    }
+}
+
+const rejectCourse = async (req, res) => {
+    const { courseId } = req.body;
+    try {
+        const course = await Course.findById(courseId);
+        if (!course) {
+            return res.status(404).json({ success: false, message: "Course not found" });
+        }
+
+        course.status = "REJECTED";
+        await course.save();
+
+        res.status(200).json({ success: true, message: "Course rejected successfully" });
+    } catch (error) {
+        console.error("Error rejecting course:", error);
+        res.status(500).json({ success: false, message: "Internal server error" });
+    }
+}
+
+export { adminLogin, pendingCourses, approveCourse, rejectCourse };
