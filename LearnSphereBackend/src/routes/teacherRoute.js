@@ -1,5 +1,5 @@
 import express from "express";
-import { createCourse } from "../controllers/teacherController.js";
+import { createCourse, getCourses } from "../controllers/teacherController.js";
 
 const teacherRouter = express.Router(); 
 
@@ -11,5 +11,6 @@ teacherRouter.get("/", (req, res) => {
 });
 
 teacherRouter.post("/create-course", createCourse);
+teacherRouter.post("/get-courses", getCourses);
 
 export default teacherRouter;

@@ -5,6 +5,7 @@ import Home from "./pages/Home";
 import TeacherDashBoard from "./pages/TeacherDashBoard";
 import CreateCourse from "./Components/TeacherDashBoard/CreateCourse";
 import AuthPage from "./pages/AuthPage";
+import TeacherDashboard from "./pages/TeacherDashBoard";
 
 function App() {
   return (
@@ -16,10 +17,8 @@ function App() {
           path="/teacher-dashboard/:id/create-course"
           element={<CreateCourse />}
         />
-        <Route
-          path="/auth"
-          element={<AuthPage />}
-        />
+        <Route path="/teacher-dashboard/:id" element={<TeacherDashboard />} />
+        <Route path="/auth" element={<AuthPage />} />
       </Routes>
     </>
   );

@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 
 const createCourse = async (req, res) => {
   try {
-    const { title, description, price, thumbnail, token } = req.body;
+    const { title, description, price, thumbnail, token, demoVideo } = req.body;
 
     if (!token) {
         return res
@@ -32,7 +32,8 @@ const createCourse = async (req, res) => {
         .json({ success: false, message: "These fields are required" });
     }
 
-    let course = await Course.findOne({ title, teacherid });
+    let course = await Course.findOne({ title, teacher: teacherid });
+
     if (course) {
       return res
         .status(400)
@@ -46,6 +47,7 @@ const createCourse = async (req, res) => {
       thumbnail:
         thumbnail ||
         "https://instructor-academy.onlinecoursehost.com/content/images/2020/10/react-2.png",
+      demoVideo: demoVideo ,
       teacher:teacherid,
     });
     await newCourse.save();
@@ -68,4 +70,32 @@ const createCourse = async (req, res) => {
   }
 };
 
-export { createCourse };
+const getCourses = async (req, res) => {
+  try{
+    const {token} = req.body;
+    
+    if(!token) {
+      return res.status(401).json({ success: false, message: "Unauthorized access" });
+    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const teacherid = decoded.id;
+    if (!teacherid) {
+      return res.status(401).json({ success: false, message: "Unauthorized access" });
+    }
+    const user = await User.findById(teacherid);
+    if (!user || user.role !== "TEACHER") {
+      return res.status(403).json({ success: false, message: "Unauthorized access" });
+    }
+    const courses = await Course.find({ teacher: teacherid });
+    if (!courses || courses.length === 0) {
+      return res.status(404).json({ success: false, message: "No courses found" });
+    }
+    res.status(200).json({ success: true, courses });
+
+  }catch(error) {
+    console.error("Error fetching courses:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+}
+
+export { createCourse, getCourses };

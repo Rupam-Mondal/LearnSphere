@@ -19,7 +19,6 @@ function Navbar() {
     } else {
       setToken(null);
     }
-
   }, []);
 
   const handleLogout = () => {
@@ -38,7 +37,27 @@ function Navbar() {
           <button className="hover:text-black">Home</button>
           <button className="hover:text-black">Jobs</button>
           <button className="hover:text-black">Practice</button>
-          <button className="hover:text-black">Dashboard</button>
+          {token && user && user.role === "TEACHER" ? (
+            <button
+              className="hover:text-black"
+              onClick={() => {
+                navigate(`/teacher-dashboard/${user.id}`);
+              }}
+            >
+              Teacher Dashboard
+            </button>
+          ) : token && user && user.role === "STUDENT" ? (
+            <button className="hover:text-black">Dashboard</button>
+          ) : (
+            <button
+              className="hover:text-black"
+              onClick={() => {
+                navigate("/auth");
+              }}
+            >
+              DashBoard
+            </button>
+          )}
         </div>
 
         <div className="flex items-center space-x-4">

@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { useNavigate, useParams } from "react-router-dom";
 
-const CreateCourse = ({id}) => {
+const CreateCourse = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const [courseName, setCourseName] = useState("");
   const [coursePrice, setCoursePrice] = useState(1000);
   const [courseDescription, setCourseDescription] = useState("");
@@ -63,13 +66,60 @@ const CreateCourse = ({id}) => {
   };
 
   const handleSubmit = (e) => {
-    alert("Course created successfully");
+    e.preventDefault();
+
+    const submitForm = async () => {
+      setLoading(true);
+
+      if (!courseName || !coursePrice || !courseDescription) {
+        alert("Please fill all the fields");
+        setLoading(false);
+        return;
+      }
+
+      if (coursePrice < 1000) {
+        alert("Price cannot be less than 1000");
+        setLoading(false);
+        return;
+      }
+
+      const courseData = {
+        title: courseName,
+        description: courseDescription,
+        price: coursePrice,
+        thumbnail: courseThumbnail,
+        demoVideo: courseVideo,
+        token: localStorage.getItem("token"),
+      };
+
+      try {
+        let response = await axios.post(
+          import.meta.env.VITE_BACKEND_URL + "/teacher/create-course",
+          courseData
+        );
+
+        alert("Course created successfully");
+        setLoading(false);
+        setCourseName("");
+        setCoursePrice(1000);
+        setCourseDescription("");
+        setCourseThumbnail(null);
+        setCourseVideo(null);
+        navigate("/teacher-dashboard/courses");
+      } catch (error) {
+        console.error("Error creating course:", error);
+        alert("Failed to create course");
+        setLoading(false);
+      }
+    };
+
+    submitForm();
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <h1 className="text-2xl font-bold mb-4">Teacher Dashboard</h1>
-      <h1 className="text-lg mb-6">Teacher Id : {id}</h1>
+      <h1 className="text-2xl font-bold mb-4">Creating Course</h1>
+
       <form
         onSubmit={handleSubmit}
         className="bg-white p-6 rounded shadow-md w-full max-w-md"
@@ -150,9 +200,15 @@ const CreateCourse = ({id}) => {
 
         <button
           type="submit"
-          className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
+          disabled={loading}
+          className={`w-full p-2 rounded text-white transition 
+    ${
+      loading
+        ? "bg-blue-300 cursor-not-allowed"
+        : "bg-blue-500 hover:bg-blue-600"
+    }`}
         >
-          {loading ? "Loading ..." : "Create Course"}
+          {loading ? "Loading..." : "Create Course"}
         </button>
       </form>
     </div>
