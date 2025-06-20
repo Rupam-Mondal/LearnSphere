@@ -16,3 +16,5 @@ export default async function getResponse(req, res) {
     suggetion: response,
   });
 }
+
+
