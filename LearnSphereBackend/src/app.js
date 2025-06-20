@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import airouter from "./routes/aiRoute.js";
 import authrouter from "./routes/authRoute.js";
 import teacherRouter from "./routes/teacherRoute.js";
+import adminRouter from "./routes/adminRoute.js";
 
 const app = express();
 
@@ -21,7 +22,11 @@ app.get("/", (req, res) => {
 
 app.use("/api/ai", airouter);
 app.use("/api/auth", authrouter);
+
+
 app.use("/api/teacher", teacherRouter);
+
+app.use("/api/admin", adminRouter);
 
 
 export default app;
