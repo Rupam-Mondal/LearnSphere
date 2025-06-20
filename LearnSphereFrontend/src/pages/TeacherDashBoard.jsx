@@ -12,9 +12,6 @@ const TeacherDashboard = () => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const earnings = 10500;
-  const totalStudents = 150;
-
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
     const storedUser = JSON.parse(localStorage.getItem("user"));
@@ -53,6 +50,32 @@ const TeacherDashboard = () => {
     return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
   };
 
+  const countStudents = (courses) => {
+    let total = 0;
+    for (var i = 0; i < courses.length; i++) {
+      total += courses[i].students.length;
+    }
+    return total;
+  };
+
+  const calculateEarnings = (courses) => {
+    let totalEarnings = 0;
+    for (let i = 0; i < courses.length; i++) {
+      totalEarnings += courses[i].price * courses[i].students.length;
+    }
+    return totalEarnings;
+  };
+
+  const calculatePendings = (courses) => {
+    let totalPendings = 0;
+    for (let i = 0; i < courses.length; i++) {
+      if (courses[i].status === "PENDING") {
+        totalPendings += 1;
+      }
+    }
+    return totalPendings;
+  }
+
   if (!user || !user.username) {
     return (
       <div className="text-center mt-10 text-lg text-gray-600">Loading...</div>
@@ -61,7 +84,7 @@ const TeacherDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white px-4 py-8 md:px-10">
-      {/* Header */}
+     
       <header className="text-center mb-12">
         <h1 className="text-4xl md:text-5xl font-extrabold text-blue-900">
           Teacher Dashboard
@@ -72,21 +95,40 @@ const TeacherDashboard = () => {
         </p>
       </header>
 
-      {/* Stats Section */}
-      <section className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+   
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid gap-6 mb-12 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+       
         <div className="bg-white shadow-xl rounded-2xl p-6 text-center">
           <h2 className="text-lg font-medium text-gray-600">Total Earnings</h2>
           <p className="text-4xl font-bold text-green-600 mt-3">
-            ₹{earnings.toLocaleString()}
+            ₹{calculateEarnings(courses)}
           </p>
         </div>
+
+        
         <div className="bg-white shadow-xl rounded-2xl p-6 text-center">
           <h2 className="text-lg font-medium text-gray-600">Total Students</h2>
           <p className="text-4xl font-bold text-indigo-600 mt-3">
-            {totalStudents.toLocaleString()}
+            {countStudents(courses)}
           </p>
         </div>
-        <div className="flex items-center justify-center">
+
+        
+        <div className="bg-white shadow-xl rounded-2xl p-6 text-center">
+          <h2 className="text-lg font-medium text-gray-600">Total Courses</h2>
+          <p className="text-4xl font-bold text-black mt-3">{courses.length}</p>
+        </div>
+
+        
+        <div className="bg-white shadow-xl rounded-2xl p-6 text-center">
+          <h2 className="text-lg font-medium text-gray-600">Total Pendings</h2>
+          <p className="text-4xl font-bold text-red-600 mt-3">
+            {calculatePendings(courses)}
+          </p>
+        </div>
+
+        
+        <div className="sm:col-span-2 md:col-span-3 xl:col-span-4 flex justify-center">
           <button
             onClick={() => navigate(`/teacher-dashboard/${id}/create-course`)}
             className="bg-blue-600 text-white px-8 py-3 text-lg rounded-xl hover:bg-blue-700 transition duration-200 shadow-lg w-full sm:w-auto"
@@ -96,7 +138,7 @@ const TeacherDashboard = () => {
         </div>
       </section>
 
-      {/* Course Section */}
+      
       {loading ? (
         <div className="text-center text-xl text-gray-500 mt-10 animate-pulse">
           Loading Courses...
@@ -131,8 +173,7 @@ const TeacherDashboard = () => {
                       ? `${course.description.substring(0, 100)}...`
                       : course.description}
                   </p>
-                  
-                  
+
                   <button
                     onClick={() =>
                       navigate(`/teacher-dashboard/${id}/course/${course._id}`)
