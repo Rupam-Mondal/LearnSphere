@@ -71,22 +71,15 @@ const TeacherCourse = () => {
             <p className="text-lg text-indigo-600 font-medium">
               Price: ₹{course.price || 0}
             </p>
-            {
-              course.status === "PENDING" ? (
-                <p className="text-yellow-600 font-semibold">
-                  Status: Pending Approval
-                </p>
-              ) : course.status === "APPROVED" ? (
-                <p className="text-green-600 font-semibold">
-                  Status: Approved
-                </p>
-              ) : (
-                <p className="text-red-600 font-semibold">
-                  Status: Rejected
-                </p>
-              )
-
-            }
+            {course.status === "PENDING" ? (
+              <p className="text-yellow-600 font-semibold">
+                Status: Pending Approval
+              </p>
+            ) : course.status === "APPROVED" ? (
+              <p className="text-green-600 font-semibold">Status: Approved</p>
+            ) : (
+              <p className="text-red-600 font-semibold">Status: Rejected</p>
+            )}
           </div>
         </div>
 
@@ -110,10 +103,24 @@ const TeacherCourse = () => {
             </div>
           </div>
         )}
-        <h1></h1>
 
-        {/* Future Section Placeholder */}
-        {/* Add "Upload Lesson" or "View Lessons" here */}
+        {course?.demoVideo ? (
+          <div className="bg-white shadow-md rounded-2xl p-6 space-y-2">
+            <h2 className="text-2xl font-bold text-gray-800">Demo Video</h2>
+            <a
+              href={course.demoVideo}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block text-blue-600 hover:underline hover:text-blue-800 transition text-lg"
+            >
+              🔗 Watch Demo Video
+            </a>
+          </div>
+        ) : (
+          <div className="bg-white shadow-md rounded-2xl p-6 text-center text-gray-500">
+            <p>No demo video has been uploaded for this course.</p>
+          </div>
+        )}
       </div>
     </div>
   );
