@@ -10,6 +10,7 @@ import Bot from "./Components/Bot/Bot";
 import React, { useContext, useEffect, useState } from "react";
 import TeacherCourse from "./pages/TeacherCourse";
 import { UserContext } from "./contexts/userContext";
+import StudentFeed from "./pages/StudentFeed";
 
 function App() {
   const [bot, setBot] = useState(false);
@@ -31,6 +32,10 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/teacher-dashboard/:id" element={<TeacherDashBoard />} />
+        <Route
+          path="/student/:id"
+          element={<StudentFeed />}
+        />
         <Route
           path="/teacher-dashboard/:id/create-course"
           element={<CreateCourse />}

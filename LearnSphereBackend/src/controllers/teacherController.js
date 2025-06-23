@@ -47,8 +47,8 @@ const createCourse = async (req, res) => {
       thumbnail:
         thumbnail ||
         "https://instructor-academy.onlinecoursehost.com/content/images/2020/10/react-2.png",
-      demoVideo: demoVideo ,
-      teacher:teacherid,
+      demoVideo: demoVideo || "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      teacher: teacherid,
     });
     await newCourse.save();
     

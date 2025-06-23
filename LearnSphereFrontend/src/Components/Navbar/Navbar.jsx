@@ -47,7 +47,11 @@ function Navbar() {
               Teacher Dashboard
             </button>
           ) : token && user && user.role === "STUDENT" ? (
-            <button className="hover:text-black">Dashboard</button>
+            <button className="hover:text-black" onClick={
+              () => {
+                navigate(`/student/${user.id}`);
+              }
+            }>Dashboard</button>
           ) : (
             <button
               className="hover:text-black"
