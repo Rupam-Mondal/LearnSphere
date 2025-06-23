@@ -7,14 +7,26 @@ import CreateCourse from "./Components/TeacherDashBoard/CreateCourse";
 import AuthPage from "./pages/AuthPage";
 import TeacherDashboard from "./pages/TeacherDashBoard";
 import Bot from "./Components/Bot/Bot";
+import React, { useContext, useEffect, useState } from "react";
+import TeacherCourse from "./pages/TeacherCourse";
+import { UserContext } from "./contexts/userContext";
 
 function App() {
+  const [bot, setBot] = useState(false);
+  const { token } = useContext(UserContext);
+  useEffect(() => {
+    if (
+      localStorage.getItem("token") &&
+      JSON.parse(localStorage.getItem("user"))?.role === "STUDENT"
+    ) {
+      setBot(true);
+    } else {
+      setBot(false);
+    }
+  }, [token]);
   return (
     <div className="w-full h-full">
-      {localStorage.getItem("token") &&
-      JSON.parse(localStorage.getItem("user"))?.role === "STUDENT" ? (
-        <Bot />
-      ) : null}
+      {bot ? <Bot /> : null}
 
       <Routes>
         <Route path="/" element={<Home />} />
@@ -25,6 +37,7 @@ function App() {
         />
         <Route path="/teacher-dashboard/:id" element={<TeacherDashboard />} />
         <Route path="/auth" element={<AuthPage />} />
+        <Route path="/teacher-dashboard/:id/course/:courseId" element={<TeacherCourse />} />
       </Routes>
     </div>
   );
