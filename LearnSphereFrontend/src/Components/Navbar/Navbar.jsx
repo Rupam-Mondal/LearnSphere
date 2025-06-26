@@ -35,7 +35,14 @@ function Navbar() {
 
         <div className="flex-1 flex justify-center space-x-10 text-gray-700 font-medium">
           <button className="hover:text-black">Home</button>
-          <button className="hover:text-black">Jobs</button>
+          <button
+            className="hover:text-black"
+            onClick={() => {
+              navigate(`/student/feed/${user.id}`);
+            }}
+          >
+            Feed
+          </button>
           <button className="hover:text-black">Practice</button>
           {token && user && user.role === "TEACHER" ? (
             <button
@@ -47,11 +54,14 @@ function Navbar() {
               Teacher Dashboard
             </button>
           ) : token && user && user.role === "STUDENT" ? (
-            <button className="hover:text-black" onClick={
-              () => {
-                navigate(`/student/${user.id}`);
-              }
-            }>Dashboard</button>
+            <button
+              className="hover:text-black"
+              onClick={() => {
+                navigate(`/student/feed/${user.id}`);
+              }}
+            >
+              Dashboard
+            </button>
           ) : (
             <button
               className="hover:text-black"

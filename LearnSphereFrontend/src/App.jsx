@@ -11,6 +11,7 @@ import React, { useContext, useEffect, useState } from "react";
 import TeacherCourse from "./pages/TeacherCourse";
 import { UserContext } from "./contexts/userContext";
 import StudentFeed from "./pages/StudentFeed";
+import StudentCourseDetails from "./pages/StudentCourseDetails";
 
 function App() {
   const [bot, setBot] = useState(false);
@@ -33,9 +34,15 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/teacher-dashboard/:id" element={<TeacherDashBoard />} />
         <Route
-          path="/student/:id"
+          path="/student/feed/:id"
           element={<StudentFeed />}
         />
+        <Route
+          path="/student/course-details/:id"
+          element={<StudentCourseDetails />}
+        />
+
+
         <Route
           path="/teacher-dashboard/:id/create-course"
           element={<CreateCourse />}

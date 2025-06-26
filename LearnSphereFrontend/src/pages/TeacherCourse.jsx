@@ -8,6 +8,8 @@ const TeacherCourse = () => {
   const [course, setCourse] = useState({});
   const [loading, setLoading] = useState(false);
   const [userType, setUserType] = useState("STUDENT");
+  const [showModal, setShowModal] = useState(false);
+
 
   useEffect(() => {
     const fetchCourseInfo = async () => {
@@ -105,17 +107,56 @@ const TeacherCourse = () => {
         )}
 
         {course?.demoVideo ? (
-          <div className="bg-white shadow-md rounded-2xl p-6 space-y-2">
-            <h2 className="text-2xl font-bold text-gray-800">Demo Video</h2>
-            <a
-              href={course.demoVideo}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block text-blue-600 hover:underline hover:text-blue-800 transition text-lg"
-            >
-              🔗 Watch Demo Video
-            </a>
-          </div>
+          <>
+            <div className="bg-white shadow-md rounded-2xl p-6 space-y-4 text-center">
+              <button
+                onClick={() => setShowModal(true)}
+                className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg text-lg font-semibold transition w-full flex items-center justify-center gap-2 shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+              >
+                ▶️ Watch Demo Video
+              </button>
+            </div>
+
+            {/* Modal */}
+            {showModal && (
+              <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+                <div className="bg-white w-full max-w-3xl p-4 rounded-xl shadow-xl relative">
+                  {/* Close Button */}
+                  <button
+                    onClick={() => setShowModal(false)}
+                    className="absolute top-3 right-3 text-gray-600 hover:text-white bg-gray-200 hover:bg-red-500 transition-colors duration-300 rounded-full w-10 h-10 flex items-center justify-center shadow-md focus:outline-none focus:ring-2 focus:ring-red-400"
+                    aria-label="Close video"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+
+                  {/* Video */}
+                  <div className="w-full aspect-video">
+                    <iframe
+                      src={course.demoVideo.replace("watch?v=", "embed/")}
+                      title="Demo Video"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="w-full h-full rounded-md"
+                    ></iframe>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
         ) : (
           <div className="bg-white shadow-md rounded-2xl p-6 text-center text-gray-500">
             <p>No demo video has been uploaded for this course.</p>
