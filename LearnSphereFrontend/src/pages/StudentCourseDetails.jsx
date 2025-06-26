@@ -8,6 +8,30 @@ const StudentCourseDetails = () => {
   const [enrolled, setEnrolled] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
+  const enrollCourse = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.warn("No token found.");
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/student/enroll-course`,
+        { courseId, token },
+      );
+
+      if (response.data.success) {
+        setEnrolled(true);
+        alert("Successfully enrolled in the course!");
+      } else {
+        console.error("Enrollment failed:", response.data.message);
+      }
+    } catch (error) {
+      console.error("Error enrolling in course:", error.message);
+    }
+  }
+
   useEffect(() => {
     const fetchCourseDetails = async () => {
       const token = localStorage.getItem("token");
@@ -20,11 +44,7 @@ const StudentCourseDetails = () => {
         const response = await axios.post(
           `${import.meta.env.VITE_BACKEND_URL}/student/course-details`,
           { courseId, token },
-          {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
+          
         );
 
         if (response.data.success) {
@@ -42,7 +62,7 @@ const StudentCourseDetails = () => {
     };
 
     fetchCourseDetails();
-  }, [courseId]);
+  }, []);
 
   if (!courseDetails) {
     return (
@@ -125,6 +145,12 @@ const StudentCourseDetails = () => {
               : "bg-blue-600 hover:bg-blue-700"
           }`}
           disabled={enrolled}
+          onClick={(e) => {
+            if (!enrolled) {
+              e.preventDefault();
+              enrollCourse();
+            }
+          }}
         >
           {enrolled ? "Already Enrolled" : "Enroll Now"}
         </button>
