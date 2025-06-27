@@ -1,167 +1,251 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import { Users, Loader2, IndianRupee } from "lucide-react";
+import { Users, Loader2, IndianRupee } from "lucide-react"; // Existing icons
 
 const TeacherCourse = () => {
   const { id, courseId } = useParams();
-  const [course, setCourse] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [userType, setUserType] = useState("STUDENT");
+  const [course, setCourse] = useState(null); // Initialize as null for clearer loading state
+  const [loading, setLoading] = useState(true); // Default to true
+  const [error, setError] = useState(null); // State for handling errors
+  const [userType, setUserType] = useState("STUDENT"); // Default, will be updated
   const [showModal, setShowModal] = useState(false);
-
 
   useEffect(() => {
     const fetchCourseInfo = async () => {
+      setLoading(true);
+      setError(null); // Clear previous errors
       try {
-        setLoading(true);
+        const token = localStorage.getItem("token");
+        if (!token) {
+          setError("Authentication token not found. Please log in.");
+          setLoading(false);
+          return;
+        }
+
         const response = await axios.post(
-          import.meta.env.VITE_BACKEND_URL + "/teacher/get-course-info",
+          `${import.meta.env.VITE_BACKEND_URL}/teacher/get-course-info`,
           {
             courseId: courseId,
-            token: localStorage.getItem("token"),
+            token: token,
           }
         );
-        setCourse(response.data.course);
-        console.log("Course Info:", response.data.course);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching course info:", error);
+        if (response.data.success) {
+          setCourse(response.data.course);
+        } else {
+          setError(response.data.message || "Failed to fetch course details.");
+        }
+      } catch (err) {
+        console.error("Error fetching course info:", err);
+        setError("An unexpected error occurred. Please try again.");
+      } finally {
         setLoading(false);
       }
     };
 
     fetchCourseInfo();
-  }, [id, courseId]);
+  }, [courseId]); // Depend only on courseId, as 'id' is for teacher dashboard nav, not course data
 
   useEffect(() => {
-    let user = JSON.parse(localStorage.getItem("user"));
-    setUserType(user.role);
+    try {
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (user && user.role) {
+        setUserType(user.role);
+      } else {
+        // Fallback or handle case where user data is incomplete/missing
+        setUserType("GUEST"); // Or another appropriate default
+      }
+    } catch (e) {
+      console.error("Failed to parse user from localStorage:", e);
+      setUserType("GUEST");
+    }
   }, []);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen text-3xl text-gray-600">
-        <Loader2 className="animate-spin mr-3" /> Loading...
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-white">
+        <Loader2 className="h-16 w-16 text-indigo-500 animate-spin mr-4" />
+        <p className="text-3xl font-semibold text-gray-700">
+          Loading course details...
+        </p>
       </div>
     );
   }
 
-  
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-red-50 p-6">
+        <div className="bg-white rounded-xl shadow-lg p-8 text-center max-w-md w-full border border-red-300">
+          <h2 className="text-2xl font-bold text-red-800 mb-4">
+            Error Loading Course
+          </h2>
+          <p className="text-gray-700 text-lg">{error}</p>
+          <button
+            onClick={() => window.location.reload()} // Simple reload to retry
+            className="mt-6 bg-red-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors duration-200 shadow-md"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!course) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 p-6">
+        <div className="bg-white rounded-xl shadow-lg p-8 text-center max-w-md w-full border border-gray-200">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">
+            Course Not Found
+          </h2>
+          <p className="text-gray-600 text-lg">
+            The course you are looking for does not exist or you do not have
+            access.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-4 sm:p-8 bg-gray-100 min-h-screen">
-      <div className="max-w-5xl mx-auto space-y-8">
-        <h1 className="text-4xl font-bold text-center text-indigo-700">
-          Course Dashboard
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-100 p-6 sm:p-10">
+      <div className="max-w-6xl mx-auto space-y-10">
+        <h1 className="text-5xl font-extrabold text-center text-indigo-800 drop-shadow-md mb-10">
+          Course Overview
         </h1>
 
-        {/* Course Card */}
-        <div className="bg-white shadow-xl rounded-2xl p-6 flex flex-col sm:flex-row items-center gap-6 transition duration-300 hover:shadow-2xl">
+        {/* Course Details Card */}
+        <div className="bg-white shadow-2xl rounded-3xl p-8 flex flex-col lg:flex-row items-start gap-8 transform transition-transform duration-500 hover:scale-[1.005]">
           <img
-            src={course?.thumbnail}
-            alt="Course Thumbnail"
-            className="w-full sm:w-60 h-40 sm:h-40 object-cover rounded-xl"
+            src={
+              course.thumbnail ||
+              "https://via.placeholder.com/400x250?text=Course+Thumbnail"
+            }
+            alt={course.title || "Course Thumbnail"}
+            className="w-full lg:w-96 h-64 object-cover rounded-xl shadow-lg flex-shrink-0 border border-gray-200"
           />
-          <div className="flex-1 space-y-2 text-center sm:text-left">
-            <h2 className="text-5xl font-bold text-gray-800">
-              {course.title || "Course Title"}
+          <div className="flex-1 space-y-4 text-center lg:text-left">
+            <h2 className="text-5xl font-bold text-gray-900 leading-tight">
+              {course.title || "Untitled Course"}
             </h2>
-            <p className="text-gray-600 text-xl">
-              {course.description || "Course Description"}
+            <p className="text-gray-700 text-xl leading-relaxed">
+              {course.description ||
+                "A comprehensive description of this course is not yet available."}
             </p>
-            <p className="text-lg text-indigo-600 font-medium">
-              Price: ₹{course.price || 0}
-            </p>
-            {course.status === "PENDING" ? (
-              <p className="text-yellow-600 font-semibold">
-                Status: Pending Approval
-              </p>
-            ) : course.status === "APPROVED" ? (
-              <p className="text-green-600 font-semibold">Status: Approved</p>
-            ) : (
-              <p className="text-red-600 font-semibold">Status: Rejected</p>
-            )}
+            <div className="flex flex-wrap justify-center lg:justify-start items-center gap-x-6 gap-y-3 mt-4">
+              <span className="text-2xl text-indigo-700 font-extrabold flex items-center">
+                <IndianRupee className="inline-block w-6 h-6 mr-1" />
+                {course.price ? course.price.toLocaleString("en-IN") : "N/A"}
+              </span>
+              {course.status && (
+                <span
+                  className={`px-4 py-2 rounded-full text-base font-semibold shadow-sm
+                  ${
+                    course.status === "PENDING"
+                      ? "bg-yellow-100 text-yellow-800 border border-yellow-300"
+                      : course.status === "APPROVED"
+                      ? "bg-green-100 text-green-800 border border-green-300"
+                      : "bg-red-100 text-red-800 border border-red-300"
+                  }`}
+                >
+                  Status: {course.status}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Stats Cards */}
+        {/* Teacher Specific Stats (Conditional Render) */}
         {userType === "TEACHER" && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div className="bg-white shadow-md rounded-2xl p-6 text-center hover:shadow-lg transition duration-300">
-              <Users className="mx-auto text-green-500 w-8 h-8 mb-2" />
-              <p className="text-sm text-gray-500">Enrolled Students</p>
-              <p className="text-3xl font-bold text-green-600">
-                {course?.students?.length || 0}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mt-12">
+            <div className="bg-white shadow-xl rounded-2xl p-8 text-center flex flex-col items-center justify-center border border-green-200 transform transition-transform duration-300 hover:scale-[1.02]">
+              <Users className="text-green-600 w-16 h-16 mb-4 animate-bounce-in" />
+              <p className="text-xl text-gray-600 font-medium">
+                Enrolled Students
+              </p>
+              <p className="text-5xl font-bold text-green-700 mt-2">
+                {course.students ? course.students.length : 0}
               </p>
             </div>
 
-            <div className="bg-white shadow-md rounded-2xl p-6 text-center hover:shadow-lg transition duration-300">
-              <IndianRupee className="mx-auto text-blue-500 w-8 h-8 mb-2" />
-              <p className="text-sm text-gray-500">Total Earnings</p>
-              <p className="text-3xl font-bold text-blue-600">
-                ₹{course?.price ? course.price * course.students.length : 0}
+            <div className="bg-white shadow-xl rounded-2xl p-8 text-center flex flex-col items-center justify-center border border-blue-200 transform transition-transform duration-300 hover:scale-[1.02]">
+              <IndianRupee className="text-blue-600 w-16 h-16 mb-4 animate-bounce-in delay-100" />
+              <p className="text-xl text-gray-600 font-medium">
+                Total Earnings
+              </p>
+              <p className="text-5xl font-bold text-blue-700 mt-2">
+                ₹
+                {course.price && course.students
+                  ? (course.price * course.students.length).toLocaleString(
+                      "en-IN"
+                    )
+                  : 0}
               </p>
             </div>
           </div>
         )}
 
-        {course?.demoVideo ? (
-          <>
-            <div className="bg-white shadow-md rounded-2xl p-6 space-y-4 text-center">
+        {/* Demo Video Section */}
+        <div className="bg-white shadow-xl rounded-2xl p-8 text-center mt-12 border border-gray-200">
+          {course.demoVideo ? (
+            <>
               <button
                 onClick={() => setShowModal(true)}
-                className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg text-lg font-semibold transition w-full flex items-center justify-center gap-2 shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                className="bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 text-white px-8 py-4 rounded-full text-xl font-semibold transition-all duration-300 w-full max-w-lg mx-auto flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transform hover:-translate-y-1 active:scale-95"
               >
                 ▶️ Watch Demo Video
               </button>
-            </div>
 
-            {/* Modal */}
-            {showModal && (
-              <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-                <div className="bg-white w-full max-w-3xl p-4 rounded-xl shadow-xl relative">
-                  {/* Close Button */}
-                  <button
-                    onClick={() => setShowModal(false)}
-                    className="absolute top-3 right-3 text-gray-600 hover:text-white bg-gray-200 hover:bg-red-500 transition-colors duration-300 rounded-full w-10 h-10 flex items-center justify-center shadow-md focus:outline-none focus:ring-2 focus:ring-red-400"
-                    aria-label="Close video"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
+              {/* Modal */}
+              {showModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 animate-fade-in">
+                  <div className="bg-white w-full max-w-4xl p-6 rounded-2xl shadow-2xl relative transform scale-95 animate-scale-up">
+                    <button
+                      onClick={() => setShowModal(false)}
+                      className="absolute -top-4 -right-4 bg-red-600 text-white rounded-full p-3 text-xl shadow-lg hover:bg-red-700 transition-all duration-300 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-red-400 z-10"
+                      aria-label="Close video"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-6 w-6"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
 
-                  {/* Video */}
-                  <div className="w-full aspect-video">
-                    <iframe
-                      src={course.demoVideo.replace("watch?v=", "embed/")}
-                      title="Demo Video"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      className="w-full h-full rounded-md"
-                    ></iframe>
+                    <div className="w-full aspect-video rounded-lg overflow-hidden shadow-inner">
+                      <iframe
+                        src={course.demoVideo.replace("watch?v=", "embed/")}
+                        title="Demo Video"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="w-full h-full"
+                      ></iframe>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="bg-white shadow-md rounded-2xl p-6 text-center text-gray-500">
-            <p>No demo video has been uploaded for this course.</p>
-          </div>
-        )}
+              )}
+            </>
+          ) : (
+            <div className="text-center text-gray-500 py-4">
+              <p className="text-xl font-medium mb-2">
+                No demo video uploaded.
+              </p>
+              <p>
+                You can add a demo video to this course in the course editing
+                section.
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

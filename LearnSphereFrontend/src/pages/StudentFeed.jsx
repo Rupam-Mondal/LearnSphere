@@ -1,34 +1,38 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import { User2Icon } from "lucide-react"; // Optional: For user icon
+import { User2Icon, Loader2 } from "lucide-react"; 
 import { useNavigate } from "react-router-dom";
 
 const StudentFeed = () => {
   const navigate = useNavigate();
   const [feed, setFeed] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const getFeed = async () => {
+      setLoading(true);
+      setError(null);
       const token = localStorage.getItem("token");
       if (!token) {
-        console.warn("No token found in localStorage.");
+        setError("Please log in to view courses.");
         setLoading(false);
         return;
       }
 
       try {
         const response = await axios.post(
-          import.meta.env.VITE_BACKEND_URL + "/student/feed",
+          `${import.meta.env.VITE_BACKEND_URL}/student/feed`,
           { token }
         );
         if (response.data.success) {
           setFeed(response.data.course);
         } else {
-          console.error("Failed to fetch feed:", response.data.message);
+          setError(response.data.message || "Failed to fetch courses.");
         }
-      } catch (error) {
-        console.error("Error fetching student feed:", error);
+      } catch (err) {
+        console.error("Error fetching student feed:", err);
+        setError("Could not load courses. Please try again later.");
       } finally {
         setLoading(false);
       }
@@ -38,46 +42,56 @@ const StudentFeed = () => {
   }, []);
 
   return (
-    <div className="p-6 bg-gradient-to-br from-blue-50 to-white min-h-screen">
-      <h1 className="text-3xl font-bold text-center text-gray-800 mb-8">
-        Student Course Feed
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
+      <h1 className="text-4xl font-extrabold text-center text-gray-900 mb-10 tracking-tight">
+        Explore Courses
       </h1>
 
       {loading ? (
-        <div className="flex justify-center items-center min-h-[200px]">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-4 border-blue-500 border-solid"></div>
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="h-12 w-12 text-blue-600 animate-spin" />
+          <p className="ml-4 text-xl text-gray-600">Loading amazing courses...</p>
+        </div>
+      ) : error ? (
+        <div className="text-center p-8 bg-red-100 border border-red-300 text-red-700 rounded-lg shadow-md mx-auto max-w-lg">
+          <p className="text-xl font-semibold mb-2">Oops! Something went wrong.</p>
+          <p className="text-lg">{error}</p>
+          <p className="text-md mt-4 text-red-600">Please refresh the page or try again later.</p>
         </div>
       ) : feed.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
           {feed.map((course) => (
             <div
               key={course._id}
-              className="bg-white shadow-xl rounded-2xl overflow-hidden transition-transform transform hover:-translate-y-1 hover:shadow-2xl"
+              className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col transform transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:border-blue-300 border border-transparent"
             >
-              <img
-                src={course.thumbnail}
-                alt={course.title}
-                className="h-48 w-full object-cover"
-              />
-              <div className="p-5 space-y-2">
-                <div className="flex justify-between items-start">
-                  <h3 className="text-xl font-bold text-gray-800">
-                    {course.title}
-                  </h3>
-                  <span className="bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full">
-                    ₹{course.price}
-                  </span>
-                </div>
-                <p className="text-gray-600">{course.description}</p>
-                <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <User2Icon className="w-4 h-4" />
-                  <span>Teacher: {course.teacherName || "Unknown"}</span>
+              <div className="relative h-48 overflow-hidden">
+                <img
+                  src={course.thumbnail}
+                  alt={course.title}
+                  className="w-full h-full object-cover object-center transition-transform duration-500 hover:scale-105"
+                />
+                <div className="absolute top-3 right-3 bg-blue-600 text-white text-lg font-bold px-4 py-1 rounded-full shadow-md">
+                  ₹{course.price}
                 </div>
               </div>
-              <div className="p-5  bg-gray-50">
-                <button className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition" onClick={()=>{
-                  navigate(`/student/course-details/${course._id}`);
-                }}>
+              <div className="p-6 flex-grow flex flex-col">
+                <h3 className="text-2xl font-semibold text-gray-800 mb-2 truncate">
+                  {course.title}
+                </h3>
+                <p className="text-gray-600 text-sm line-clamp-3 mb-4 flex-grow">
+                  {course.description}
+                </p>
+                <div className="flex items-center gap-2 text-md text-gray-500 mb-6">
+                  <User2Icon className="w-5 h-5 text-indigo-500" />
+                  <span className="font-medium">Teacher: {course.teacherName || "Unknown"}</span>
+                </div>
+                <button
+                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-3 rounded-lg font-semibold text-lg shadow-md hover:from-blue-700 hover:to-indigo-800 transition-all duration-300 transform hover:-translate-y-0.5"
+                  onClick={() => {
+                    navigate(`/student/course-details/${course._id}`);
+                  }}
+                >
                   View Course
                 </button>
               </div>
@@ -85,9 +99,10 @@ const StudentFeed = () => {
           ))}
         </div>
       ) : (
-        <p className="text-center text-gray-500 text-lg">
-          No courses available.
-        </p>
+        <div className="text-center p-8 bg-white rounded-lg shadow-md mx-auto max-w-lg">
+          <p className="text-2xl font-semibold text-gray-700 mb-4">No courses available right now.</p>
+          <p className="text-lg text-gray-500">Check back later for new and exciting courses!</p>
+        </div>
       )}
     </div>
   );

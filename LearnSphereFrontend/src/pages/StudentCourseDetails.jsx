@@ -1,184 +1,223 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import { X, PlayCircle, CheckCircle, Clock } from "lucide-react";
 
 const StudentCourseDetails = () => {
   const { id: courseId } = useParams();
   const [courseDetails, setCourseDetails] = useState(null);
   const [enrolled, setEnrolled] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const enrollCourse = async () => {
     const token = localStorage.getItem("token");
     if (!token) {
-      console.warn("No token found.");
+      alert("Please log in to enroll in the course.");
       return;
     }
 
     try {
+      setEnrolled(true); 
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/student/enroll-course`,
-        { courseId, token },
+        { courseId },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       if (response.data.success) {
-        setEnrolled(true);
         alert("Successfully enrolled in the course!");
       } else {
-        console.error("Enrollment failed:", response.data.message);
+        setEnrolled(false);
+        alert(`Enrollment failed: ${response.data.message}`);
       }
     } catch (error) {
-      console.error("Error enrolling in course:", error.message);
+      setEnrolled(false);
+      alert("An error occurred during enrollment. Please try again.");
     }
-  }
+  };
 
   useEffect(() => {
     const fetchCourseDetails = async () => {
+      setLoading(true);
       const token = localStorage.getItem("token");
+
       if (!token) {
-        console.warn("No token found.");
+        setError("You need to be logged in to view course details.");
+        setLoading(false);
         return;
       }
 
       try {
         const response = await axios.post(
           `${import.meta.env.VITE_BACKEND_URL}/student/course-details`,
-          { courseId, token },
-          
+          { courseId },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
 
         if (response.data.success) {
           setCourseDetails(response.data.course);
           setEnrolled(response.data.enrolled);
         } else {
-          console.error(
-            "Failed to fetch course details:",
-            response.data.message
-          );
+          setError(response.data.message);
         }
       } catch (error) {
-        console.error("Error fetching course details:", error.message);
+        setError("Could not load course details. Please try again later.");
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchCourseDetails();
-  }, []);
+  }, [courseId]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen bg-gray-50">
+        <div className="text-center text-lg text-gray-600 animate-pulse flex items-center">
+          <Clock className="w-6 h-6 mr-2" /> Loading course details...
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-screen bg-red-50">
+        <div className="text-center text-lg text-red-700 p-4 rounded-lg bg-red-100 border border-red-300 shadow-md">
+          <p>Error: {error}</p>
+          <p className="mt-2 text-base text-red-600">
+            Please try refreshing the page or logging in again.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (!courseDetails) {
     return (
-      <div className="p-10 text-center text-gray-500 text-lg">
-        Loading course details...
+      <div className="flex justify-center items-center h-screen bg-gray-50">
+        <div className="text-center text-lg text-gray-600">
+          No course details available.
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white shadow-xl rounded-xl mt-10">
-      {/* Thumbnail */}
-      <img
-        src={courseDetails.thumbnail}
-        alt={courseDetails.title}
-        className="w-full h-64 object-cover rounded-lg mb-6"
-      />
-
-      {/* Title & Description */}
-      <h1 className="text-3xl font-bold text-gray-800 mb-2">
-        {courseDetails.title}
-      </h1>
-      <p className="text-gray-600 mb-4">{courseDetails.description}</p>
-
-      {/* Instructor & Price */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-        <div>
-          <p className="text-sm text-gray-500">Instructor</p>
-          <p className="text-lg font-semibold text-gray-700">
-            {courseDetails.teacherName}
-          </p>
-        </div>
-        <div className="text-right">
-          <p className="text-sm text-gray-500">Price</p>
-          <p className="text-xl font-bold text-blue-600">
-            ₹{courseDetails.price}
-          </p>
-        </div>
-      </div>
-
-      {/* Status and Enrollment */}
-      <div className="flex items-center gap-4 mb-6">
-        <span
-          className={`px-4 py-1 text-sm rounded-full font-medium ${
-            courseDetails.status === "APPROVED"
-              ? "bg-green-100 text-green-700"
-              : "bg-yellow-100 text-yellow-700"
-          }`}
-        >
-          Status: {courseDetails.status}
-        </span>
-
-        <span
-          className={`px-4 py-1 text-sm rounded-full font-medium ${
-            enrolled ? "bg-blue-100 text-blue-700" : "bg-red-100 text-red-700"
-          }`}
-        >
-          {enrolled ? "You are enrolled" : "Not enrolled"}
-        </span>
-      </div>
-
-      {/* Demo Video Button */}
-      {courseDetails.demoVideo && (
-        <div className="mt-6">
+    <div className="max-w-5xl mx-auto p-8 bg-white rounded-2xl shadow-lg mt-10">
+      
+      <div className="relative overflow-hidden rounded-xl mb-8 shadow-md">
+        <img
+          src={courseDetails.thumbnail}
+          alt={courseDetails.title}
+          className="w-full h-80 object-cover transform hover:scale-105 transition-transform duration-500"
+        />
+        {courseDetails.demoVideo && (
           <button
             onClick={() => setShowModal(true)}
-            className="w-full py-3 rounded-lg bg-purple-600 text-white font-semibold hover:bg-purple-700 transition"
+            className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 text-white text-xl font-semibold opacity-0 hover:opacity-100 transition-opacity duration-300"
+            aria-label="Watch Demo Video"
           >
-            ▶️ Watch Demo Video
+            <PlayCircle className="w-16 h-16 text-white hover:text-purple-300 transition-colors duration-300" />
           </button>
-        </div>
-      )}
-
-      {/* Enroll Button */}
-      <div className="mt-4">
-        <button
-          className={`w-full py-3 rounded-lg text-white font-semibold transition ${
-            enrolled
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-blue-600 hover:bg-blue-700"
-          }`}
-          disabled={enrolled}
-          onClick={(e) => {
-            if (!enrolled) {
-              e.preventDefault();
-              enrollCourse();
-            }
-          }}
-        >
-          {enrolled ? "Already Enrolled" : "Enroll Now"}
-        </button>
+        )}
       </div>
 
-      {/* Modal Popup */}
+      <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex-1">
+          <h1 className="text-4xl font-extrabold text-gray-900 mb-4">
+            {courseDetails.title}
+          </h1>
+          <p className="text-lg text-gray-700 mb-6">
+            {courseDetails.description}
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 border-t border-b py-6 border-gray-200">
+            <div>
+              <p className="text-sm text-gray-500 font-medium uppercase">
+                Instructor
+              </p>
+              <p className="text-xl font-bold text-gray-800 mt-1">
+                {courseDetails.teacherName}
+              </p>
+            </div>
+            <div className="md:text-right">
+              <p className="text-sm text-gray-500 font-medium uppercase">
+                Price
+              </p>
+              <p className="text-3xl font-extrabold text-blue-600 mt-1">
+                ₹{courseDetails.price}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-4 mb-8">
+            <span
+              className={`px-5 py-2 text-base rounded-full font-semibold flex items-center gap-2
+                ${
+                  courseDetails.status === "APPROVED"
+                    ? "bg-green-100 text-green-700 border border-green-300"
+                    : "bg-yellow-100 text-yellow-700 border border-yellow-300"
+                }`}
+            >
+              <CheckCircle className="w-5 h-5" /> Status: {courseDetails.status}
+            </span>
+
+            <span
+              className={`px-5 py-2 text-base rounded-full font-semibold flex items-center gap-2
+                ${
+                  enrolled
+                    ? "bg-blue-100 text-blue-700 border border-blue-300"
+                    : "bg-red-100 text-red-700 border border-red-300"
+                }`}
+            >
+              {enrolled ? (
+                <CheckCircle className="w-5 h-5" />
+              ) : (
+                <X className="w-5 h-5" />
+              )}
+              {enrolled ? "You are enrolled" : "Not enrolled"}
+            </span>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="lg:w-1/3 flex flex-col gap-4">
+          <button
+            className={`w-full py-4 rounded-xl text-white font-bold text-lg
+              ${
+                enrolled
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800"
+              }`}
+            disabled={enrolled}
+            onClick={enrollCourse}
+          >
+            {enrolled ? "Already Enrolled" : "Enroll Now"}
+          </button>
+
+          
+        </div>
+      </div>
+
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-          <div className="bg-white w-full max-w-3xl p-4 rounded-lg shadow-lg relative">
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className="bg-white w-full max-w-4xl p-6 rounded-2xl shadow-2xl relative">
             <button
               onClick={() => setShowModal(false)}
-              className="absolute top-3 right-3 text-black border border-black hover:text-white bg-gray-200 hover:bg-red-500 transition-colors duration-300 rounded-full w-10 h-10 flex items-center justify-center shadow-md focus:outline-none focus:ring-2 focus:ring-red-400"
-              aria-label="Close video"
+              className="absolute -top-3 -right-3 bg-red-600 text-white rounded-full p-2"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
+              <X className="w-6 h-6" />
             </button>
 
             <div className="w-full aspect-video">
@@ -187,7 +226,7 @@ const StudentCourseDetails = () => {
                 title="Demo Video"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
-                className="w-full h-full rounded-md"
+                className="w-full h-full"
               ></iframe>
             </div>
           </div>

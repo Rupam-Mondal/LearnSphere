@@ -84,13 +84,16 @@ const TeacherDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white px-4 py-8 md:px-10">
-      <header className="text-center mb-12">
-        <h1 className="text-4xl md:text-5xl font-extrabold text-blue-900">
+      <header className="text-center mb-16 animate-fade-in-down">
+        <h1 className="text-5xl md:text-6xl font-extrabold text-blue-800 drop-shadow-lg leading-tight">
           Teacher Dashboard
         </h1>
-        <p className="text-gray-600 mt-2 text-lg">
+        <p className="text-gray-700 mt-4 text-xl font-medium">
           Welcome,{" "}
-          <span className="font-semibold">{capitalize(user.username)}</span>
+          <span className="font-bold text-blue-700">
+            {capitalize(user.username)}
+          </span>
+          ! Manage your courses and track your progress.
         </p>
       </header>
 
