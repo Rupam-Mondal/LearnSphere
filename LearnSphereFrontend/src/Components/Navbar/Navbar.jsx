@@ -57,7 +57,7 @@ function Navbar() {
             <button
               className="hover:text-black"
               onClick={() => {
-                navigate(`/student/feed/${user.id}`);
+                navigate(`/student/dashboard/${user.id}`);
               }}
             >
               Dashboard

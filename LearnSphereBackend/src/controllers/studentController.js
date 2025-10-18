@@ -186,4 +186,28 @@ const enrollCourse = async (req, res) => {
   }
 };
 
-export { getAllCourse, getCourseDetails, enrollCourse };
+const getInfo = async (req, res) => {
+  const { studentId } = req.body;
+  try {
+    if (!studentId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Student ID is required" });
+    }else{
+      const student = await User.findById(studentId);
+      if(!student || student.role !== "STUDENT"){
+        return res
+        .status(403)
+        .json({ success: false, message: "Unauthorized access" });
+      }
+      return res.status(200).json({ success: true, student });
+    }
+  }
+  catch (error) {
+    console.error("Error fetching student info:", error);
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+
+}
+
+export { getAllCourse, getCourseDetails, enrollCourse, getInfo };
