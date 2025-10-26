@@ -1,12 +1,35 @@
-import { Loader2 } from 'lucide-react';
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom';
+import axios from "axios";
+import { Loader2, User2 as User2Icon } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const StudentDashboard = () => {
-    const [feed, setFeed] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const navigate = useNavigate();
+  const [feed, setFeed] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  const token = localStorage.getItem("token");
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const response = await axios.post(
+          `${import.meta.env.VITE_BACKEND_URL}/student/my-courses`,
+          { token }
+        );
+        console.log("Fetched courses:", response.data);
+        setFeed(response.data.registeredCourses || []);
+      } catch (err) {
+        setError(
+          err.message || "Failed to fetch courses. Please try again later."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
@@ -17,13 +40,19 @@ const StudentDashboard = () => {
       {loading ? (
         <div className="flex justify-center items-center h-64">
           <Loader2 className="h-12 w-12 text-blue-600 animate-spin" />
-          <p className="ml-4 text-xl text-gray-600">Loading amazing courses...</p>
+          <p className="ml-4 text-xl text-gray-600">
+            Loading amazing courses...
+          </p>
         </div>
       ) : error ? (
         <div className="text-center p-8 bg-red-100 border border-red-300 text-red-700 rounded-lg shadow-md mx-auto max-w-lg">
-          <p className="text-xl font-semibold mb-2">Oops! Something went wrong.</p>
+          <p className="text-xl font-semibold mb-2">
+            Oops! Something went wrong.
+          </p>
           <p className="text-lg">{error}</p>
-          <p className="text-md mt-4 text-red-600">Please refresh the page or try again later.</p>
+          <p className="text-md mt-4 text-red-600">
+            Please refresh the page or try again later.
+          </p>
         </div>
       ) : feed.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
@@ -42,6 +71,7 @@ const StudentDashboard = () => {
                   ₹{course.price}
                 </div>
               </div>
+
               <div className="p-6 flex-grow flex flex-col">
                 <h3 className="text-2xl font-semibold text-gray-800 mb-2 truncate">
                   {course.title}
@@ -49,15 +79,19 @@ const StudentDashboard = () => {
                 <p className="text-gray-600 text-sm line-clamp-3 mb-4 flex-grow">
                   {course.description}
                 </p>
+
                 <div className="flex items-center gap-2 text-md text-gray-500 mb-6">
                   <User2Icon className="w-5 h-5 text-indigo-500" />
-                  <span className="font-medium">Teacher: {course.teacherName || "Unknown"}</span>
+                  <span className="font-medium">
+                    Teacher: {course.teacherName || "Unknown"}
+                  </span>
                 </div>
+
                 <button
                   className="w-full bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-3 rounded-lg font-semibold text-lg shadow-md hover:from-blue-700 hover:to-indigo-800 transition-all duration-300 transform hover:-translate-y-0.5"
-                  onClick={() => {
-                    navigate(`/student/course-details/${course._id}`);
-                  }}
+                  onClick={() =>
+                    navigate(`/student/course-details/${course._id}`)
+                  }
                 >
                   View Course
                 </button>
@@ -67,12 +101,16 @@ const StudentDashboard = () => {
         </div>
       ) : (
         <div className="text-center p-8 bg-white rounded-lg shadow-md mx-auto max-w-lg">
-          <p className="text-2xl font-semibold text-gray-700 mb-4">No courses available right now.</p>
-          <p className="text-lg text-gray-500">Check back later for new and exciting courses!</p>
+          <p className="text-2xl font-semibold text-gray-700 mb-4">
+            No courses available right now.
+          </p>
+          <p className="text-lg text-gray-500">
+            Check back later for new and exciting courses!
+          </p>
         </div>
       )}
     </div>
   );
-}
+};
 
-export default StudentDashboard
+export default StudentDashboard;
