@@ -210,4 +210,35 @@ const getInfo = async (req, res) => {
 
 }
 
-export { getAllCourse, getCourseDetails, enrollCourse, getInfo };
+async function GetUserRegisteredCourse(req , res){
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Unauthorized access" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const studentId = decoded.id;
+    if (!studentId) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Unauthorized access" });
+    }
+    const user = await User.findById(studentId);
+    const registeredCourses = user.courses;
+    return res.json({
+      success: true,
+      registeredCourses,
+    });
+  } catch (error) {
+    return res.json({
+      success: false,
+      message: "Internal Server Error",
+    })
+  }
+}
+
+export { getAllCourse, getCourseDetails, enrollCourse, getInfo , GetUserRegisteredCourse };
