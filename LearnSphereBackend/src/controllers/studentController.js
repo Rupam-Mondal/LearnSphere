@@ -227,7 +227,7 @@ async function GetUserRegisteredCourse(req , res){
         .status(401)
         .json({ success: false, message: "Unauthorized access" });
     }
-    const user = await User.findById(studentId);
+    const user = await User.findById(studentId).populate('courses');
     const registeredCourses = user.courses;
     return res.json({
       success: true,
