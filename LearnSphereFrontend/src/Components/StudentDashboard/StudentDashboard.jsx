@@ -10,6 +10,19 @@ const StudentDashboard = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
+  const fetchTeacherName = async (teacherId) => {
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/student/get-teacher-name`,
+        { teacherId }
+      );
+      return res.data.teacherName || "Unknown";
+    } catch (err) {
+      console.error("Error fetching teacher name:", err);
+      return "Unknown";
+    }
+  };
+
   useEffect(() => {
     const fetchCourses = async () => {
       try {
@@ -17,8 +30,16 @@ const StudentDashboard = () => {
           `${import.meta.env.VITE_BACKEND_URL}/student/my-courses`,
           { token }
         );
-        console.log("Fetched courses:", response.data);
-        setFeed(response.data.registeredCourses || []);
+        let courses = response.data.registeredCourses || [];
+
+        const updatedCourses = await Promise.all(
+          courses.map(async (course) => {
+            const teacherName = await fetchTeacherName(course.teacher);
+            return { ...course, teacherName };
+          })
+        );
+
+        setFeed(updatedCourses);
       } catch (err) {
         setError(
           err.message || "Failed to fetch courses. Please try again later."
@@ -41,7 +62,7 @@ const StudentDashboard = () => {
         <div className="flex justify-center items-center h-64">
           <Loader2 className="h-12 w-12 text-blue-600 animate-spin" />
           <p className="ml-4 text-xl text-gray-600">
-            Loading amazing courses...
+            Loading enrolled courses...
           </p>
         </div>
       ) : error ? (
@@ -67,9 +88,9 @@ const StudentDashboard = () => {
                   alt={course.title}
                   className="w-full h-full object-cover object-center transition-transform duration-500 hover:scale-105"
                 />
-                <div className="absolute top-3 right-3 bg-blue-600 text-white text-lg font-bold px-4 py-1 rounded-full shadow-md">
+                {/* <div className="absolute top-3 right-3 bg-blue-600 text-white text-lg font-bold px-4 py-1 rounded-full shadow-md">
                   ₹{course.price}
-                </div>
+                </div> */}
               </div>
 
               <div className="p-6 flex-grow flex flex-col">
