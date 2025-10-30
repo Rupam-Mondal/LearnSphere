@@ -51,7 +51,7 @@ function App() {
         {/* <Route path="/teacher-dashboard/:id" element={<TeacherDashboard />} /> */}
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/teacher-dashboard/:id/course/:courseId" element={<TeacherCourse />} />
-        <Route path="//student/dashboard/:id" element={<StudentDashboard />} />
+        <Route path="/student/dashboard/:id" element={<StudentDashboard />} />
       </Routes>
     </div>
   );

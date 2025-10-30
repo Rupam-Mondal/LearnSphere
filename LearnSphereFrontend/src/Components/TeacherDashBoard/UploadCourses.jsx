@@ -20,7 +20,7 @@ const LessonUploaderForm = ({ onClose, onSuccess }) => {
     if (!file) return alert("Please select a video file.");
 
     setUploadingVideo(true);
-    setMessage("⏳ Uploading video to Cloudinary...");
+    setMessage("⏳ Uploading video ...");
 
     const form = new FormData();
     form.append("file", file);
@@ -180,14 +180,13 @@ const LessonUploaderForm = ({ onClose, onSuccess }) => {
             {uploadedVideoUrl && (
               <p className="text-green-600 text-sm mt-2">
                 ✅ Uploaded:{" "}
-                <a
-                  href={uploadedVideoUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="underline"
-                >
-                  {uploadedVideoUrl}
-                </a>
+                <video
+                  src={uploadedVideoUrl}
+                  className="mt-2 w-full rounded-lg shadow-md h-[240px]" controls>
+                  {/* <source src={uploadedVideoUrl} type="video/mp4" /> */}
+
+                  Your browser does not support the video tag.
+                </video>
               </p>
             )}
           </div>
