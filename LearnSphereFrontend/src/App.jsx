@@ -8,7 +8,7 @@ import AuthPage from "./pages/AuthPage";
 import TeacherDashboard from "./pages/TeacherDashBoard";
 import Bot from "./Components/Bot/Bot";
 import React, { useContext, useEffect, useState } from "react";
-import TeacherCourse from "./pages/TeacherCourse";
+import TeacherCourse from "./Components/TeacherDashBoard/TeacherCourse";
 import { UserContext } from "./contexts/userContext";
 import StudentFeed from "./pages/StudentFeed";
 import StudentCourseDetails from "./pages/StudentCourseDetails";

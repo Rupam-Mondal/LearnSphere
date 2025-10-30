@@ -130,4 +130,97 @@ const getCourseInfo = async (req, res) => {
   }
 };
 
-export { createCourse, getCourses, getCourseInfo };
+const uploadLesson = async (req,res) => {
+  try {
+    const { courseId, title, videoUrl, token, resources } = req.body;
+
+    if (!token) {
+      return res.status(401).json({ success: false, message: "Unauthorized access" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const teacherid = decoded.id;
+
+    if (!teacherid) {
+      return res.status(401).json({ success: false, message: "Unauthorized access" });
+    }
+
+    const user = await User.findById(teacherid);
+    if (!user || user.role !== "TEACHER") {
+      return res.status(403).json({ success: false, message: "Unauthorized access" });
+    }
+
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ success: false, message: "Course not found" });
+    }
+
+    const newLesson = {
+      videoId: courseId + "-" + title.replace(/\s+/g, '-').toLowerCase(),
+      title,
+      videoUrl,
+      resources:resources || [],
+    };
+
+    course.lessons.push(newLesson);
+    await course.save();
+
+    res.status(200).json({ success: true, message: "Lesson uploaded successfully" });
+
+  } catch (error) {
+    console.error("Error uploading lesson:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+}
+
+const deleteLesson = async (req, res) => {
+  try {
+    const { lessonId, token } = req.body;
+
+    if (!token || !lessonId) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields: token or lesson ID.",
+      });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const teacherid = decoded.id;
+
+    const user = await User.findById(teacherid);
+    if (!user || user.role !== "TEACHER") {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden: Not authorized to delete lessons.",
+      });
+    }
+
+    const course = await Course.findOne({ "lessons.videoId": lessonId });
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Lesson or associated course not found.",
+      });
+    }
+
+    course.lessons = course.lessons.filter(
+      (lesson) => lesson.videoId !== lessonId
+    );
+    await course.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Lesson deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting lesson:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+
+
+export { createCourse, getCourses, getCourseInfo, uploadLesson, deleteLesson };
