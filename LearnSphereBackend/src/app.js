@@ -7,7 +7,7 @@ import authrouter from "./routes/authRoute.js";
 import teacherRouter from "./routes/teacherRoute.js";
 import adminRouter from "./routes/adminRoute.js";
 import studentRouter from "./routes/studentRoute.js";
-
+import commentRouter from "./routes/commentRoute.js";
 const app = express();
 
 app.use(cors());
@@ -31,6 +31,6 @@ app.use("/api/admin", adminRouter);
 
 app.use("/api/student", studentRouter);
 
-
+app.use("/api/comment", commentRouter);
 
 export default app;

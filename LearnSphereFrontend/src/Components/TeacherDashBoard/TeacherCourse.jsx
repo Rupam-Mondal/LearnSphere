@@ -12,8 +12,7 @@ import {
   X, // Close icon for modal
 } from "lucide-react";
 import UploadCourses from "./UploadCourses";
-
-
+import { jwtDecode } from "jwt-decode";
 
 const TeacherCourse = () => {
   const { id, courseId } = useParams();
@@ -152,7 +151,7 @@ const TeacherCourse = () => {
             permission to view this resource.
           </p>
           <a
-            href="/teacher/dashboard" 
+            href="/teacher/dashboard"
             className="mt-6 inline-block bg-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-colors duration-200 shadow-lg"
           >
             Go to Dashboard
@@ -171,7 +170,7 @@ const TeacherCourse = () => {
           <span className="text-indigo-600">{course.title}</span>
         </h1>
 
-        
+
         <div className="bg-white shadow-3xl rounded-3xl p-6 md:p-10 flex flex-col xl:flex-row items-start gap-8 border-t-8 border-indigo-500">
           <img
             src={
@@ -194,7 +193,7 @@ const TeacherCourse = () => {
                 "A comprehensive description of this course is not yet available."}
             </p>
 
-            
+
             <div className="flex flex-wrap items-center gap-x-8 gap-y-4 pt-4 border-t border-gray-100">
               <span className="text-3xl text-green-700 font-extrabold flex items-center bg-green-50 p-3 rounded-lg shadow-inner">
                 {/* <DollarSign className="inline-block w-7 h-7 mr-2 text-green-500" /> */}
@@ -238,8 +237,8 @@ const TeacherCourse = () => {
                   ₹
                   {course.price && course.students
                     ? (course.price * course.students.length).toLocaleString(
-                        "en-IN"
-                      )
+                      "en-IN"
+                    )
                     : 0}
                 </p>
               </div>
@@ -329,8 +328,216 @@ const TeacherCourse = () => {
         </div>
         {/* --- End Content Management Section --- */}
       </div>
+      <div>
+        <div>
+          <div className="mt-10 border-t border-gray-200 pt-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              💬 Comments
+            </h2>
+            <CommentSection courseId={courseId} />
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
+const CommentSection = ({ courseId }) => {
+    const [comments, setComments] = useState([]);
+    const [newComment, setNewComment] = useState("");
+    const [replyingTo, setReplyingTo] = useState(null);
+    const [replyText, setReplyText] = useState("");
+    const [loading, setLoading] = useState(true);
+    const [role, setRole] = useState(null);
 
+    const token = localStorage.getItem("token");
+
+    // --- Decode token to get user role ---
+    useEffect(() => {
+        if (token) {
+            try {
+                const decoded = jwtDecode(token);
+                setRole(decoded.role.toUpperCase()); // assumes JWT includes { id, role }
+            } catch (err) {
+                console.error("Invalid token:", err);
+            }
+        }
+    }, [token]);
+
+    // --- Fetch comments from backend ---
+    const fetchComments = async () => {
+        try {
+            setLoading(true);
+            const response = await axios.post(
+                `${import.meta.env.VITE_BACKEND_URL}/comment/get-by-course`,
+                { courseID: courseId },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            if (response.data.success) {
+                setComments(response.data.comments);
+            }
+        } catch (error) {
+            console.error("Error fetching comments:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (token && courseId) fetchComments();
+    }, [courseId]);
+
+    // --- Add a new comment ---
+    const handleAddComment = async () => {
+        if (!newComment.trim()) return;
+        if (!token) {
+            console.error("Please log in to post a comment.");
+            return;
+        }
+
+        try {
+            const response = await axios.post(
+                `${import.meta.env.VITE_BACKEND_URL}/comment/add`,
+                { courseID: courseId, text: newComment.trim() },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            if (response.data.success) {
+                setNewComment("");
+                fetchComments(); // Refresh comments
+            }
+        } catch (error) {
+            console.error("Error adding comment:", error);
+        }
+    };
+
+    // --- Add a reply (teacher only) ---
+    const handleAddReply = async (commentId) => {
+        if (!replyText.trim()) return;
+        if (!token) {
+            console.error("Please log in to reply.");
+            return;
+        }
+
+        try {
+            const response = await axios.post(
+                `${import.meta.env.VITE_BACKEND_URL}/comment/add-reply`,
+                { commentID: commentId, text: replyText.trim() },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            if (response.data.success) {
+                setReplyText("");
+                setReplyingTo(null);
+                fetchComments(); // Refresh
+            }
+        } catch (error) {
+            console.error("Error adding reply:", error);
+        }
+    };
+
+    return (
+        <div className="bg-gray-50 rounded-2xl p-6 shadow-inner">
+            {/* Add Comment */}
+            <div className="flex flex-col sm:flex-row gap-3 mb-6">
+                <textarea
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Add a public comment..."
+                    className="flex-1 border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none text-gray-800 resize-none"
+                    rows={3}
+                />
+                <button
+                    onClick={handleAddComment}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl font-semibold transition-colors shadow-md self-end sm:self-start"
+                >
+                    Comment
+                </button>
+            </div>
+
+            {/* Comments */}
+            {loading ? (
+                <p className="text-gray-500 italic">Loading comments...</p>
+            ) : comments.length === 0 ? (
+                <p className="text-gray-500 italic">No comments yet. Be the first to comment!</p>
+            ) : (
+                <div className="space-y-6">
+                    {comments.map((comment) => (
+                        <div key={comment._id} className="border-b border-gray-200 pb-4">
+                            <div className="flex items-start gap-3">
+                                <div className="w-10 h-10 bg-blue-500 text-white flex items-center justify-center rounded-full font-bold">
+                                    {comment.userID?.username
+                                        ? comment.userID.username[0].toUpperCase()
+                                        : "U"}
+                                </div>
+                                <div className="flex-1">
+                                    <p className="font-semibold text-gray-900">
+                                        {comment.userID?.username || "Unknown User"}
+                                    </p>
+                                    <p className="text-gray-700">{comment.text}</p>
+
+                                    {/* Only teacher can reply */}
+                                    {role === "TEACHER" && (
+                                        <button
+                                            onClick={() =>
+                                                setReplyingTo(
+                                                    replyingTo === comment._id ? null : comment._id
+                                                )
+                                            }
+                                            className="text-sm text-blue-600 mt-1 hover:underline"
+                                        >
+                                            Reply
+                                        </button>
+                                    )}
+
+                                    {/* Replies */}
+                                    {comment.replies?.length > 0 && (
+                                        <div className="ml-8 mt-3 space-y-2">
+                                            {comment.replies.map((reply) => (
+                                                <div
+                                                    key={reply._id}
+                                                    className="flex items-start gap-3 bg-gray-100 p-3 rounded-xl"
+                                                >
+                                                    <div className="w-8 h-8 bg-gray-400 text-white flex items-center justify-center rounded-full text-sm font-bold">
+                                                        {reply.user?.username
+                                                            ? reply.user.username[0].toUpperCase()
+                                                            : "U"}
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-semibold text-gray-800">
+                                                            {reply.user?.username || "User"}
+                                                        </p>
+                                                        <p className="text-gray-700 text-sm">{reply.text}</p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Reply Box (only for teacher) */}
+                                    {replyingTo === comment._id && role === "TEACHER" && (
+                                        <div className="mt-3 ml-8 flex flex-col sm:flex-row gap-3">
+                                            <input
+                                                value={replyText}
+                                                onChange={(e) => setReplyText(e.target.value)}
+                                                placeholder="Write a reply..."
+                                                className="flex-1 border border-gray-300 rounded-xl p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                            />
+                                            <button
+                                                onClick={() => handleAddReply(comment._id)}
+                                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow"
+                                            >
+                                                Reply
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
 export default TeacherCourse;

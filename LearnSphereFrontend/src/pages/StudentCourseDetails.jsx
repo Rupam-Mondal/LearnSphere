@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { X, PlayCircle, CheckCircle, Clock, ChevronDown, ChevronUp, BookOpen, FileText } from "lucide-react";
-
+import { jwtDecode } from "jwt-decode";
 // Component for the Video Player Modal
 const VideoPlayerModal = ({ videoUrl, onClose }) => {
     // 1. YouTube URL Transformation
@@ -40,16 +40,16 @@ const VideoPlayerModal = ({ videoUrl, onClose }) => {
 
 const StudentCourseDetails = () => {
     // NOTE: useParams and other router components are assumed to be available
-    const { id: courseId } = useParams(); 
-    
+    const { id: courseId } = useParams();
+
     const [courseDetails, setCourseDetails] = useState(null);
     const [enrolled, setEnrolled] = useState(false);
-    
+
     // States for Modals
     const [showDemoModal, setShowDemoModal] = useState(false);
     const [showLessonVideoModal, setShowLessonVideoModal] = useState(false);
-    const [currentVideoUrl, setCurrentVideoUrl] = useState(null); 
-    
+    const [currentVideoUrl, setCurrentVideoUrl] = useState(null);
+
     // States for UI
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -87,7 +87,7 @@ const StudentCourseDetails = () => {
 
             if (response.data.success) {
                 // Enrollment successful, refetch data to update the course object if necessary
-                fetchCourseDetails(token); 
+                fetchCourseDetails(token);
             } else {
                 setEnrolled(false);
                 console.error(`Enrollment failed: ${response.data.message}`);
@@ -181,8 +181,8 @@ const StudentCourseDetails = () => {
                     alt={courseDetails.title}
                     className="w-full h-56 sm:h-80 object-cover transform transition-transform duration-500 hover:scale-105"
                     onError={(e) => {
-                         e.target.onerror = null; 
-                         e.target.src = 'https://placehold.co/1200x480/4c4d9e/ffffff?text=Course+Image';
+                        e.target.onerror = null;
+                        e.target.src = 'https://placehold.co/1200x480/4c4d9e/ffffff?text=Course+Image';
                     }}
                 />
                 {courseDetails.demoVideo && (
@@ -229,10 +229,9 @@ const StudentCourseDetails = () => {
                     <div className="flex flex-wrap items-center gap-4 mb-8">
                         <span
                             className={`px-5 py-2 text-base rounded-full font-semibold flex items-center gap-2
-                                ${
-                                    courseDetails.status === "APPROVED"
-                                        ? "bg-green-100 text-green-700 border border-green-300"
-                                        : "bg-yellow-100 text-yellow-700 border border-yellow-300"
+                                ${courseDetails.status === "APPROVED"
+                                    ? "bg-green-100 text-green-700 border border-green-300"
+                                    : "bg-yellow-100 text-yellow-700 border border-yellow-300"
                                 }`}
                         >
                             <CheckCircle className="w-5 h-5" /> Status: {courseDetails.status}
@@ -240,10 +239,9 @@ const StudentCourseDetails = () => {
 
                         <span
                             className={`px-5 py-2 text-base rounded-full font-semibold flex items-center gap-2
-                                ${
-                                    enrolled
-                                        ? "bg-blue-100 text-blue-700 border border-blue-300"
-                                        : "bg-red-100 text-red-700 border border-red-300"
+                                ${enrolled
+                                    ? "bg-blue-100 text-blue-700 border border-blue-300"
+                                    : "bg-red-100 text-red-700 border border-red-300"
                                 }`}
                         >
                             {enrolled ? (
@@ -254,16 +252,16 @@ const StudentCourseDetails = () => {
                             {enrolled ? "You are enrolled" : "Not enrolled"}
                         </span>
                     </div>
+                    
                 </div>
 
                 {/* Actions */}
                 <div className="lg:w-1/3 flex flex-col gap-4">
                     <button
                         className={`w-full py-4 rounded-xl text-white font-bold text-lg shadow-lg
-                            ${
-                                enrolled
-                                    ? "bg-gray-400 cursor-not-allowed"
-                                    : "bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 transform hover:scale-[1.01] transition-all duration-300"
+                            ${enrolled
+                                ? "bg-gray-400 cursor-not-allowed"
+                                : "bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 transform hover:scale-[1.01] transition-all duration-300"
                             }`}
                         disabled={enrolled}
                         onClick={enrollCourse}
@@ -272,7 +270,14 @@ const StudentCourseDetails = () => {
                     </button>
                 </div>
             </div>
-
+            <div>
+                    <div className="mt-10 border-t border-gray-200 pt-6">
+                        <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            💬 Comments
+                        </h2>
+                        <CommentSection courseId={courseId} />
+                    </div>
+            </div>
             {/* Lesson List (Enrollment Protected) */}
             {enrolled && courseDetails.lessons && courseDetails.lessons.length > 0 && (
                 <div className="mt-12">
@@ -303,44 +308,44 @@ const StudentCourseDetails = () => {
                                     <div className="p-5 bg-white border-t border-gray-200">
                                         {lesson.videoUrl ? (
                                             <ul className="space-y-4">
-                                                
-                                                        {lesson.videoUrl ? (
-                                                            <>
-                                                                {/* Video Resource Display */}
-                                                                <div className="flex items-center gap-3 flex-1">
-                                                                    <PlayCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-                                                                    <span className="text-gray-800 font-medium truncate">
-                                                                        {lesson.title || `Video ${index + 1}`}
-                                                                    </span>
-                                                                </div>
-                                                                
-                                                                {/* Show Video Button */}
-                                                                <button
-                                                                    onClick={() => openLessonVideo(lesson.videoUrl)}
-                                                                    className="flex items-center gap-1 px-4 py-2 text-sm bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors shadow-md transform hover:scale-[1.03] flex-shrink-0 mt-2 sm:mt-0"
-                                                                >
-                                                                    <PlayCircle className="w-4 h-4" />
-                                                                    Show Video
-                                                                </button>
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                {/* General File/Link Resource Display */}
-                                                                <div className="flex items-center gap-3 flex-1">
-                                                                    <FileText className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                                                                    <a 
-                                                                        href={lesson.otherUrl || "#"} 
-                                                                        target="_blank" 
-                                                                        rel="noopener noreferrer"
-                                                                        className="text-blue-700 hover:text-blue-800 font-medium truncate"
-                                                                    >
-                                                                        {lesson.title || `Resource Link ${resIndex + 1}`}
-                                                                    </a>
-                                                                </div>
-                                                                <span className="text-sm text-gray-500 flex-shrink-0">Document/Link</span>
-                                                            </>
-                                                        )}
-                                                    {/* </li>
+
+                                                {lesson.videoUrl ? (
+                                                    <>
+                                                        {/* Video Resource Display */}
+                                                        <div className="flex items-center gap-3 flex-1">
+                                                            <PlayCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+                                                            <span className="text-gray-800 font-medium truncate">
+                                                                {lesson.title || `Video ${index + 1}`}
+                                                            </span>
+                                                        </div>
+
+                                                        {/* Show Video Button */}
+                                                        <button
+                                                            onClick={() => openLessonVideo(lesson.videoUrl)}
+                                                            className="flex items-center gap-1 px-4 py-2 text-sm bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors shadow-md transform hover:scale-[1.03] flex-shrink-0 mt-2 sm:mt-0"
+                                                        >
+                                                            <PlayCircle className="w-4 h-4" />
+                                                            Show Video
+                                                        </button>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        {/* General File/Link Resource Display */}
+                                                        <div className="flex items-center gap-3 flex-1">
+                                                            <FileText className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                                                            <a
+                                                                href={lesson.otherUrl || "#"}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="text-blue-700 hover:text-blue-800 font-medium truncate"
+                                                            >
+                                                                {lesson.title || `Resource Link ${resIndex + 1}`}
+                                                            </a>
+                                                        </div>
+                                                        <span className="text-sm text-gray-500 flex-shrink-0">Document/Link</span>
+                                                    </>
+                                                )}
+                                                {/* </li>
                                                 ))} */}
                                             </ul>
                                         ) : (
@@ -356,7 +361,7 @@ const StudentCourseDetails = () => {
 
             {/* Demo Video Modal */}
             {showDemoModal && (
-                <VideoPlayerModal 
+                <VideoPlayerModal
                     videoUrl={courseDetails.demoVideo}
                     onClose={() => setShowDemoModal(false)}
                 />
@@ -364,10 +369,210 @@ const StudentCourseDetails = () => {
 
             {/* Lesson Video Modal */}
             {showLessonVideoModal && currentVideoUrl && (
-                <VideoPlayerModal 
+                <VideoPlayerModal
                     videoUrl={currentVideoUrl}
                     onClose={() => setShowLessonVideoModal(false)}
                 />
+            )}
+        </div>
+    );
+};
+
+const CommentSection = ({ courseId }) => {
+    const [comments, setComments] = useState([]);
+    const [newComment, setNewComment] = useState("");
+    const [replyingTo, setReplyingTo] = useState(null);
+    const [replyText, setReplyText] = useState("");
+    const [loading, setLoading] = useState(true);
+    const [userRole, setUserRole] = useState(null);
+
+    const token = localStorage.getItem("token");
+
+    // --- Decode token to get user role ---
+    useEffect(() => {
+        if (token) {
+            try {
+                const decoded = jwtDecode(token);
+                setUserRole(decoded.role); // assumes JWT includes { id, role }
+            } catch (err) {
+                console.error("Invalid token:", err);
+            }
+        }
+    }, [token]);
+
+    // --- Fetch comments from backend ---
+    const fetchComments = async () => {
+        try {
+            setLoading(true);
+            const response = await axios.post(
+                `${import.meta.env.VITE_BACKEND_URL}/comment/get-by-course`,
+                { courseID: courseId },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            if (response.data.success) {
+                setComments(response.data.comments);
+            }
+        } catch (error) {
+            console.error("Error fetching comments:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (token && courseId) fetchComments();
+    }, [courseId]);
+
+    // --- Add a new comment ---
+    const handleAddComment = async () => {
+        if (!newComment.trim()) return;
+        if (!token) {
+            console.error("Please log in to post a comment.");
+            return;
+        }
+
+        try {
+            const response = await axios.post(
+                `${import.meta.env.VITE_BACKEND_URL}/comment/add`,
+                { courseID: courseId, text: newComment.trim() },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            if (response.data.success) {
+                setNewComment("");
+                fetchComments(); // Refresh comments
+            }
+        } catch (error) {
+            console.error("Error adding comment:", error);
+        }
+    };
+
+    // --- Add a reply (teacher only) ---
+    const handleAddReply = async (commentId) => {
+        if (!replyText.trim()) return;
+        if (!token) {
+            console.error("Please log in to reply.");
+            return;
+        }
+
+        try {
+            const response = await axios.post(
+                `${import.meta.env.VITE_BACKEND_URL}/comment/add-reply`,
+                { commentID: commentId, text: replyText.trim() },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            if (response.data.success) {
+                setReplyText("");
+                setReplyingTo(null);
+                fetchComments(); // Refresh
+            }
+        } catch (error) {
+            console.error("Error adding reply:", error);
+        }
+    };
+
+    return (
+        <div className="bg-gray-50 rounded-2xl p-6 shadow-inner">
+            {/* Add Comment */}
+            <div className="flex flex-col sm:flex-row gap-3 mb-6">
+                <textarea
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Add a public comment..."
+                    className="flex-1 border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none text-gray-800 resize-none"
+                    rows={3}
+                />
+                <button
+                    onClick={handleAddComment}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl font-semibold transition-colors shadow-md self-end sm:self-start"
+                >
+                    Comment
+                </button>
+            </div>
+
+            {/* Comments */}
+            {loading ? (
+                <p className="text-gray-500 italic">Loading comments...</p>
+            ) : comments.length === 0 ? (
+                <p className="text-gray-500 italic">No comments yet. Be the first to comment!</p>
+            ) : (
+                <div className="space-y-6">
+                    {comments.map((comment) => (
+                        <div key={comment._id} className="border-b border-gray-200 pb-4">
+                            <div className="flex items-start gap-3">
+                                <div className="w-10 h-10 bg-blue-500 text-white flex items-center justify-center rounded-full font-bold">
+                                    {comment.userID?.username
+                                        ? comment.userID.username[0].toUpperCase()
+                                        : "U"}
+                                </div>
+                                <div className="flex-1">
+                                    <p className="font-semibold text-gray-900">
+                                        {comment.userID?.username || "Unknown User"}
+                                    </p>
+                                    <p className="text-gray-700">{comment.text}</p>
+
+                                    {/* Only teacher can reply */}
+                                    {userRole === "teacher" && (
+                                        <button
+                                            onClick={() =>
+                                                setReplyingTo(
+                                                    replyingTo === comment._id ? null : comment._id
+                                                )
+                                            }
+                                            className="text-sm text-blue-600 mt-1 hover:underline"
+                                        >
+                                            Reply
+                                        </button>
+                                    )}
+
+                                    {/* Replies */}
+                                    {comment.replies?.length > 0 && (
+                                        <div className="ml-8 mt-3 space-y-2">
+                                            {comment.replies.map((reply) => (
+                                                <div
+                                                    key={reply._id}
+                                                    className="flex items-start gap-3 bg-gray-100 p-3 rounded-xl"
+                                                >
+                                                    <div className="w-8 h-8 bg-gray-400 text-white flex items-center justify-center rounded-full text-sm font-bold">
+                                                        {reply.user?.username
+                                                            ? reply.user.username[0].toUpperCase()
+                                                            : "U"}
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-semibold text-gray-800">
+                                                            {reply.user?.username || "User"}
+                                                        </p>
+                                                        <p className="text-gray-700 text-sm">{reply.text}</p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Reply Box (only for teacher) */}
+                                    {replyingTo === comment._id && userRole === "teacher" && (
+                                        <div className="mt-3 ml-8 flex flex-col sm:flex-row gap-3">
+                                            <input
+                                                value={replyText}
+                                                onChange={(e) => setReplyText(e.target.value)}
+                                                placeholder="Write a reply..."
+                                                className="flex-1 border border-gray-300 rounded-xl p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                            />
+                                            <button
+                                                onClick={() => handleAddReply(comment._id)}
+                                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow"
+                                            >
+                                                Reply
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             )}
         </div>
     );
