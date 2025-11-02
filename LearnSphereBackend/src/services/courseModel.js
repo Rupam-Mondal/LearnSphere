@@ -33,11 +33,11 @@ const courseSchema = new mongoose.Schema({
   ],
   lessons: [
     {
-      title: {
-        type: String,
+      videoId:{
+        type: String, //courseID+video{number}
         required: true,
       },
-      content: {
+      title: {
         type: String,
         required: true,
       },

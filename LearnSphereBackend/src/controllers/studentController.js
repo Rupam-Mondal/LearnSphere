@@ -124,19 +124,15 @@ const enrollCourse = async (req, res) => {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
     } catch (jwtError) {
       if (jwtError.name === "TokenExpiredError") {
-        return res
-          .status(401)
-          .json({
-            success: false,
-            message: "Token expired. Please log in again.",
-          });
-      }
-      return res
-        .status(401)
-        .json({
+        return res.status(401).json({
           success: false,
-          message: "Invalid token. Please log in again.",
+          message: "Token expired. Please log in again.",
         });
+      }
+      return res.status(401).json({
+        success: false,
+        message: "Invalid token. Please log in again.",
+      });
     }
 
     const studentId = decoded.id;
@@ -159,12 +155,10 @@ const enrollCourse = async (req, res) => {
     }
 
     if (course.students.includes(studentId)) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "You are already enrolled in this course.",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "You are already enrolled in this course.",
+      });
     }
 
     course.students.push(studentId);
@@ -177,13 +171,98 @@ const enrollCourse = async (req, res) => {
       .json({ success: true, message: "Successfully enrolled in the course." });
   } catch (error) {
     console.error("Error enrolling in course:", error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Internal Server Error during enrollment.",
-      });
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error during enrollment.",
+    });
   }
 };
 
-export { getAllCourse, getCourseDetails, enrollCourse };
+const getInfo = async (req, res) => {
+  const { studentId } = req.body;
+  try {
+    if (!studentId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Student ID is required" });
+    } else {
+      const student = await User.findById(studentId);
+      if (!student || student.role !== "STUDENT") {
+        return res
+          .status(403)
+          .json({ success: false, message: "Unauthorized access" });
+      }
+      return res.status(200).json({ success: true, student });
+    }
+  } catch (error) {
+    console.error("Error fetching student info:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+async function GetUserRegisteredCourse(req, res) {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Unauthorized access" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const studentId = decoded.id;
+    if (!studentId) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Unauthorized access" });
+    }
+    const user = await User.findById(studentId).populate("courses");
+    const registeredCourses = user.courses;
+    return res.json({
+      success: true,
+      registeredCourses,
+    });
+  } catch (error) {
+    return res.json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+}
+
+const getTeacherName = async (req, res) => {
+  try {
+    const { teacherId } = req.body;
+    if (!teacherId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Teacher ID is required" });
+    }
+    const teacher = await User.findById(teacherId);
+    if (!teacher || teacher.role !== "TEACHER") {
+      return res
+        .status(404)
+        .json({ success: false, message: "Teacher not found" });
+    }
+    return res
+      .status(200)
+      .json({ success: true, teacherName: teacher.username });
+  } catch (error) {
+    console.error("Error fetching teacher name:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+export {
+  getAllCourse,
+  getCourseDetails,
+  enrollCourse,
+  getInfo,
+  GetUserRegisteredCourse,
+  getTeacherName
+};
