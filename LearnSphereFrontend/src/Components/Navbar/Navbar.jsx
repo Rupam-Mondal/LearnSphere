@@ -34,16 +34,16 @@ function Navbar() {
         <div className="text-xl font-bold text-[#59168B]">LearnSphere</div>
 
         <div className="flex-1 flex justify-center space-x-10 text-gray-700 font-medium">
-          <button className="hover:text-black">Home</button>
+          <button className="hover:text-black cursor-pointer">Home</button>
           <button
-            className="hover:text-black"
+            className="hover:text-black cursor-pointer"
             onClick={() => {
               navigate(`/student/feed/${user.id}`);
             }}
           >
             Feed
           </button>
-          <button className="hover:text-black">Practice</button>
+          <button className="hover:text-black cursor-pointer">Practice</button>
           {token && user && user.role === "TEACHER" ? (
             <button
               className="hover:text-black"
@@ -55,16 +55,16 @@ function Navbar() {
             </button>
           ) : token && user && user.role === "STUDENT" ? (
             <button
-              className="hover:text-black"
+              className="hover:text-black cursor-pointer"
               onClick={() => {
-                navigate(`/student/feed/${user.id}`);
+                navigate(`/student/dashboard/${user.id}`);
               }}
             >
               Dashboard
             </button>
           ) : (
             <button
-              className="hover:text-black"
+              className="hover:text-black curssor-pointer"
               onClick={() => {
                 navigate("/auth");
               }}
