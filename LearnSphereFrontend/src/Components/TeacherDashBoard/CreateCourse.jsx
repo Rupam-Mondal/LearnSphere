@@ -145,11 +145,12 @@ const CreateCourse = () => {
           value={coursePrice}
           onChange={(e) => {
             const value = parseInt(e.target.value);
-            if (value >= 1000) {
-              setCoursePrice(value);
-            } else {
-              alert("Price cannot be less than 1000");
-            }
+            setCoursePrice(value);
+            // if (value >= 1000) {
+            //   setCoursePrice(value);
+            // } else {
+            //   alert("Price cannot be less than 1000");
+            // }
           }}
         />
 
