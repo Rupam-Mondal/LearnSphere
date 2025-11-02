@@ -69,6 +69,7 @@ const TeacherCourse = () => {
             token: token,
           }
         );
+        console.log(response.data.course);
         if (response.data.success) {
           setCourse(response.data.course);
         } else {
@@ -240,7 +241,7 @@ const TeacherCourse = () => {
                   Modules/Videos
                 </p>
                 <p className="text-5xl font-extrabold text-purple-700 mt-2">
-                  {course.modules?.length || 0}
+                  {course.lessons?.length || 0}
                 </p>
               </div>
             </div>
