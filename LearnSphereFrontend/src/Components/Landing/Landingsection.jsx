@@ -1,11 +1,48 @@
 import "./Float.css";
-
+import { useState } from "react";
 function LandingSection() {
   const content = ["Supercharge your", "Learning preparation", "With AI"];
   const subcontent = [
     "Learn and practice with AI-powered learning platform, accelerating your skills for real-world success.",
     "Track progress, and personalize your learning.",
   ];
+  const [showForm, setShowForm] = useState(false);
+  const [result, setResult] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const onSubmit = async (event) => {
+    event.preventDefault();
+    setLoading(true);
+    setResult("");
+    const formData = new FormData(event.target);
+    formData.append("access_key", import.meta.env.VITE_EMAIL_API_KEY);
+
+    try {
+      const response = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setResult("✅ Message Sent Successfully");
+        event.target.reset(); 
+
+        setTimeout(() => {
+          setShowForm(false);
+          setResult("");
+        }, 2000);
+      } else {
+        setResult("❌ Error Sending Message");
+      }
+    } catch (err) {
+      setResult("❌ Network Error");
+    } finally {
+      setLoading(false);
+    }
+
+  };
 
   return (
     <div className="w-full relative flex flex-col justify-center items-center text-center mt-10 px-4 max-w-screen-xl mx-auto">
@@ -14,9 +51,8 @@ function LandingSection() {
         {content.map((line, index) => (
           <h1
             key={index}
-            className={`text-3xl md:text-6xl font-bold ${
-              index === 2 ? "text-[#7F00FF]" : "text-zinc-300"
-            }`}
+            className={`text-3xl md:text-6xl font-bold ${index === 2 ? "text-[#7F00FF]" : "text-zinc-300"
+              }`}
           >
             {line}
           </h1>
@@ -39,7 +75,7 @@ function LandingSection() {
         <div className="py-2 px-5 font-semibold cursor-pointer text-white bg-[#6E56F9] rounded-lg">
           Start Your Journey
         </div>
-        <div className="bg-[#405980] font-semibold cursor-pointer py-2 px-5 text-white rounded-lg">
+        <div className="bg-[#405980] font-semibold cursor-pointer py-2 px-5 text-white rounded-lg" onClick={() => setShowForm(true)}>
           Contact Us
         </div>
       </div>
@@ -148,6 +184,85 @@ function LandingSection() {
           </div>
         </div>
       </div>
+      {/* Contact Form Modal */}
+      {showForm && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 animate-fadeIn">
+          <div className="bg-white rounded-xl shadow-xl w- sm:w-[400px] p-6 relative">
+            <button
+              className="absolute top-4 right-3 hover:text-gray-700 bg-[#7F00FF] text-white rounded-md px-3 py-1"
+              onClick={() => {
+                setShowForm(false);
+                setResult("");
+              }}
+            >
+              ✕
+            </button>
+
+            <h2 className="text-2xl font-semibold mb-4 text-center text-gray-700">
+              Contact Us
+            </h2>
+
+            <form onSubmit={onSubmit} className="flex flex-col gap-3" onKeyDown={(e) => {
+              if (e.key === "Enter") e.target.form.requestSubmit();
+            }}>
+              <input
+                type="text"
+                name="name"
+                placeholder="Full Name"
+                required
+                className="border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-[#7F00FF]"
+              />
+              <input
+                type="email"
+                name="email"
+                placeholder="Email Address"
+                required
+                className="border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-[#7F00FF]"
+              />
+              <input
+                type="tel"
+                name="mobile"
+                placeholder="Mobile Number"
+                required
+                className="border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-[#7F00FF]"
+              />
+              <textarea
+                name="message"
+                placeholder="Your Query"
+                required
+                className="border border-gray-300 rounded-lg p-2 h-24 focus:outline-none focus:ring-2 focus:ring-[#7F00FF]"
+              ></textarea>
+              <button
+                type="submit"
+                disabled={loading}
+                className={`flex justify-center items-center gap-2 bg-[#7F00FF] text-white py-2 rounded-lg font-semibold transition ${
+                  loading ? "opacity-70 cursor-not-allowed" : "hover:bg-[#6e00e0]"
+                }`}
+              >
+                {loading ? (
+                  <>
+                    <span className="loader border-2 border-t-transparent border-white rounded-full w-4 h-4 animate-spin"></span>
+                    Sending...
+                  </>
+                ) : (
+                  "Submit"
+                )}
+              </button>
+
+              {result && (
+                <p
+                  className={`text-center text-sm font-medium ${result.includes("Success")
+                      ? "text-green-600"
+                      : "text-red-600"
+                    }`}
+                >
+                  {result}
+                </p>
+              )}
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
