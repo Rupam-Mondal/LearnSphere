@@ -491,14 +491,11 @@ const StudentCourseDetails = () => {
                                                 ))} */}
                         </ul>
                       ) : (
-                        
-                          <p className="text-gray-500 italic p-3">
-                            No resources available for this lesson.
-                          </p>
-                        
+                        <p className="text-gray-500 italic p-3">
+                          No resources available for this lesson.
+                        </p>
                       )}
-                      {
-                        lesson.resources.length > 0 ? (
+                      {lesson.resources.length > 0 ? (
                         <ul className="space-y-4">
                           {lesson.resources.map((resource, resIndex) => (
                             <li key={resIndex}>
@@ -510,18 +507,19 @@ const StudentCourseDetails = () => {
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="text-blue-700 hover:text-blue-800 font-medium truncate"
-                                > click here to view resource
+                                >
+                                  {" "}
+                                  click here to view resource
                                 </a>
                               </div>
                             </li>
                           ))}
                         </ul>
-                                
-                        ):( 
-                          <p className="text-gray-500 italic p-3">
-                            No additional resources available for this lesson.
-                          </p>
-                        )}
+                      ) : (
+                        <p className="text-gray-500 italic p-3">
+                          No additional resources available for this lesson.
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>
