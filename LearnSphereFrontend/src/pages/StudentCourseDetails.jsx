@@ -12,6 +12,7 @@ import {
   FileText,
 } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
+import toast from "react-hot-toast";
 // Component for the Video Player Modal
 const VideoPlayerModal = ({ videoUrl, onClose }) => {
   // 1. YouTube URL Transformation
@@ -66,6 +67,31 @@ const StudentCourseDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [openLessonIndex, setOpenLessonIndex] = useState(null);
+  const [completedLessons, setCompletedLessons] = useState([]);
+  const [clickedMark, setClickedMark] = useState(false);
+
+  useEffect(() => {
+    const fetchProgress = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      try {
+        const response = await axios.post(
+          `${import.meta.env.VITE_BACKEND_URL}/student/check-progress`,
+          { token: token, courseId: courseId }
+        );
+        if (response.data.success) {
+          const completed = response.data.completedLessons.map(
+            (lesson) => lesson.videoId
+          );
+          setCompletedLessons(completed);
+        }
+      } catch (error) {
+        console.error("Error fetching progress:", error);
+      }
+    };
+    fetchProgress();
+  }, [courseId, clickedMark === true]);
 
   const toggleLesson = (index) => {
     setOpenLessonIndex(openLessonIndex === index ? null : index);
@@ -80,8 +106,7 @@ const StudentCourseDetails = () => {
   const enrollCourse = async () => {
     const token = localStorage.getItem("token");
     if (!token) {
-      // Using console.error instead of alert based on instructions
-      console.error("Please log in to enroll in the course.");
+      toast.error("Please log in to enroll in the course.");
       return;
     }
 
@@ -128,6 +153,8 @@ const StudentCourseDetails = () => {
         }
       );
 
+      console.log("Course Details Response:", response.data);
+
       if (response.data.success) {
         setCourseDetails(response.data.course);
         setEnrolled(response.data.enrolled);
@@ -140,6 +167,35 @@ const StudentCourseDetails = () => {
       setLoading(false);
     }
   };
+
+  async function makeItMark(courseId, videoId) {
+    setClickedMark(true);
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("Please log in to mark the lesson as completed.");
+      return;
+    }
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/student/mark-as-done`,
+        {
+          token: token,
+          courseId: courseId,
+          videoId: videoId,
+        }
+      );
+
+      if (response.data.success) {
+        toast.success("Lesson marked as completed");
+      } else {
+        toast.error(`Failed to mark lesson: ${response.data.message}`);
+      }
+    } catch (error) {
+      toast.error("An error occurred while marking the lesson.");
+    } finally {
+      setClickedMark(false);
+    }
+  }
 
   useEffect(() => {
     setLoading(true);
@@ -297,6 +353,43 @@ const StudentCourseDetails = () => {
               <BookOpen className="w-8 h-8 text-blue-600" /> Course Content
             </h2>
             <div className="space-y-3">
+              <div className="w-full max-w-md">
+                <div className="flex justify-between mb-1">
+                  <span className="text-sm font-medium text-gray-700">
+                    Progress
+                  </span>
+                  <span className="text-sm font-medium text-gray-700">
+                    {completedLessons.length}/{courseDetails.lessons.length}
+                  </span>
+                </div>
+
+                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                  <div
+                    className="bg-green-500 h-3 rounded-full transition-all duration-500"
+                    style={{
+                      width: `${
+                        courseDetails.lessons.length > 0
+                          ? (completedLessons.length /
+                              courseDetails.lessons.length) *
+                            100
+                          : 0
+                      }%`,
+                    }}
+                  ></div>
+                </div>
+
+                <p className="text-xs text-gray-500 mt-1 font-medium">
+                  {Math.round(
+                    courseDetails.lessons.length > 0
+                      ? (completedLessons.length /
+                          courseDetails.lessons.length) *
+                          100
+                      : 0
+                  )}
+                  % Completed
+                </p>
+              </div>
+
               {courseDetails.lessons.map((lesson, index) => (
                 <div
                   key={index}
@@ -314,10 +407,13 @@ const StudentCourseDetails = () => {
                   >
                     <span className="text-lg font-semibold text-gray-800 flex-1">
                       <span className="text-blue-600 mr-2">
-                        Module {index + 1}:
+                        Lecture {index + 1}:
                       </span>{" "}
                       {lesson.title}
                     </span>
+                    {completedLessons.includes(lesson.videoId) && (
+                      <CheckCircle className="w-6 h-6 text-green-600" />
+                    )}
                     {openLessonIndex === index ? (
                       <ChevronUp className="w-6 h-6 text-blue-600" />
                     ) : (
@@ -331,24 +427,46 @@ const StudentCourseDetails = () => {
                       {lesson.videoUrl ? (
                         <ul className="space-y-4">
                           {lesson.videoUrl ? (
-                            <>
+                            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 border rounded-xl bg-white shadow-sm">
                               {/* Video Resource Display */}
                               <div className="flex items-center gap-3 flex-1">
-                                <PlayCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-                                <span className="text-gray-800 font-medium truncate">
+                                <PlayCircle className="w-6 h-6 text-red-600 flex-shrink-0" />
+                                <span className="text-gray-900 font-semibold text-sm sm:text-base truncate">
                                   {lesson.title || `Video ${index + 1}`}
                                 </span>
                               </div>
 
-                              {/* Show Video Button */}
-                              <button
-                                onClick={() => openLessonVideo(lesson.videoUrl)}
-                                className="flex items-center gap-1 px-4 py-2 text-sm bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors shadow-md transform hover:scale-[1.03] flex-shrink-0 mt-2 sm:mt-0"
-                              >
-                                <PlayCircle className="w-4 h-4" />
-                                Show Video
-                              </button>
-                            </>
+                              {/* Buttons Section */}
+                              <div className="flex flex-row md:flex-col items-center gap-3 w-full md:w-auto">
+                                <button
+                                  onClick={() =>
+                                    openLessonVideo(lesson.videoUrl)
+                                  }
+                                  className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-full hover:bg-red-700 transition-all shadow-md hover:shadow-lg w-full md:w-auto"
+                                >
+                                  <PlayCircle className="w-4 h-4" />
+                                  Show Video
+                                </button>
+
+                                {completedLessons.includes(lesson.videoId) ? (
+                                  <button
+                                    disabled
+                                    className="px-4 py-2 text-sm font-medium rounded-full hover:bg-gray-500 transition-all shadow-sm hover:shadow w-full md:w-auto bg-gray-500 text-white hover:text-white cursor-not-allowed flex items-center justify-center gap-2"
+                                  >
+                                    Mark as Done
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => {
+                                      makeItMark(courseId, lesson.videoId);
+                                    }}
+                                    className="px-4 py-2 text-sm font-medium rounded-full hover:bg-gray-100 transition-all shadow-sm hover:shadow w-full md:w-auto bg-blue-500 text-white hover:text-black cursor-pointer flex items-center justify-center gap-2"
+                                  >
+                                    Mark as Done
+                                  </button>
+                                )}
+                              </div>
+                            </div>
                           ) : (
                             <>
                               {/* General File/Link Resource Display */}
@@ -373,10 +491,37 @@ const StudentCourseDetails = () => {
                                                 ))} */}
                         </ul>
                       ) : (
-                        <p className="text-gray-500 italic p-3">
-                          No resources available for this lesson.
-                        </p>
+                        
+                          <p className="text-gray-500 italic p-3">
+                            No resources available for this lesson.
+                          </p>
+                        
                       )}
+                      {
+                        lesson.resources.length > 0 ? (
+                        <ul className="space-y-4">
+                          {lesson.resources.map((resource, resIndex) => (
+                            <li key={resIndex}>
+                              {/* General File/Link Resource Display */}
+                              <div className="flex items-center gap-3 flex-1">
+                                <FileText className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                                <a
+                                  href={resource || "#"}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-700 hover:text-blue-800 font-medium truncate"
+                                > click here to view resource
+                                </a>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                                
+                        ):( 
+                          <p className="text-gray-500 italic p-3">
+                            No additional resources available for this lesson.
+                          </p>
+                        )}
                     </div>
                   )}
                 </div>
@@ -384,6 +529,25 @@ const StudentCourseDetails = () => {
             </div>
           </div>
         )}
+
+      {courseDetails.lessons.length > 0 &&
+        (completedLessons.length / courseDetails.lessons.length) * 100 ===
+          100 && (
+          <div className="mt-10 p-6 bg-green-100 border border-green-300 rounded-2xl text-center">
+            <h2 className="text-2xl font-bold text-green-800 mb-2">
+              🎉 Congratulations You have Completed the Course! 🎉
+            </h2>
+            <p className="text-green-700">
+              {" "}
+              You are now eligible for the virtual interview, and you will
+              receive your certificate once you pass.{" "}
+            </p>
+            <button className="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+              Proceed to Virtual Interview
+            </button>
+          </div>
+        )}
+
       {enrolled && (
         <div>
           <div className="mt-10 border-t border-gray-200 pt-6">
