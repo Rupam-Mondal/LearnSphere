@@ -19,12 +19,13 @@ const Login = () => {
       console.log(res.data);
       if (res.data.success) {
         localStorage.setItem("token", res.data.token);
+        toast.success("Login successful!");
         navigate("/dashboard");
       } else {
-        alert("Login failed. Please try again.");
+        toast.error("Login failed. Please try again.");
       }
     } catch (error) {
-      alert("Log in Failed. Please try again.");
+      toast.error("Log in Failed. Please try again.");
     }
   };
 

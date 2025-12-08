@@ -59,13 +59,14 @@ const Dashboard = () => {
       const data = response.data;
       if (data.success) {
         setCourses(courses.filter((course) => course._id !== courseId));
+        toast.success("Course approved successfully!");
       } else {
         console.error("Failed to approve course:", data.message);
-        alert(`Failed to approve course: ${data.message}`); 
+        toast.error(`Failed to approve course: ${data.message}`); 
       }
     } catch (error) {
       console.error("Error approving course:", error);
-      alert("An error occurred while approving the course.");
+      toast.error("An error occurred while approving the course.");
     }
   };
 
@@ -78,13 +79,14 @@ const Dashboard = () => {
       const data = response.data;
       if (data.success) {
         setCourses(courses.filter((course) => course._id !== courseId));
+        toast.success("Course rejected successfully!");
       } else {
         console.error("Failed to reject course:", data.message);
-        alert(`Failed to reject course: ${data.message}`); 
+        toast.error(`Failed to reject course: ${data.message}`); 
       }
     } catch (error) {
       console.error("Error rejecting course:", error);
-      alert("An error occurred while rejecting the course."); 
+      toast.error("An error occurred while rejecting the course."); 
     }
   };
 
