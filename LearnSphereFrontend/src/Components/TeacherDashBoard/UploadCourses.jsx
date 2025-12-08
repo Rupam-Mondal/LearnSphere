@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Plus, X, Video, List, Loader2, FileText } from "lucide-react";
 import axios from "axios";
+import toast from "react-hot-toast";
 
 const LessonUploaderForm = ({ onClose, onSuccess }) => {
   const [videoUrl, setVideoUrl] = useState("");
@@ -17,7 +18,7 @@ const LessonUploaderForm = ({ onClose, onSuccess }) => {
   // ---- Cloudinary Video Upload ----
   const VideoHandler = async (e) => {
     const file = e.target.files[0];
-    if (!file) return alert("Please select a video file.");
+    if (!file) return toast.error("Please select a video file.");
 
     setUploadingVideo(true);
     setMessage("⏳ Uploading video ...");
@@ -270,7 +271,7 @@ const UploadCourses = ({ course }) => {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        alert("Authentication error: Please sign in again.");
+        toast.error("Authentication error: Please sign in again.");
         return;
       }
 
@@ -286,15 +287,15 @@ const UploadCourses = ({ course }) => {
         setLessons((prev) =>
           prev.filter((lesson) => (lesson._id || lesson.id) !== lessonId)
         );
-        alert("✅ Lesson deleted successfully!");
+        toast.success("✅ Lesson deleted successfully!");
       } else {
-        alert(
+        toast.error(
           `❌ Deletion failed: ${result.data?.message || "Unknown error."}`
         );
       }
     } catch (error) {
       console.error("API Error:", error);
-      alert(
+      toast.error(
         `❌ Failed to delete lesson: ${
           error.message || "Internal network error."
         }`

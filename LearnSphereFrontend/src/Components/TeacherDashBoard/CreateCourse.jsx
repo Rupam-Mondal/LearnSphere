@@ -16,7 +16,7 @@ const CreateCourse = () => {
     setLoading(true);
     const file = e.target.files[0];
     if (!file) {
-      alert("Please select a file");
+      toast.error("Please select a file");
       return;
     }
     console.log(file);
@@ -42,7 +42,7 @@ const CreateCourse = () => {
     setLoading(true);
     const file = e.target.files[0];
     if (!file) {
-      alert("Please select a file");
+      toast.error("Please select a file");
       return;
     }
     console.log(file);
@@ -72,13 +72,13 @@ const CreateCourse = () => {
       setLoading(true);
 
       if (!courseName || !coursePrice || !courseDescription) {
-        alert("Please fill all the fields");
+        toast.error("Please fill all the fields");
         setLoading(false);
         return;
       }
 
       if (coursePrice < 1000) {
-        alert("Price cannot be less than 1000");
+        toast.error("Price cannot be less than 1000");
         setLoading(false);
         return;
       }
@@ -98,7 +98,7 @@ const CreateCourse = () => {
           courseData
         );
 
-        alert("Course created successfully");
+        toast.success("Course created successfully");
         setLoading(false);
         setCourseName("");
         setCoursePrice(1000);
@@ -108,7 +108,7 @@ const CreateCourse = () => {
         navigate("/teacher-dashboard/courses");
       } catch (error) {
         console.error("Error creating course:", error);
-        alert("Failed to create course");
+        toast.error("Failed to create course");
         setLoading(false);
       }
     };
@@ -149,7 +149,7 @@ const CreateCourse = () => {
             // if (value >= 1000) {
             //   setCoursePrice(value);
             // } else {
-            //   alert("Price cannot be less than 1000");
+            //   toast.error("Price cannot be less than 1000");
             // }
           }}
         />

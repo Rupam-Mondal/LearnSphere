@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -17,7 +18,7 @@ const AuthPage = () => {
     setLoading(true);
     const file = e.target.files[0];
     if (!file) {
-      alert("Please select a file");
+      toast.error("Please select a file");
       return;
     }
 
@@ -33,7 +34,7 @@ const AuthPage = () => {
       );
       setProfilePicture(response.data.secure_url);
     } catch (error) {
-      alert("Upload failed");
+      toast.error("Upload failed");
     }
 
     setLoading(false);
@@ -54,15 +55,15 @@ const AuthPage = () => {
       );
 
       if (response.data.success) {
-        alert(response.data.message);
+        toast.success(response.data.message);
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("user", JSON.stringify(response.data.user));
         navigate("/");
       } else {
-        alert(response.data.error || "Registration failed");
+        toast.error(response.data.error || "Registration failed");
       }
     } catch (error) {
-      alert("Registration failed. User AlreaDY exists or some credentials missed.");
+      toast.error("Registration failed. User AlreaDY exists or some credentials missed.");
     }
   };
 
@@ -78,15 +79,15 @@ const AuthPage = () => {
       );
 
       if (response.data.success) {
-        alert(response.data.message);
+        toast.success(response.data.message);
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("user", JSON.stringify(response.data.user));
         navigate("/");
       } else {
-        alert(response.data.error || "Login failed");
+        toast.error(response.data.error || "Login failed");
       }
     } catch (error) {
-      alert("Login failed. Please check your credentials.");
+      toast.error("Login failed. Please check your credentials.");
     }
   };
 
