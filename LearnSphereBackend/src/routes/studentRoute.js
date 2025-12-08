@@ -6,6 +6,8 @@ import {
   getInfo,
   GetUserRegisteredCourse,
   getTeacherName,
+  markAsDone,
+  checkForProgress,
 } from "../controllers/studentController.js";
 
 const studentRouter = express.Router();
@@ -16,5 +18,7 @@ studentRouter.post("/enroll-course", enrollCourse);
 studentRouter.post("/get-info", getInfo);
 studentRouter.post('/my-courses', GetUserRegisteredCourse);
 studentRouter.post('/get-teacher-name', getTeacherName);
+studentRouter.post("/mark-as-done", markAsDone);
+studentRouter.post("/check-progress", checkForProgress);
 
 export default studentRouter;

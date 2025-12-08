@@ -1,6 +1,7 @@
 import Course from "../services/courseModel.js";
+import Progress from "../services/Progress.js";
 import User from "../services/userModel.js";
-import jwt from "jsonwebtoken";
+import jwt, { decode } from "jsonwebtoken";
 
 const getTokenFromHeader = (req) => {
   const authHeader = req.headers.authorization;
@@ -258,11 +259,120 @@ const getTeacherName = async (req, res) => {
   }
 };
 
+const markAsDone = async (req, res) => {
+  const { token, courseId, videoId } = req.body;
+  try {
+    if (!token || !courseId || !videoId) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Token, Course ID, and Video ID are required",
+        });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    if (!decoded) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Unauthorized access" });
+    }
+    if (decoded.role !== "STUDENT") {
+      return res
+        .status(403)
+        .json({ success: false, message: "Forbidden: Access is denied" });
+    }
+    const studentId = decoded.id;
+
+    const progress = await Progress.findOne({
+      userId: studentId,
+      courseId: courseId,
+    });
+
+    if (progress) {
+      if (
+        !progress.completedLessons.some((lesson) => lesson.videoId === videoId)
+      ) {
+        progress.completedLessons.push({ videoId });
+        await progress.save();
+      }
+    } else {
+      const newProgress = new Progress({
+        userId: studentId,
+        courseId: courseId,
+        completedLessons: [{ videoId }],
+      });
+      await newProgress.save();
+    }
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Lesson marked as done" });
+  } catch (error) {
+    console.error("Error marking lesson as done:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+const checkForProgress =  async (req,res) =>{
+  const {token, courseId} = req.body;
+  try{
+    if (!token || !courseId) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Token and Course ID are required",
+        });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    if (!decoded) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Unauthorized access" });
+    }
+    if (decoded.role !== "STUDENT") {
+      return res
+        .status(403)
+        .json({ success: false, message: "Forbidden: Access is denied" });
+    }
+    const studentId = decoded.id;
+
+    const progress = await Progress.findOne({
+      userId: studentId,
+      courseId: courseId,
+    });
+
+    if (progress) {
+      return res
+        .status(200)
+        .json({ success: true, completedLessons: progress.completedLessons });
+    } else {
+      return res
+        .status(200)
+        .json({ success: true, completedLessons: [] });
+    }
+  }
+  catch(error){
+    console.error("Error checking progress:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
+  }
+}
+
 export {
   getAllCourse,
   getCourseDetails,
   enrollCourse,
   getInfo,
   GetUserRegisteredCourse,
-  getTeacherName
+  getTeacherName,
+  markAsDone,
+  checkForProgress,
 };
