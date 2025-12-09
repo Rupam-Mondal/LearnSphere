@@ -15,6 +15,7 @@ import StudentCourseDetails from "./pages/StudentCourseDetails";
 import StudentDashboard from "./Components/StudentDashboard/StudentDashboard";
 import Practice from "./pages/Practice";
 import Java from "./pages/Java";
+import Oops from "./pages/Oops";
 
 function App() {
   const [bot, setBot] = useState(false);
@@ -56,6 +57,7 @@ function App() {
         <Route path="/student/dashboard/:id" element={<StudentDashboard />} />
         <Route path="/practice" element={<Practice />} />
         <Route path="/practice/Java" element={<Java />} />
+        <Route path="/practice/oops" element={<Oops />} />
       </Routes>
     </div>
   );

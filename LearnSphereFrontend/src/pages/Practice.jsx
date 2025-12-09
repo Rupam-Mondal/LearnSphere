@@ -7,22 +7,6 @@ function Practice() {
 
   const tests = [
     {
-      title: "Stress Interview Test",
-      description:
-        "Simulates high-pressure questions to test your composure and stress handling.",
-      color: "bg-red-50",
-      icon: <FaBrain className="text-red-500 text-3xl" />,
-      route: "/practice/stress-interview",
-    },
-    {
-      title: "Fluency Test",
-      description:
-        "Evaluate your speaking clarity and fluency in real-time scenarios.",
-      color: "bg-green-50",
-      icon: <FaComments className="text-green-500 text-3xl" />,
-      route: "/practice/fluency",
-    },
-    {
       title: "Java Test",
       description:
         "Assess your Java programming skills with practical coding questions.",
@@ -31,12 +15,12 @@ function Practice() {
       route: "/practice/Java",
     },
     {
-      title: "Situational Test",
+      title: "Oops Test",
       description:
-        "Check how well you respond to practical, real-world work situations.",
+        "Evaluate your understanding of Object-Oriented Programming concepts.",
       color: "bg-blue-50",
       icon: <FaUserTie className="text-blue-500 text-3xl" />,
-      route: "/practice/situational",
+      route: "/practice/oops",
     },
   ];
 
