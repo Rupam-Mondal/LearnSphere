@@ -23,12 +23,12 @@ function Practice() {
       route: "/practice/fluency",
     },
     {
-      title: "Demotivation Test",
+      title: "Java Test",
       description:
-        "Tests your ability to stay motivated even in discouraging situations.",
+        "Assess your Java programming skills with practical coding questions.",
       color: "bg-yellow-50",
       icon: <FaSadTear className="text-yellow-500 text-3xl" />,
-      route: "/practice/demotivation",
+      route: "/practice/Java",
     },
     {
       title: "Situational Test",
