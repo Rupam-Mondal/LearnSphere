@@ -13,6 +13,7 @@ import { UserContext } from "./contexts/userContext";
 import StudentFeed from "./pages/StudentFeed";
 import StudentCourseDetails from "./pages/StudentCourseDetails";
 import StudentDashboard from "./Components/StudentDashboard/StudentDashboard";
+import Practice from "./pages/Practice";
 
 function App() {
   const [bot, setBot] = useState(false);
@@ -52,6 +53,7 @@ function App() {
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/teacher-dashboard/:id/course/:courseId" element={<TeacherCourse />} />
         <Route path="/student/dashboard/:id" element={<StudentDashboard />} />
+        <Route path="/practice" element={<Practice />} />
       </Routes>
     </div>
   );

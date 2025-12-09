@@ -43,7 +43,12 @@ function Navbar() {
           >
             Feed
           </button>
-          <button className="hover:text-black cursor-pointer">Practice</button>
+          <button className="hover:text-black cursor-pointer
+          "
+            onClick={() => {
+              navigate("/practice")
+            }}
+          >Practice</button>
           {token && user && user.role === "TEACHER" ? (
             <button
               className="hover:text-black"
