@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import {
   X,
   PlayCircle,
@@ -54,7 +55,7 @@ const VideoPlayerModal = ({ videoUrl, onClose }) => {
 const StudentCourseDetails = () => {
   // NOTE: useParams and other router components are assumed to be available
   const { id: courseId } = useParams();
-
+  const navigate = useNavigate();
   const [courseDetails, setCourseDetails] = useState(null);
   const [enrolled, setEnrolled] = useState(false);
 
@@ -540,7 +541,7 @@ const StudentCourseDetails = () => {
               You are now eligible for the virtual interview, and you will
               receive your certificate once you pass.{" "}
             </p>
-            <button className="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+            <button className="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition" onClick={() => navigate("/practice")}>
               Proceed to Virtual Interview
             </button>
           </div>
