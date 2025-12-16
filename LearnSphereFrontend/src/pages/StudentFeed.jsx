@@ -87,7 +87,7 @@ const StudentFeed = () => {
                   <span className="font-medium">Teacher: {course.teacherName || "Unknown"}</span>
                 </div>
                 <button
-                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-3 rounded-lg font-semibold text-lg shadow-md hover:from-blue-700 hover:to-indigo-800 transition-all duration-300 transform hover:-translate-y-0.5"
+                  className="w-full bg-gradient-to-r cursor-pointer from-blue-600 to-indigo-700 text-white py-3 rounded-lg font-semibold text-lg shadow-md hover:from-blue-700 hover:to-indigo-800 transition-all duration-300 transform hover:-translate-y-0.5"
                   onClick={() => {
                     navigate(`/student/course-details/${course._id}`);
                   }}

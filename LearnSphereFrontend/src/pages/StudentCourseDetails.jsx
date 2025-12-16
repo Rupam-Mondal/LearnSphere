@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import {
   X,
@@ -57,6 +57,7 @@ const StudentCourseDetails = () => {
 
   const [courseDetails, setCourseDetails] = useState(null);
   const [enrolled, setEnrolled] = useState(false);
+  const navigate = useNavigate();
 
   // States for Modals
   const [showDemoModal, setShowDemoModal] = useState(false);
@@ -540,7 +541,11 @@ const StudentCourseDetails = () => {
               You are now eligible for the virtual interview, and you will
               receive your certificate once you pass.{" "}
             </p>
-            <button className="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+            <button
+              onClick={() => {
+                navigate(`/interview/${courseDetails.title.replace(/\s+/g, "-").toLowerCase()}`);
+              }}
+             className="mt-4 cursor-pointer px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
               Proceed to Virtual Interview
             </button>
           </div>
