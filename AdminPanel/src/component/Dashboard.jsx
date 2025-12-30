@@ -23,7 +23,6 @@ const Dashboard = () => {
           import.meta.env.VITE_BACKEND_URL + "/admin/pending-courses"
         );
         const data = response.data; 
-        console.log("Fetched courses:", data.courses);
         if (data.success) {
           setCourses(data.courses);
         } else {
