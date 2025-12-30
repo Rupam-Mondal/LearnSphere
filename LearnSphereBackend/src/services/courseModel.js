@@ -1,6 +1,14 @@
 import mongoose from "mongoose";
 
 const courseSchema = new mongoose.Schema({
+  topic: {
+    type: String,
+    required: true,
+  },
+  topicCover:{
+    type: [String],
+    default: []
+  },
   title: {
     type: String,
     required: true,
@@ -34,7 +42,7 @@ const courseSchema = new mongoose.Schema({
   lessons: [
     {
       videoId:{
-        type: String, //courseID+video{number}
+        type: String,
         required: true,
       },
       title: {

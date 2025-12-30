@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 
 const createCourse = async (req, res) => {
   try {
-    const { title, description, price, thumbnail, token, demoVideo } = req.body;
+    const {topic, title, description, price, thumbnail, token, demoVideo } = req.body;
 
     if (!token) {
         return res
@@ -41,6 +41,7 @@ const createCourse = async (req, res) => {
     }
 
     let newCourse = new Course({
+      topic,
       title,
       description,
       price,
