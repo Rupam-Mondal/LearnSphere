@@ -17,7 +17,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.get("/", (req, res) => {
-  console.log("Received a request at the root endpoint.");
   res.send("Welcome to the LearnSphere Backend!");
 });
 

@@ -26,7 +26,7 @@ const courseSchema = new mongoose.Schema({
   thumbnail: {
     type: String,
     default:
-      "https://instructor-academy.onlinecoursehost.com/content/images/2020/10/react-2.png",
+      "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800",
   },
   teacher: {
     type: mongoose.Schema.Types.ObjectId,

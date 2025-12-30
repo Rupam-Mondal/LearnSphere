@@ -76,7 +76,7 @@ const getCourseDetails = async (req, res) => {
         .json({ success: false, message: "Course ID is required" });
     }
 
-    const course = await Course.findById(courseId);
+    const course = await Course.findById(courseId).populate("lessons teacher");
     if (!course) {
       return res
         .status(404)
