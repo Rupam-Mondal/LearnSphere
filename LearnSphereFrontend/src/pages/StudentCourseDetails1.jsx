@@ -150,8 +150,6 @@ const StudentCourseDetails1 = () => {
         }
       );
 
-      console.log("Course Details Response:", response.data);
-
       if (response.data.success) {
         setCourseDetails(response.data.course);
         setEnrolled(response.data.enrolled);

@@ -19,7 +19,6 @@ const CreateCourse = () => {
       toast.error("Please select a file");
       return;
     }
-    console.log(file);
 
     const form = new FormData();
     form.append("file", file);
@@ -31,7 +30,6 @@ const CreateCourse = () => {
         import.meta.env.VITE_COLUDINARY_URL + "/image/upload",
         form
       );
-      console.log(response.data);
       setCourseThumbnail(response.data.secure_url);
     } catch (error) {}
 
@@ -45,7 +43,6 @@ const CreateCourse = () => {
       toast.error("Please select a file");
       return;
     }
-    console.log(file);
 
     const form = new FormData();
     form.append("file", file);
@@ -57,9 +54,7 @@ const CreateCourse = () => {
         import.meta.env.VITE_COLUDINARY_URL + "/video/upload",
         form
       );
-      console.log(response.data);
       setCourseVideo(response.data.secure_url);
-      // setCourseThumbnail(response.data.secure_url);
     } catch (error) {}
 
     setLoading(false);

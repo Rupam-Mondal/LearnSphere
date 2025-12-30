@@ -69,7 +69,6 @@ const TeacherCourse = () => {
             token: token,
           }
         );
-        console.log(response.data.course);
         if (response.data.success) {
           setCourse(response.data.course);
         } else {

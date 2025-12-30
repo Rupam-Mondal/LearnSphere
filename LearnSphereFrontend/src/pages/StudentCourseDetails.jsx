@@ -146,7 +146,6 @@ const StudentCourseDetails = () => {
         }
       );
 
-      console.log("Course Details Response:", response.data);
 
       if (response.data.success) {
         setCourseDetails(response.data.course);
