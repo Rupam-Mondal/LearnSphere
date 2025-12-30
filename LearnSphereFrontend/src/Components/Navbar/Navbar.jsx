@@ -233,12 +233,20 @@ const Menu = ({ onClose }) => {
           </div>
 
           <div className="flex items-center justify-start px-3 w-full rounded-sm transition-all duration-300 hover:bg-gray-100">
-            <Book className="w-6 h-6 text-gray-600" />
+            <Pencil className="w-6 h-6 text-gray-600" />
+            <MenuItem label="Explore" onClick={() => navigate("/feed")} />
+          </div>
+
+
+          <div className="flex items-center justify-start px-3 w-full rounded-sm transition-all duration-300 hover:bg-gray-100">
             {token && user?.role === "STUDENT" && (
-              <MenuItem
-                label="Dashboard"
-                onClick={() => navigate(`/student/dashboard/${user.id}`)}
-              />
+              <>
+                <Book className="w-6 h-6 text-gray-600" />
+                <MenuItem
+                  label="Dashboard"
+                  onClick={() => navigate(`/student/dashboard/${user.id}`)}
+                />
+              </>
             )}
 
             {token && user?.role === "TEACHER" && (
@@ -253,10 +261,7 @@ const Menu = ({ onClose }) => {
             {token && (
               <>
                 <LogOut className="w-6 h-6 text-red-600" />
-                <MenuItem
-                label="Logout"
-                onClick={handleLogout}
-              />
+                <MenuItem label="Logout" onClick={handleLogout} />
               </>
             )}
           </div>

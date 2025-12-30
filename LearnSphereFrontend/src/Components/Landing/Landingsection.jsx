@@ -1,8 +1,8 @@
 import girl from "../../assets/LandingPic/girl.webp";
 const Landingsection = () => {
   return (
-    <section className="min-h-screen bg-[#f5e9fd] flex items-center justify-center px-5">
-      <div className="max-w-7xl w-full grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+    <section className="min-h-[100vh] bg-[#f5e9fd] flex items-center justify-center px-5">
+      <div className="max-w-7xl w-full mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
         <div className="text-center md:text-left">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight">
             Learn Smarter. <br />

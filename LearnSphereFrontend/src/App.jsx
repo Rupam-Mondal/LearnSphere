@@ -38,7 +38,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/teacher-dashboard/:id" element={<TeacherDashBoard />} />
         <Route
-          path="/student/feed/:id"
+          path="/student/feed"
           element={<StudentFeed />}
         />
         <Route
