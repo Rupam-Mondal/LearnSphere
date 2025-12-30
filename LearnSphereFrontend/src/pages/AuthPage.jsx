@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { UserContext } from "../contexts/userContext";
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -11,6 +12,7 @@ const AuthPage = () => {
   const [role, setRole] = useState("student");
   const [profilePicture, setProfilePicture] = useState("");
   const [loading, setLoading] = useState(false);
+  const {token, setToken,user,setUser}=useContext(UserContext);
 
   const navigate = useNavigate();
 
@@ -58,6 +60,8 @@ const AuthPage = () => {
         toast.success(response.data.message);
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("user", JSON.stringify(response.data.user));
+        setToken(response.data.token);
+        setUser(response.data.user);
         navigate("/");
       } else {
         toast.error(response.data.error || "Registration failed");
@@ -82,6 +86,8 @@ const AuthPage = () => {
         toast.success(response.data.message);
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("user", JSON.stringify(response.data.user));
+        setToken(response.data.token);
+        setUser(response.data.user);
         navigate("/");
       } else {
         toast.error(response.data.error || "Login failed");

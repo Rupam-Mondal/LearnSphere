@@ -11,11 +11,12 @@ import React, { useContext, useEffect, useState } from "react";
 import TeacherCourse from "./Components/TeacherDashBoard/TeacherCourse";
 import { UserContext } from "./contexts/userContext";
 import StudentFeed from "./pages/StudentFeed";
-import StudentCourseDetails from "./pages/StudentCourseDetails";
+import StudentCourseDetails1 from "./pages/StudentCourseDetails1";
 import StudentDashboard from "./Components/StudentDashboard/StudentDashboard";
 import Practice from "./pages/Practice";
 import Java from "./pages/Java";
 import Oops from "./pages/Oops";
+import Navbar from "./Components/Navbar/Navbar";
 
 function App() {
   const [bot, setBot] = useState(false);
@@ -32,6 +33,7 @@ function App() {
   }, [token]);
   return (
     <div className="w-full h-full">
+      <Navbar />
       {bot ? <Bot /> : null}
 
       <Routes>
@@ -43,7 +45,7 @@ function App() {
         />
         <Route
           path="/student/course-details/:id"
-          element={<StudentCourseDetails />}
+          element={<StudentCourseDetails1 />}
         />
 
 

@@ -8,24 +8,9 @@ export default function Navbar() {
   const { token, setToken, user, setUser } = useContext(UserContext);
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 
-  useEffect(() => {
-    const storedToken = localStorage.getItem("token");
-    const storedUser = JSON.parse(localStorage.getItem("user"));
-
-    if (storedUser) {
-      setUser(storedUser);
-    }
-
-    if (storedToken) {
-      setToken(storedToken);
-    } else {
-      setToken(null);
-    }
-  }, []);
-
   const handleLogout = () => {
-    localStorage.removeItem("user");
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
     setUser(null);
     setToken(null);
   };
@@ -45,11 +30,18 @@ export default function Navbar() {
         {isMenuOpen && <Menu onClose={() => setIsMenuOpen(false)} />}
 
         <div className="hidden md:flex flex-1 justify-center space-x-10 text-gray-700 font-medium">
-          <button className="hover:text-black cursor-pointer">Home</button>
+          <button
+            onClick={() => {
+              navigate(`/`);
+            }}
+            className="hover:text-black cursor-pointer"
+          >
+            Home
+          </button>
           <button
             className="hover:text-black cursor-pointer"
             onClick={() => {
-              navigate(`/student/feed/${user.id}`);
+              navigate(`/student/feed`);
             }}
           >
             Feed
@@ -224,19 +216,36 @@ const Menu = ({ onClose }) => {
         <div className="flex flex-col px-6 py-6 gap-3">
           <div className="flex items-center justify-start px-3 w-full rounded-sm transition-all duration-300 hover:bg-gray-100">
             <Home className="w-6 h-6 text-gray-600" />
-            <MenuItem label="Home" onClick={() => navigate("/")} />
+            <MenuItem
+              label="Home"
+              onClick={() => {
+                navigate("/");
+                onClose();
+              }}
+            />
           </div>
 
           <div className="flex items-center justify-start px-3 w-full rounded-sm transition-all duration-300 hover:bg-gray-100">
             <Pencil className="w-6 h-6 text-gray-600" />
-            <MenuItem label="Practice" onClick={() => navigate("/practice")} />
+            <MenuItem
+              label="Practice"
+              onClick={() => {
+                navigate("/practice");
+                onClose();
+              }}
+            />
           </div>
 
           <div className="flex items-center justify-start px-3 w-full rounded-sm transition-all duration-300 hover:bg-gray-100">
             <Pencil className="w-6 h-6 text-gray-600" />
-            <MenuItem label="Explore" onClick={() => navigate("/feed")} />
+            <MenuItem
+              label="Explore"
+              onClick={() => {
+                navigate("/student/feed");
+                onClose();
+              }}
+            />
           </div>
-
 
           <div className="flex items-center justify-start px-3 w-full rounded-sm transition-all duration-300 hover:bg-gray-100">
             {token && user?.role === "STUDENT" && (
@@ -244,7 +253,10 @@ const Menu = ({ onClose }) => {
                 <Book className="w-6 h-6 text-gray-600" />
                 <MenuItem
                   label="Dashboard"
-                  onClick={() => navigate(`/student/dashboard/${user.id}`)}
+                  onClick={() => {
+                    navigate(`/student/dashboard/${user.id}`);
+                    onClose();
+                  }}
                 />
               </>
             )}
@@ -252,7 +264,10 @@ const Menu = ({ onClose }) => {
             {token && user?.role === "TEACHER" && (
               <MenuItem
                 label="Teacher Dashboard"
-                onClick={() => navigate(`/teacher-dashboard/${user.id}`)}
+                onClick={() => {
+                  navigate(`/teacher-dashboard/${user.id}`);
+                  onClose();
+                }}
               />
             )}
           </div>

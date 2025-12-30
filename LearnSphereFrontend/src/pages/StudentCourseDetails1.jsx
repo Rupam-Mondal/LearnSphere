@@ -1,19 +1,24 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import axios from "axios";
 import {
-  X,
-  PlayCircle,
+  BookOpen,
   CheckCircle,
-  Clock,
   ChevronDown,
   ChevronUp,
-  BookOpen,
+  Clock,
   FileText,
+  PlayCircle,
+  Star,
+  Users,
+  Globe,
+  Award,
+  ChevronRight,
+  X,
 } from "lucide-react";
+import axios from "axios";
+import { toast } from "react-hot-toast";
 import { jwtDecode } from "jwt-decode";
-import toast from "react-hot-toast";
-
+import { UserContext } from "../contexts/userContext";
 
 const VideoPlayerModal = ({ videoUrl, onClose }) => {
   const embedUrl = videoUrl
@@ -48,9 +53,8 @@ const VideoPlayerModal = ({ videoUrl, onClose }) => {
   );
 };
 
-const StudentCourseDetails = () => {
+const StudentCourseDetails1 = () => {
   const { id: courseId } = useParams();
-
   const [courseDetails, setCourseDetails] = useState(null);
   const [enrolled, setEnrolled] = useState(false);
   const navigate = useNavigate();
@@ -64,6 +68,7 @@ const StudentCourseDetails = () => {
   const [openLessonIndex, setOpenLessonIndex] = useState(null);
   const [completedLessons, setCompletedLessons] = useState([]);
   const [clickedMark, setClickedMark] = useState(false);
+  const {token} = useContext(UserContext);
 
   useEffect(() => {
     const fetchProgress = async () => {
@@ -98,7 +103,6 @@ const StudentCourseDetails = () => {
   };
 
   const enrollCourse = async () => {
-    const token = localStorage.getItem("token");
     if (!token) {
       toast.error("Please log in to enroll in the course.");
       return;
@@ -194,9 +198,8 @@ const StudentCourseDetails = () => {
     setLoading(true);
     const token = localStorage.getItem("token");
     fetchCourseDetails(token);
-  }, [courseId]); // Re-run when the courseId changes
+  }, [courseId]);
 
-  // --- Loading, Error, and Not Found States ---
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen bg-gray-50">
@@ -231,116 +234,164 @@ const StudentCourseDetails = () => {
     );
   }
 
-  // --- Main Course Details UI ---
   return (
-    <div className="max-w-7xl mx-auto p-4 sm:p-8 md:pt-22 bg-white rounded-3xl shadow-2xl mb-10 font-sans">
-      <div className="relative overflow-hidden rounded-2xl mb-8 shadow-xl">
-        <img
-          src={
-            courseDetails.thumbnail ||
-            "https://placehold.co/1200x480/4c4d9e/ffffff?text=Course+Image"
-          }
-          alt={courseDetails.title}
-          className="w-full h-56 sm:h-80 object-cover transform transition-transform duration-500 hover:scale-105"
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.src =
-              "https://placehold.co/1200x480/4c4d9e/ffffff?text=Course+Image";
-          }}
-        />
-        {courseDetails.demoVideo && (
-          <button
-            onClick={() => setShowDemoModal(true)}
-            className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 text-white text-xl font-semibold opacity-0 hover:opacity-100 transition-opacity duration-300"
-            aria-label="Watch Demo Video"
-          >
-            <PlayCircle className="w-16 h-16 text-white hover:text-purple-300 transition-colors duration-300" />
-          </button>
-        )}
-      </div>
-
-      <div className="flex flex-col lg:flex-row gap-8">
-        <div className="flex-1">
-          <h1 className="text-4xl font-extrabold text-gray-900 mb-2">
-            {courseDetails.title}
-          </h1>
-          <p className="text-lg text-gray-700 mb-6 border-b pb-4">
-            {courseDetails.description}
-          </p>
-
-          {/* Meta Data */}
-          <div className="grid grid-cols-2 gap-6 mb-8 py-4 border-t border-b border-gray-100">
-            <div>
-              <p className="text-sm text-gray-500 font-medium uppercase">
-                Instructor
-              </p>
-              <p className="text-xl font-bold text-gray-800 mt-1">
-                {courseDetails.teacherName}
-              </p>
+    <div className="min-h-screen bg-white">
+      <div className="bg-[#1c1d1f] text-white pt-28 pb-12 px-6">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between gap-12">
+          <div className="lg:col-span-2">
+            <div className="flex items-center gap-2 text-sm font-bold text-purple-400 mb-6 uppercase tracking-wider">
+              <span>{courseDetails?.topic}</span>
+              <ChevronRight className="w-4 h-4 text-gray-500" />
+              <span className="text-gray-300">{courseDetails?.title}</span>
             </div>
-            <div className="text-right">
-              <p className="text-sm text-gray-500 font-medium uppercase">
-                Price
-              </p>
-              <p className="text-3xl font-extrabold text-blue-600 mt-1">
-                ₹{courseDetails.price || "FREE"}
-              </p>
+
+            <h1 className="text-4xl md:text-5xl font-black mb-6 leading-tight">
+              {courseDetails?.title}
+            </h1>
+
+            <p className="text-lg md:text-xl text-gray-300 mb-8 leading-relaxed max-w-3xl">
+              {courseDetails?.description ||
+                "Master the fundamentals and advanced concepts in this comprehensive guide designed for all skill levels."}
+            </p>
+            <div className="flex flex-wrap items-center gap-6 mb-8">
+              <div className="flex items-center gap-1 text-amber-400 font-bold">
+                <span className="text-lg">4.8</span>
+                <Star className="w-5 h-5 fill-current" />
+                <span className="text-gray-400 font-normal text-sm ml-1 underline underline-offset-4">
+                  (12,430 ratings)
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2 text-sm text-gray-300">
+                <Users className="w-5 h-5 text-purple-400" />
+                <span>
+                  {courseDetails?.students.length || 0} students enrolled
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2 text-sm text-gray-300">
+                <Globe className="w-5 h-5 text-purple-400" />
+                <span>English [Auto]</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-purple-600 flex items-center justify-center font-bold text-xl ring-4 ring-purple-900/30">
+                {courseDetails?.teacherName?.charAt(0)}
+              </div>
+              <div>
+                <p className="text-sm text-gray-400">Created by</p>
+                <p className="font-bold text-purple-400 hover:underline cursor-pointer">
+                  {courseDetails?.teacherName}
+                </p>
+              </div>
+            </div>
+
+            <div className="w-full mt-20 bg-[#2e2e30] text-white rounded p-10 shadow-lg">
+              <h2 className="text-3xl font-extrabold mb-8">
+                What you’ll learn
+              </h2>
+
+              <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {courseDetails?.topicCover.map((point, index) => (
+                  <li
+                    key={index}
+                    className="flex items-start gap-3  text-sm md:text-base"
+                  >
+                    <CheckCircle className="w-5 h-5 text-white mt-0.5" />
+                    {point}
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
 
-          {/* Status Badges */}
-          <div className="flex flex-wrap items-center gap-4 mb-8">
-            <span
-              className={`px-5 py-2 text-base rounded-full font-semibold flex items-center gap-2
-                                ${
-                                  courseDetails.status === "APPROVED"
-                                    ? "bg-green-100 text-green-700 border border-green-300"
-                                    : "bg-yellow-100 text-yellow-700 border border-yellow-300"
-                                }`}
-            >
-              <CheckCircle className="w-5 h-5" /> Status: {courseDetails.status}
-            </span>
+          <div className="md:w-[40%] lg:w-[30%]">
+            <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden sticky top-28">
+              <div className="relative group cursor-pointer">
+                <img
+                  src={
+                    courseDetails?.thumbnail ||
+                    "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800"
+                  }
+                  alt="Preview"
+                  className="w-full h-48 object-cover"
+                />
+                <div
+                  onClick={() => {
+                    setShowDemoModal(true);
+                  }}
+                  className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <PlayCircle className="w-16 h-16 text-white" />
+                  <span className="text-white font-bold mt-2">
+                    Preview this course
+                  </span>
+                </div>
+              </div>
 
-            <span
-              className={`px-5 py-2 text-base rounded-full font-semibold flex items-center gap-2
-                                ${
-                                  enrolled
-                                    ? "bg-blue-100 text-blue-700 border border-blue-300"
-                                    : "bg-red-100 text-red-700 border border-red-300"
-                                }`}
-            >
-              {enrolled ? (
-                <CheckCircle className="w-5 h-5" />
-              ) : (
-                <X className="w-5 h-5" />
-              )}
-              {enrolled ? "You are enrolled" : "Not enrolled"}
-            </span>
+              <div className="p-8 text-gray-900">
+                <div className="flex items-baseline gap-2 mb-6">
+                  <span className="text-4xl font-black">
+                    ₹{courseDetails?.price || "499"}
+                  </span>
+                </div>
+
+                {enrolled ? (
+                  <>
+                    <button
+                      disabled
+                      className="cursor-not-allowed w-full bg-gray-600 hover:bg-gray-700 text-white py-4 rounded-xl font-bold text-lg transition-all active:scale-95 mb-4 shadow-lg shadow-gray-200"
+                    >
+                      Already Enrolled
+                    </button>
+                  </>
+                ) : (
+                  <button 
+                  onClick={enrollCourse}
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white py-4 rounded-xl font-bold text-lg transition-all active:scale-95 mb-4 shadow-lg shadow-purple-200">
+                    Enroll Now
+                  </button>
+                )}
+
+                <div className="space-y-4">
+                  <p className="font-bold text-sm">This course includes:</p>
+                  <ul className="text-sm space-y-3 text-gray-600">
+                    <li className="flex items-center gap-3">
+                      <PlayCircle className="w-4 h-4" />{" "}
+                      {courseDetails?.lessons.length || 0} videos till now
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <Award className="w-4 h-4" /> Certificate of completion
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-
-        {/* Actions */}
-        <div className="lg:w-1/3 flex flex-col gap-4">
-          <button
-            className={`w-full py-4 rounded-xl text-white font-bold text-lg shadow-lg
-                            ${
-                              enrolled
-                                ? "bg-gray-400 cursor-not-allowed"
-                                : "bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 transform hover:scale-[1.01] transition-all duration-300"
-                            }`}
-            disabled={enrolled}
-            onClick={enrollCourse}
-          >
-            {enrolled ? "Already Enrolled" : "Enroll Now"}
-          </button>
         </div>
       </div>
 
-      {/* Lesson List (Enrollment Protected) */}
+      {/* {!enrolled && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t p-4 z-50 flex items-center justify-between px-6">
+          <div>
+            <p className="text-2xl font-black">
+              ₹{courseDetails?.price || "499"}
+            </p>
+            <p className="text-purple-600 font-bold text-xs">
+              Limited time offer
+            </p>
+          </div>
+          <button className="bg-purple-600 text-white px-8 py-3 rounded-xl font-bold">
+            Enroll
+          </button>
+        </div>
+      )} */}
+
       {enrolled &&
         courseDetails.lessons &&
         courseDetails.lessons.length > 0 && (
-          <div className="mt-12">
+          <div className="mt-12 max-w-7xl mx-auto px-6 pb-16">
             <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
               <BookOpen className="w-8 h-8 text-blue-600" /> Course Content
             </h2>
@@ -355,9 +406,10 @@ const StudentCourseDetails = () => {
                   </span>
                 </div>
 
-                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
                   <div
-                    className="bg-green-500 h-3 rounded-full transition-all duration-500"
+                    className="h-3 rounded-full bg-gradient-to-r from-green-400 to-green-600
+               transition-all duration-700 ease-out"
                     style={{
                       width: `${
                         courseDetails.lessons.length > 0
@@ -367,7 +419,7 @@ const StudentCourseDetails = () => {
                           : 0
                       }%`,
                     }}
-                  ></div>
+                  />
                 </div>
 
                 <p className="text-xs text-gray-500 mt-1 font-medium">
@@ -387,7 +439,6 @@ const StudentCourseDetails = () => {
                   key={index}
                   className="border border-gray-200 rounded-xl overflow-hidden shadow-sm"
                 >
-                  {/* Lesson Header/Toggle Button */}
                   <button
                     className={`w-full text-left p-5 flex justify-between items-center transition-colors duration-200
                                         ${
@@ -413,14 +464,12 @@ const StudentCourseDetails = () => {
                     )}
                   </button>
 
-                  {/* Lesson Content (Resources) */}
                   {openLessonIndex === index && (
                     <div className="p-5 bg-white border-t border-gray-200">
                       {lesson.videoUrl ? (
                         <ul className="space-y-4">
                           {lesson.videoUrl ? (
                             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 border rounded-xl bg-white shadow-sm">
-                              {/* Video Resource Display */}
                               <div className="flex items-center gap-3 flex-1">
                                 <PlayCircle className="w-6 h-6 text-red-600 flex-shrink-0" />
                                 <span className="text-gray-900 font-semibold text-sm sm:text-base truncate">
@@ -428,7 +477,6 @@ const StudentCourseDetails = () => {
                                 </span>
                               </div>
 
-                              {/* Buttons Section */}
                               <div className="flex flex-row md:flex-col items-center gap-3 w-full md:w-auto">
                                 <button
                                   onClick={() =>
@@ -461,7 +509,6 @@ const StudentCourseDetails = () => {
                             </div>
                           ) : (
                             <>
-                              {/* General File/Link Resource Display */}
                               <div className="flex items-center gap-3 flex-1">
                                 <FileText className="w-5 h-5 text-blue-600 flex-shrink-0" />
                                 <a
@@ -479,8 +526,6 @@ const StudentCourseDetails = () => {
                               </span>
                             </>
                           )}
-                          {/* </li>
-                                                ))} */}
                         </ul>
                       ) : (
                         <p className="text-gray-500 italic p-3">
@@ -491,7 +536,6 @@ const StudentCourseDetails = () => {
                         <ul className="space-y-4">
                           {lesson.resources.map((resource, resIndex) => (
                             <li key={resIndex}>
-                              {/* General File/Link Resource Display */}
                               <div className="flex items-center gap-3 flex-1">
                                 <FileText className="w-5 h-5 text-blue-600 flex-shrink-0" />
                                 <a
@@ -523,7 +567,7 @@ const StudentCourseDetails = () => {
       {courseDetails.lessons.length > 0 &&
         (completedLessons.length / courseDetails.lessons.length) * 100 ===
           100 && (
-          <div className="mt-10 p-6 bg-green-100 border border-green-300 rounded-2xl text-center">
+          <div className="mt-10 p-6 bg-green-100 border border-green-300 text-center">
             <h2 className="text-2xl font-bold text-green-800 mb-2">
               🎉 Congratulations You have Completed the Course! 🎉
             </h2>
@@ -534,9 +578,14 @@ const StudentCourseDetails = () => {
             </p>
             <button
               onClick={() => {
-                navigate(`/interview/${courseDetails.title.replace(/\s+/g, "-").toLowerCase()}`);
+                navigate(
+                  `/interview/${courseDetails.title
+                    .replace(/\s+/g, "-")
+                    .toLowerCase()}`
+                );
               }}
-             className="mt-4 cursor-pointer px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+              className="mt-4 cursor-pointer px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+            >
               Proceed to Virtual Interview
             </button>
           </div>
@@ -544,7 +593,7 @@ const StudentCourseDetails = () => {
 
       {enrolled && (
         <div>
-          <div className="mt-10 border-t border-gray-200 pt-6">
+          <div className="mt-10 border-t border-gray-200 pt-6 max-w-7xl mx-auto px-6 pb-16">
             <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
               💬 Comments
             </h2>
@@ -552,7 +601,7 @@ const StudentCourseDetails = () => {
           </div>
         </div>
       )}
-      {/* Demo Video Modal */}
+
       {showDemoModal && (
         <VideoPlayerModal
           videoUrl={courseDetails.demoVideo}
@@ -560,7 +609,6 @@ const StudentCourseDetails = () => {
         />
       )}
 
-      {/* Lesson Video Modal */}
       {showLessonVideoModal && currentVideoUrl && (
         <VideoPlayerModal
           videoUrl={currentVideoUrl}
@@ -581,19 +629,17 @@ const CommentSection = ({ courseId }) => {
 
   const token = localStorage.getItem("token");
 
-  // --- Decode token to get user role ---
   useEffect(() => {
     if (token) {
       try {
         const decoded = jwtDecode(token);
-        setUserRole(decoded.role); // assumes JWT includes { id, role }
+        setUserRole(decoded.role);
       } catch (err) {
         console.error("Invalid token:", err);
       }
     }
   }, [token]);
 
-  // --- Fetch comments from backend ---
   const fetchComments = async () => {
     try {
       setLoading(true);
@@ -617,7 +663,6 @@ const CommentSection = ({ courseId }) => {
     if (token && courseId) fetchComments();
   }, [courseId]);
 
-  // --- Add a new comment ---
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
     if (!token) {
@@ -634,14 +679,13 @@ const CommentSection = ({ courseId }) => {
 
       if (response.data.success) {
         setNewComment("");
-        fetchComments(); // Refresh comments
+        fetchComments();
       }
     } catch (error) {
       console.error("Error adding comment:", error);
     }
   };
 
-  // --- Add a reply (teacher only) ---
   const handleAddReply = async (commentId) => {
     if (!replyText.trim()) return;
     if (!token) {
@@ -659,7 +703,7 @@ const CommentSection = ({ courseId }) => {
       if (response.data.success) {
         setReplyText("");
         setReplyingTo(null);
-        fetchComments(); // Refresh
+        fetchComments();
       }
     } catch (error) {
       console.error("Error adding reply:", error);
@@ -668,7 +712,6 @@ const CommentSection = ({ courseId }) => {
 
   return (
     <div className="bg-gray-50 rounded-2xl p-6 shadow-inner">
-      {/* Add Comment */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <textarea
           value={newComment}
@@ -678,8 +721,8 @@ const CommentSection = ({ courseId }) => {
           rows={3}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault(); // Prevents newline
-              handleAddComment(); // Calls the comment handler
+              e.preventDefault();
+              handleAddComment();
             }
           }}
         />
@@ -691,7 +734,6 @@ const CommentSection = ({ courseId }) => {
         </button>
       </div>
 
-      {/* Comments */}
       {loading ? (
         <p className="text-gray-500 italic">Loading comments...</p>
       ) : comments.length === 0 ? (
@@ -714,7 +756,6 @@ const CommentSection = ({ courseId }) => {
                   </p>
                   <p className="text-gray-700">{comment.text}</p>
 
-                  {/* Only teacher can reply */}
                   {userRole === "teacher" && (
                     <button
                       onClick={() =>
@@ -728,7 +769,6 @@ const CommentSection = ({ courseId }) => {
                     </button>
                   )}
 
-                  {/* Replies */}
                   {comment.replies?.length > 0 && (
                     <div className="ml-8 mt-3 space-y-2">
                       {comment.replies.map((reply) => (
@@ -754,7 +794,6 @@ const CommentSection = ({ courseId }) => {
                     </div>
                   )}
 
-                  {/* Reply Box (only for teacher) */}
                   {replyingTo === comment._id && userRole === "teacher" && (
                     <div className="mt-3 ml-8 flex flex-col sm:flex-row gap-3">
                       <input
@@ -781,4 +820,4 @@ const CommentSection = ({ courseId }) => {
   );
 };
 
-export default StudentCourseDetails;
+export default StudentCourseDetails1;
