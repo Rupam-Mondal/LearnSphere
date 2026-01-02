@@ -106,7 +106,7 @@ const AuthPage = () => {
        
         <div className="flex justify-center mb-8">
           <button
-            className={`w-1/2 py-2 font-semibold rounded-l-lg transition-colors duration-300 ${
+            className={`w-1/2 cursor-pointer py-2 font-semibold rounded-l-lg transition-colors duration-300 ${
               isLogin ? "bg-[#59168B] text-white" : "bg-gray-100 text-gray-700"
             }`}
             onClick={() => setIsLogin(true)}
@@ -114,7 +114,7 @@ const AuthPage = () => {
             Login
           </button>
           <button
-            className={`w-1/2 py-2 font-semibold rounded-r-lg transition-colors duration-300 ${
+            className={`w-1/2 cursor-pointer py-2 font-semibold rounded-r-lg transition-colors duration-300 ${
               !isLogin ? "bg-[#59168B] text-white" : "bg-gray-100 text-gray-700"
             }`}
             onClick={() => setIsLogin(false)}
@@ -150,7 +150,7 @@ const AuthPage = () => {
             </div>
             <button
               type="submit"
-              className="w-full bg-[#59168B] text-white py-2 rounded-lg hover:bg-[#4b1278] transition"
+              className="w-full cursor-pointer bg-[#59168B] text-white py-2 rounded-lg hover:bg-[#4b1278] transition"
             >
               Login
             </button>
@@ -226,7 +226,7 @@ const AuthPage = () => {
             </div>
             <button
               type="submit"
-              className={`w-full bg-[#59168B] text-white py-2 rounded-lg hover:bg-[#4b1278] transition ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+              className={`w-full cursor-pointer bg-[#59168B] text-white py-2 rounded-lg hover:bg-[#4b1278] transition ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
               
             >
               Sign Up
