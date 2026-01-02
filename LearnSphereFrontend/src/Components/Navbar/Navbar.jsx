@@ -55,6 +55,15 @@ export default function Navbar() {
           >
             Practice
           </button>
+          <button
+            className="hover:text-black cursor-pointer
+          "
+            onClick={() => {
+              navigate("/Teachers");
+            }}
+          >
+            Teachers
+          </button>
           {token && user && user.role === "TEACHER" ? (
             <button
               className="hover:text-black"
@@ -85,43 +94,80 @@ export default function Navbar() {
           )}
         </div>
 
-        <div className="hidden md:flex items-center space-x-4">
+        <div className="hidden md:flex items-center">
           {token ? (
-            <>
+            <div className="relative group">
+              {/* Profile Avatar */}
               <img
                 src={
                   user?.profilePicture ||
-                  "https://plus.unsplash.com/premium_photo-1689568126014-06fea9d5d341?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8cHJvZmlsZXxlbnwwfHwwfHx8MA%3D%3D"
+                  "https://plus.unsplash.com/premium_photo-1689568126014-06fea9d5d341?fm=jpg&q=60&w=3000"
                 }
-                alt="profile icon"
-                className="w-10 h-10 rounded-full cursor-pointer hover:opacity-80 transition border-2 border-[#591688]"
+                alt="Profile"
+                className="
+          w-10 h-10 rounded-full object-cover cursor-pointer
+          border-2 border-[#59168B]
+          transition-all duration-300
+          hover:scale-105 hover:shadow-lg
+        "
               />
-              <button
-                className="text-sm text-[#59168B] underline hover:text-black ml-2"
-                onClick={handleLogout}
+
+              {/* Hover Bridge (IMPORTANT) */}
+              <div className="absolute right-0 top-full h-3 w-full" />
+
+              {/* Dropdown */}
+              <div
+                className="
+          absolute right-0 mt-3 w-44
+          bg-white rounded-xl shadow-xl
+          border border-gray-100
+          opacity-0 scale-95 pointer-events-none
+          group-hover:opacity-100
+          group-hover:scale-100
+          group-hover:pointer-events-auto
+          transition-all duration-200
+          z-50
+        "
               >
-                Logout
-              </button>
-            </>
+                <button
+                  onClick={handleLogout}
+                  className="
+            w-full text-left px-4 py-3 text-sm text-gray-700
+            hover:bg-[#f3e9fb] hover:text-[#59168B]
+            rounded-xl
+            transition
+          "
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
           ) : (
-            <>
+            <div className="flex items-center gap-3">
               <button
-                className="border border-[#59168B]  px-5 py-2 rounded-sm hover:bg-[#ebd9f9] transition cursor-pointer"
-                onClick={() => {
-                  navigate("/auth");
-                }}
+                onClick={() => navigate("/auth")}
+                className="
+          px-5 py-2 text-sm font-medium
+          border border-[#59168B] text-[#59168B]
+          rounded-lg hover:bg-[#f2e9fa]
+          transition
+        "
               >
                 Login
               </button>
+
               <button
-                className="bg-[#59168B] text-white px-5 py-2 rounded-sm hover:bg-[#4b1278] transition cursor-pointer"
-                onClick={() => {
-                  navigate("/auth");
-                }}
+                onClick={() => navigate("/auth")}
+                className="
+          px-5 py-2 text-sm font-medium text-white
+          bg-[#59168B] rounded-lg
+          shadow-md hover:bg-[#4b1278]
+          transition
+        "
               >
                 Register
               </button>
-            </>
+            </div>
           )}
         </div>
       </div>

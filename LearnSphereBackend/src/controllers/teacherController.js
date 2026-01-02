@@ -222,6 +222,29 @@ const deleteLesson = async (req, res) => {
   }
 };
 
+const GetAllTeachers = async (req, res) => {
+  try {
+    const teachers = await User.find({
+      role: "TEACHER",
+    });
+
+    res.status(200).json({
+      success: true,
+      count: teachers.length,
+      teachers,
+    });
+  } catch (error) {
+    console.error("Error fetching teachers:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+export default GetAllTeachers;
+
+
 
 
 export { createCourse, getCourses, getCourseInfo, uploadLesson, deleteLesson };

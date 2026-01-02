@@ -1,5 +1,5 @@
 import express from "express";
-import {
+import GetAllTeachers, {
   createCourse,
   getCourseInfo,
   getCourses,
@@ -21,5 +21,6 @@ teacherRouter.post("/get-courses", getCourses);
 teacherRouter.post("/get-course-info", getCourseInfo);
 teacherRouter.post("/upload-lesson", uploadLesson);
 teacherRouter.post("/delete-lesson", deleteLesson);
+teacherRouter.get("/all_teachers", GetAllTeachers);
 
 export default teacherRouter;

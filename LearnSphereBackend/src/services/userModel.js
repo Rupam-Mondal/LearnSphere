@@ -23,6 +23,21 @@ const userSchema = new mongoose.Schema(
       enum: ["STUDENT", "TEACHER", "ADMIN"],
       default: "student",
     },
+    rating: {
+      type: Number,
+      min: 0,
+      max: 5,
+      default: null,
+      validate: {
+        validator: function (value) {
+          if (value !== null && this.role !== "TEACHER") {
+            return false;
+          }
+          return true;
+        },
+        message: "Rating is only allowed for teachers",
+      },
+    },
     courses: [
       {
         type: mongoose.Schema.Types.ObjectId,

@@ -17,6 +17,7 @@ import Practice from "./pages/Practice";
 import Java from "./pages/Java";
 import Oops from "./pages/Oops";
 import Navbar from "./Components/Navbar/Navbar";
+import Teachers from "./pages/Teachers";
 
 function App() {
   const [bot, setBot] = useState(false);
@@ -60,6 +61,7 @@ function App() {
         <Route path="/practice" element={<Practice />} />
         <Route path="/practice/Java" element={<Java />} />
         <Route path="/practice/oops" element={<Oops />} />
+        <Route path="/Teachers" element={<Teachers />} />
       </Routes>
     </div>
   );
