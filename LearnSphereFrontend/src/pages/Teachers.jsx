@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 export default function Teachers() {
   const [teachers, setTeachers] = useState([]);
@@ -9,6 +10,8 @@ export default function Teachers() {
   const [ratingFilter, setRatingFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+
+  const navigate = useNavigate();
 
   /* ================= FETCH ================= */
   useEffect(() => {
@@ -220,7 +223,10 @@ export default function Teachers() {
                         Courses: {teacher.courses.length}
                       </p>
 
-                      <button className="mt-6 cursor-pointer rounded-xl bg-black text-white py-3 text-sm font-medium hover:bg-gray-800 transition">
+                      <button
+                        onClick={() => navigate(`/teacher/${teacher._id}`)}
+                        className="mt-6 cursor-pointer rounded-xl bg-black text-white py-3 text-sm font-medium hover:bg-gray-800 transition"
+                      >
                         View Profile
                       </button>
                     </div>
