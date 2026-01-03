@@ -24,7 +24,7 @@ const TeacherLanding = () => {
 
             <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
               <button 
-                onClick={() => navigate("/teacher/auth")}
+                onClick={() => navigate("/teacher-auth")}
                 className="bg-gray-900 hover:bg-gray-800 transition-all text-white px-10 py-4 rounded-lg font-bold text-lg shadow-xl"
               >
                 Get Started
@@ -36,7 +36,7 @@ const TeacherLanding = () => {
             <div className="relative">
               <div className="absolute -top-4 -left-4 w-full h-full border-4 border-purple-200 rounded-2xl hidden md:block"></div>
               <img
-                src="https://s.udemycdn.com/teaching/record-your-video-v3.jpg"
+                src={"https://s.udemycdn.com/teaching/record-your-video-v3.jpg" || girl}
                 alt="Teacher Illustration"
                 className="relative z-10 w-full max-w-[550px] rounded-2xl shadow-2xl grayscale-[20%] hover:grayscale-0 transition-all duration-500"
               />
@@ -86,7 +86,7 @@ const HowToBegin = () => {
       description: "Then choose a promising topic with the help of our Marketplace Insights tool. The way that you teach — what you bring to it — is up to you.",
       helpTitle: "How we help you",
       helpText: "We offer plenty of resources on how to create your first course. And, our instructor dashboard and curriculum pages help keep you organized.",
-      image: "https://s.udemycdn.com/teaching/plan-your-curriculum-v3.jpg", // Example Udemy asset
+      image: "https://s.udemycdn.com/teaching/plan-your-curriculum-v3.jpg",
     },
     {
       title: "Record your video",

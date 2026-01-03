@@ -15,6 +15,7 @@ app.use(
     origin: [
       "http://localhost:5173", // local frontend
       "https://learn-sphere-7kcz.vercel.app", // deployed frontend
+      "http://localhost:5174"
     ],
     credentials: true, // VERY IMPORTANT
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],

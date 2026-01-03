@@ -111,7 +111,7 @@ const TeacherAuth = () => {
           localStorage.setItem("user", JSON.stringify(response.data.user));
           setToken(response.data.token);
           setUser(response.data.user);
-          navigate("/teacher-dashboard");
+          navigate(`/teacher-dashboard/${response.data.user._id}`);
         } else {
           toast.error("Access denied. This is the Teacher portal.");
         }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import {
@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import UploadCourses from "./UploadCourses";
 import { jwtDecode } from "jwt-decode";
+import { UserContext } from "../../contexts/userContext";
 
 const TeacherCourse = () => {
   const { id, courseId } = useParams();
@@ -21,6 +22,7 @@ const TeacherCourse = () => {
   const [error, setError] = useState(null);
   const [userType, setUserType] = useState("STUDENT");
   const [showModal, setShowModal] = useState(false);
+  const { user } = useContext(UserContext);
   // const [lessons, setLessons] = useState([]);
 
   const StatusBadge = ({ status }) => {
@@ -136,7 +138,7 @@ const TeacherCourse = () => {
 
   if (!course) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50 p-6">
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 p-6 ">
         <div className="bg-white rounded-xl shadow-2xl p-10 text-center max-w-lg w-full border-t-4 border-indigo-500">
           <h2 className="text-3xl font-bold text-gray-800 mb-4">
             🔍 Course Not Found
@@ -157,7 +159,7 @@ const TeacherCourse = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-8 lg:p-12">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-8 md:p-22">
       <div className="max-w-7xl mx-auto space-y-12">
         <h1 className="text-4xl sm:text-5xl font-extrabold text-center text-gray-900 leading-tight">
           Course Management:{" "}

@@ -72,8 +72,6 @@ function App() {
         <Route path="/all/teachers" element={<Teachers />} />
 
 
-
-
         {/* Teacher Routes */}
         <Route path="/teacher-Home" element={<TeacherHome />} />
         <Route path="/teacher-auth" element={<TeacherAuth />} />

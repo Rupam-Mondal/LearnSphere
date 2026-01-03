@@ -43,7 +43,7 @@ export default function TeacherNavbar() {
             <button
               className="hover:text-black"
               onClick={() => {
-                navigate(`/teacher-dashboard/${user.id}`);
+                navigate(`/teacher-dashboard/${user._id}`);
               }}
             >
               Your Courses
@@ -245,7 +245,7 @@ const Menu = ({ onClose }) => {
               <MenuItem
                 label="Your Courses"
                 onClick={() => {
-                  navigate(`/teacher-dashboard/${user.id}`);
+                  navigate(`/teacher-dashboard/${user._id}`);
                   onClose();
                 }}
               />
