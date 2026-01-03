@@ -16,7 +16,7 @@ export default function Navbar() {
   };
 
   return (
-    <div className="fixed w-full flex justify-center mt-0 z-10">
+    <div className="fixed w-full flex justify-center mt-0 z-[999] bg-white">
       <div className="w-[100%] max-w-full h-16 bg-white shadow-[2px_2px_5px_rgba(0,0,0,0.1)] px-6 flex items-center justify-between md:justify-between">
         <div className="text-xl md:text-2xl  font-bold text-[#59168B]">
           LearnSphere

@@ -14,6 +14,10 @@ import {
   Award,
   ChevronRight,
   X,
+  MessageCircle,
+  TrendingUp,
+  Sparkles,
+  Send,
 } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
@@ -68,7 +72,7 @@ const StudentCourseDetails1 = () => {
   const [openLessonIndex, setOpenLessonIndex] = useState(null);
   const [completedLessons, setCompletedLessons] = useState([]);
   const [clickedMark, setClickedMark] = useState(false);
-  const {token} = useContext(UserContext);
+  const { token } = useContext(UserContext);
 
   useEffect(() => {
     const fetchProgress = async () => {
@@ -200,9 +204,29 @@ const StudentCourseDetails1 = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen bg-gray-50">
-        <div className="text-center text-lg text-gray-600 animate-pulse flex items-center p-6 rounded-xl bg-white shadow-lg">
-          <Clock className="w-6 h-6 mr-2" /> Loading course details...
+      <div className="flex justify-center items-center h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-cyan-50">
+        <div className="text-center">
+          <div className="relative">
+            <div className="w-24 h-24 border-[6px] border-blue-100 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
+            <Sparkles className="w-10 h-10 text-blue-600 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-pulse" />
+          </div>
+          <p className="mt-8 text-xl font-bold text-slate-700 animate-pulse">
+            Loading course details...
+          </p>
+          <div className="mt-4 flex gap-1.5 justify-center">
+            <div
+              className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"
+              style={{ animationDelay: "0ms" }}
+            ></div>
+            <div
+              className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"
+              style={{ animationDelay: "150ms" }}
+            ></div>
+            <div
+              className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"
+              style={{ animationDelay: "300ms" }}
+            ></div>
+          </div>
         </div>
       </div>
     );
@@ -210,11 +234,16 @@ const StudentCourseDetails1 = () => {
 
   if (error) {
     return (
-      <div className="flex justify-center items-center h-screen bg-red-50">
-        <div className="text-center text-lg text-red-700 p-6 rounded-xl bg-red-100 border border-red-300 shadow-md">
-          <p className="font-bold">Error Loading Course</p>
-          <p className="mt-2 text-base">{error}</p>
-          <p className="mt-4 text-sm text-red-600">
+      <div className="flex justify-center items-center h-screen bg-gradient-to-br from-rose-50 via-red-50/50 to-orange-50">
+        <div className="max-w-md text-center p-10 rounded-3xl bg-white shadow-[0_20px_60px_rgba(0,0,0,0.1)] border border-red-100 animate-scaleIn">
+          <div className="w-20 h-20 bg-gradient-to-br from-red-100 to-rose-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+            <X className="w-10 h-10 text-red-600" />
+          </div>
+          <h3 className="text-3xl font-black text-slate-900 mb-3">
+            Error Loading Course
+          </h3>
+          <p className="text-slate-600 mb-4 text-lg">{error}</p>
+          <p className="text-sm text-slate-500 bg-slate-50 p-4 rounded-xl">
             Please try refreshing the page or checking your login status.
           </p>
         </div>
@@ -224,143 +253,206 @@ const StudentCourseDetails1 = () => {
 
   if (!courseDetails) {
     return (
-      <div className="flex justify-center items-center h-screen bg-gray-50">
-        <div className="text-center text-lg text-gray-600 p-6 rounded-xl bg-white shadow-lg">
-          No course details available for this ID.
+      <div className="flex justify-center items-center h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+        <div className="text-center p-10 rounded-3xl bg-white shadow-xl">
+          <p className="text-lg text-slate-600">
+            No course details available for this ID.
+          </p>
         </div>
       </div>
     );
   }
 
+  const progressPercentage =
+    courseDetails.lessons.length > 0
+      ? (completedLessons.length / courseDetails.lessons.length) * 100
+      : 0;
+
   return (
-    <div className="min-h-screen bg-white">
-      <div className="bg-[#1c1d1f] text-white pt-28 pb-12 px-6">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between gap-12">
-          <div className="lg:col-span-2">
-            <div className="flex items-center gap-2 text-sm font-bold text-purple-400 mb-6 uppercase tracking-wider">
-              <span>{courseDetails?.topic}</span>
-              <ChevronRight className="w-4 h-4 text-gray-500" />
-              <span className="text-gray-300">{courseDetails?.title}</span>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/40">
+      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 text-white pt-32 pb-20 px-6 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDE2YzAtNi42MjcgNS4zNzMtMTIgMTItMTJzMTIgNS4zNzMgMTIgMTItNS4zNzMgMTItMTIgMTItMTItNS4zNzMtMTItMTJ6bTAgMjRjMC02LjYyNyA1LjM3My0xMiAxMi0xMnMxMiA1LjM3MyAxMiAxMi01LjM3MyAxMi0xMiAxMi0xMi01LjM3My0xMi0xMnoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-30"></div>
+
+        <div className="absolute top-20 right-20 w-72 h-72 bg-cyan-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div
+          className="absolute bottom-20 left-20 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "1s" }}
+        ></div>
+
+        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between gap-12 relative z-10">
+          <div className="flex-1 lg:pr-8">
+            <div className="flex items-center gap-2 text-sm font-bold text-cyan-400 mb-8 uppercase tracking-wider">
+              <span className="bg-cyan-400/20 backdrop-blur-sm px-4 py-2 rounded-full border border-cyan-400/30 hover:bg-cyan-400/30 transition-all duration-300 shadow-lg">
+                {courseDetails?.topic}
+              </span>
+              <ChevronRight className="w-4 h-4" />
+              <span className="text-slate-300">{courseDetails?.title}</span>
             </div>
 
-            <h1 className="text-4xl md:text-5xl font-black mb-6 leading-tight">
+            <h1 className="text-6xl md:text-7xl font-black mb-8 leading-[1.1] bg-clip-text text-transparent bg-gradient-to-r from-white via-cyan-100 to-blue-200 animate-fadeIn">
               {courseDetails?.title}
             </h1>
 
-            <p className="text-lg md:text-xl text-gray-300 mb-8 leading-relaxed max-w-3xl">
+            <p className="text-xl text-slate-300 mb-10 leading-relaxed max-w-3xl">
               {courseDetails?.description ||
                 "Master the fundamentals and advanced concepts in this comprehensive guide designed for all skill levels."}
             </p>
-            <div className="flex flex-wrap items-center gap-6 mb-8">
-              <div className="flex items-center gap-1 text-amber-400 font-bold">
-                <span className="text-lg">4.8</span>
-                <Star className="w-5 h-5 fill-current" />
-                <span className="text-gray-400 font-normal text-sm ml-1 underline underline-offset-4">
-                  (12,430 ratings)
+
+            <div className="flex flex-wrap items-center gap-6 mb-10">
+              <div className="flex items-center gap-3 bg-gradient-to-br from-amber-400/20 to-orange-400/20 backdrop-blur-sm px-5 py-3 rounded-2xl border border-amber-400/30 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
+                <Star className="w-6 h-6 fill-amber-400 text-amber-400 drop-shadow-lg" />
+                <span className="text-xl font-black text-amber-300">4.8</span>
+                <span className="text-slate-300 text-sm font-medium">
+                  (12,430)
                 </span>
               </div>
 
-              <div className="flex items-center gap-2 text-sm text-gray-300">
-                <Users className="w-5 h-5 text-purple-400" />
-                <span>
-                  {courseDetails?.students.length || 0} students enrolled
+              <div className="flex items-center gap-3 text-slate-300 hover:text-white transition-colors">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 backdrop-blur-sm flex items-center justify-center border border-cyan-400/30 shadow-lg">
+                  <Users className="w-6 h-6 text-cyan-400" />
+                </div>
+                <span className="font-bold text-lg">
+                  {courseDetails?.students.length || 0} students
                 </span>
               </div>
 
-              <div className="flex items-center gap-2 text-sm text-gray-300">
-                <Globe className="w-5 h-5 text-purple-400" />
-                <span>English [Auto]</span>
+              <div className="flex items-center gap-3 text-slate-300 hover:text-white transition-colors">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-sm flex items-center justify-center border border-blue-400/30 shadow-lg">
+                  <Globe className="w-6 h-6 text-blue-400" />
+                </div>
+                <span className="font-bold text-lg">English [Auto]</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-purple-600 flex items-center justify-center font-bold text-xl ring-4 ring-purple-900/30">
+            <div className="items-center gap-5 p-5 bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 inline-flex shadow-xl hover:shadow-2xl hover:bg-white/15 transition-all duration-300">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center font-black text-3xl shadow-xl ring-4 ring-white/20">
                 {courseDetails?.teacherName?.charAt(0)}
               </div>
               <div>
-                <p className="text-sm text-gray-400">Created by</p>
-                <p className="font-bold text-purple-400 hover:underline cursor-pointer">
+                <p className="text-sm font-semibold text-slate-400 mb-1">
+                  Created by
+                </p>
+                <p className="font-black text-xl text-cyan-400 hover:text-cyan-300 cursor-pointer transition-colors">
                   {courseDetails?.teacherName}
                 </p>
               </div>
             </div>
 
-            <div className="w-full mt-20 bg-[#2e2e30] text-white rounded p-10 shadow-lg">
-              <h2 className="text-3xl font-extrabold mb-8">
-                What you’ll learn
-              </h2>
+            <div className="w-full mt-16 bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-xl rounded-3xl p-10 shadow-2xl border border-slate-700/50 hover:border-slate-600/50 transition-all duration-500">
+              <div className="flex items-center gap-4 mb-10">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center shadow-xl">
+                  <TrendingUp className="w-7 h-7 text-white" />
+                </div>
+                <h2 className="text-4xl font-black text-white">
+                  What you'll learn
+                </h2>
+              </div>
 
-              <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <ul className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {courseDetails?.topicCover.map((point, index) => (
                   <li
                     key={index}
-                    className="flex items-start gap-3  text-sm md:text-base"
+                    className="flex items-start gap-4 text-slate-200 text-base group hover:translate-x-2 transition-all duration-300"
                   >
-                    <CheckCircle className="w-5 h-5 text-white mt-0.5" />
-                    {point}
+                    <div className="w-7 h-7 rounded-xl bg-cyan-400/20 flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-cyan-400/40 group-hover:scale-110 transition-all duration-300 shadow-lg">
+                      <CheckCircle className="w-5 h-5 text-cyan-400" />
+                    </div>
+                    <span className="leading-relaxed">{point}</span>
                   </li>
                 ))}
               </ul>
             </div>
           </div>
 
-          <div className="md:w-[40%] lg:w-[30%]">
-            <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden sticky top-28">
-              <div className="relative group cursor-pointer">
+          <div className="lg:w-[38%]">
+            <div className="bg-white rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.2)] border border-slate-200 overflow-hidden sticky top-28 transform hover:scale-[1.02] transition-all duration-500 hover:shadow-[0_25px_70px_rgba(0,0,0,0.25)]">
+              <div className="relative group cursor-pointer overflow-hidden">
                 <img
                   src={
                     courseDetails?.thumbnail ||
                     "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800"
                   }
                   alt="Preview"
-                  className="w-full h-48 object-cover"
+                  className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-700"
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
                 <div
-                  onClick={() => {
-                    setShowDemoModal(true);
-                  }}
-                  className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={() => setShowDemoModal(true)}
+                  className="absolute inset-0 bg-black/60 backdrop-blur-md flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500"
                 >
-                  <PlayCircle className="w-16 h-16 text-white" />
-                  <span className="text-white font-bold mt-2">
+                  <div className="w-24 h-24 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-500 shadow-2xl ring-4 ring-white/30">
+                    <PlayCircle className="w-14 h-14 text-white drop-shadow-lg" />
+                  </div>
+                  <span className="text-white font-black text-xl">
                     Preview this course
                   </span>
                 </div>
               </div>
 
-              <div className="p-8 text-gray-900">
-                <div className="flex items-baseline gap-2 mb-6">
-                  <span className="text-4xl font-black">
+              <div className="p-8">
+                <div className="flex items-baseline gap-3 mb-8">
+                  <span className="text-6xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-cyan-600">
                     ₹{courseDetails?.price || "499"}
                   </span>
+                  {/* <span className="text-slate-400 line-through text-xl font-semibold">
+                    ₹1,999
+                  </span>
+                  <span className="ml-2 px-3 py-1 bg-gradient-to-r from-emerald-500 to-green-500 text-white text-sm font-black rounded-full shadow-lg">
+                    75% OFF
+                  </span> */}
                 </div>
 
                 {enrolled ? (
-                  <>
-                    <button
-                      disabled
-                      className="cursor-not-allowed w-full bg-gray-600 hover:bg-gray-700 text-white py-4 rounded-xl font-bold text-lg transition-all active:scale-95 mb-4 shadow-lg shadow-gray-200"
-                    >
+                  <button
+                    disabled
+                    className="w-full bg-gradient-to-r from-slate-300 to-slate-400 text-white py-5 rounded-2xl font-black text-lg mb-5 shadow-lg cursor-not-allowed relative overflow-hidden"
+                  >
+                    <span className="relative z-10 flex items-center justify-center gap-3">
+                      <CheckCircle className="w-6 h-6" />
                       Already Enrolled
-                    </button>
-                  </>
+                    </span>
+                  </button>
                 ) : (
-                  <button 
-                  onClick={enrollCourse}
-                  className="w-full bg-purple-600 hover:bg-purple-700 text-white py-4 rounded-xl font-bold text-lg transition-all active:scale-95 mb-4 shadow-lg shadow-purple-200">
-                    Enroll Now
+                  <button
+                    onClick={enrollCourse}
+                    className="w-full bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-600 hover:from-blue-700 hover:via-blue-600 hover:to-cyan-700 text-white py-5 rounded-2xl font-black text-lg mb-5 shadow-[0_8px_24px_rgba(37,99,235,0.4)] hover:shadow-[0_12px_32px_rgba(37,99,235,0.5)] transition-all duration-300 transform hover:scale-[1.02] active:scale-95 relative overflow-hidden group"
+                  >
+                    <span className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-400 opacity-0 group-hover:opacity-30 transition-opacity duration-300"></span>
+                    <span className="relative z-10 flex items-center justify-center gap-2">
+                      Enroll Now
+                      <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    </span>
                   </button>
                 )}
 
-                <div className="space-y-4">
-                  <p className="font-bold text-sm">This course includes:</p>
-                  <ul className="text-sm space-y-3 text-gray-600">
-                    <li className="flex items-center gap-3">
-                      <PlayCircle className="w-4 h-4" />{" "}
-                      {courseDetails?.lessons.length || 0} videos till now
+                <div className="space-y-5 pt-8 border-t-2 border-slate-100">
+                  <p className="font-black text-sm text-slate-700 mb-5 uppercase tracking-wide">
+                    This course includes:
+                  </p>
+                  <ul className="text-sm space-y-4 text-slate-600">
+                    <li className="flex items-center gap-4 group hover:translate-x-2 transition-all duration-300">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-50 to-rose-100 flex items-center justify-center group-hover:shadow-lg transition-all duration-300">
+                        <PlayCircle className="w-5 h-5 text-red-600" />
+                      </div>
+                      <span className="font-bold text-base">
+                        {courseDetails?.lessons.length || 0} video lectures
+                      </span>
                     </li>
-                    <li className="flex items-center gap-3">
-                      <Award className="w-4 h-4" /> Certificate of completion
+                    <li className="flex items-center gap-4 group hover:translate-x-2 transition-all duration-300">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center group-hover:shadow-lg transition-all duration-300">
+                        <Award className="w-5 h-5 text-amber-600" />
+                      </div>
+                      <span className="font-bold text-base">
+                        Certificate of completion
+                      </span>
+                    </li>
+                    <li className="flex items-center gap-4 group hover:translate-x-2 transition-all duration-300">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-50 to-cyan-100 flex items-center justify-center group-hover:shadow-lg transition-all duration-300">
+                        <Clock className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <span className="font-bold text-base">
+                        Lifetime access
+                      </span>
                     </li>
                   </ul>
                 </div>
@@ -389,47 +481,43 @@ const StudentCourseDetails1 = () => {
       {enrolled &&
         courseDetails.lessons &&
         courseDetails.lessons.length > 0 && (
-          <div className="mt-12 max-w-7xl mx-auto px-6 pb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-              <BookOpen className="w-8 h-8 text-blue-600" /> Course Content
-            </h2>
-            <div className="space-y-3">
-              <div className="w-full max-w-md">
-                <div className="flex justify-between mb-1">
-                  <span className="text-sm font-medium text-gray-700">
-                    Progress
-                  </span>
-                  <span className="text-sm font-medium text-gray-700">
-                    {completedLessons.length}/{courseDetails.lessons.length}
-                  </span>
-                </div>
+          <div className="mt-16 max-w-7xl mx-auto px-6 pb-16">
+            <div className="flex items-center gap-5 mb-10">
+              <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-xl">
+                <BookOpen className="w-8 h-8 text-white" />
+              </div>
+              <h2 className="text-5xl font-black text-slate-900">
+                Course Content
+              </h2>
+            </div>
 
-                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
-                  <div
-                    className="h-3 rounded-full bg-gradient-to-r from-green-400 to-green-600
-               transition-all duration-700 ease-out"
-                    style={{
-                      width: `${
-                        courseDetails.lessons.length > 0
-                          ? (completedLessons.length /
-                              courseDetails.lessons.length) *
-                            100
-                          : 0
-                      }%`,
-                    }}
-                  />
+            <div className="bg-white flex flex-col gap-3 rounded-3xl p-10 shadow-[0_8px_32px_rgba(0,0,0,0.08)] border-2 border-slate-100 mb-10 hover:shadow-[0_12px_40px_rgba(0,0,0,0.12)] transition-all duration-300">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 via-green-500 to-emerald-600 flex items-center justify-center shadow-lg">
+                    <TrendingUp className="w-7 h-7 text-white" />
+                  </div>
+                  <div>
+                    <span className="text-sm font-black text-slate-600 block uppercase tracking-wide mb-1">
+                      Your Progress
+                    </span>
+                    <span className="text-3xl font-black text-slate-900">
+                      {completedLessons.length}/{courseDetails.lessons.length}
+                    </span>
+                  </div>
                 </div>
+                <span className="text-4xl font-black text-emerald-600">
+                  {Math.round(progressPercentage)}%
+                </span>
+              </div>
 
-                <p className="text-xs text-gray-500 mt-1 font-medium">
-                  {Math.round(
-                    courseDetails.lessons.length > 0
-                      ? (completedLessons.length /
-                          courseDetails.lessons.length) *
-                          100
-                      : 0
-                  )}
-                  % Completed
-                </p>
+              <div className="relative w-full bg-slate-200 rounded-full h-5 overflow-hidden shadow-inner">
+                <div
+                  className="h-5 rounded-full bg-gradient-to-r from-emerald-400 via-green-500 to-emerald-600 transition-all duration-1000 ease-out relative overflow-hidden shadow-lg"
+                  style={{ width: `${progressPercentage}%` }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer"></div>
+                </div>
               </div>
 
               {courseDetails.lessons.map((lesson, index) => (
@@ -590,13 +678,14 @@ const StudentCourseDetails1 = () => {
         )}
 
       {enrolled && (
-        <div>
-          <div className="mt-10 border-t border-gray-200 pt-6 max-w-7xl mx-auto px-6 pb-16">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              💬 Comments
-            </h2>
-            <CommentSection courseId={courseId} />
+        <div className="max-w-7xl mx-auto px-6 pb-20 mt-10">
+          <div className="flex items-center gap-5 mb-10">
+            <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center shadow-xl">
+              <MessageCircle className="w-8 h-8 text-white" />
+            </div>
+            <h2 className="text-5xl font-black text-slate-900">Discussion</h2>
           </div>
+          <CommentSection courseId={courseId} />
         </div>
       )}
 
