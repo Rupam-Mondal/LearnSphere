@@ -27,7 +27,7 @@ import Teachers from "./pages/Teachers";
 import TeacherHome from "./pages/Teacher/TeacherHome";
 import TeacherNavbar from "./Components/Navbar/TeacherNavbar";
 import TeacherAuth from "./pages/Teacher/TeacherAuth";
-
+import TeacherProfile from "./pages/TeacherProfile";
 function App() {
   const [bot, setBot] = useState(false);
   const [nav, setNav] = useState(true);
@@ -70,6 +70,7 @@ function App() {
         <Route path="/practice/Java" element={<Java />} />
         <Route path="/practice/oops" element={<Oops />} />
         <Route path="/all/teachers" element={<Teachers />} />
+        <Route path="/student/teacher/:teacherId" element={<TeacherProfile />} />
 
 
         {/* Teacher Routes */}

@@ -24,7 +24,7 @@ export default function Teachers() {
         const sorted = response.data.teachers.sort(
           (a, b) => (b.rating ?? 0) - (a.rating ?? 0)
         );
-
+        console.log("teachers",response)
         setTeachers(sorted);
         setFilteredTeachers(sorted);
       } catch (error) {

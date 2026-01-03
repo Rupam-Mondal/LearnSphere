@@ -8,6 +8,7 @@ import {
   deleteLesson,
   teacherRegistration,
   teacherLogin,
+  getTeacherWithCourses,
 } from "../controllers/teacherController.js";
 
 const teacherRouter = express.Router(); 
@@ -27,5 +28,5 @@ teacherRouter.post("/get-course-info", getCourseInfo);
 teacherRouter.post("/upload-lesson", uploadLesson);
 teacherRouter.post("/delete-lesson", deleteLesson);
 teacherRouter.get("/all_teachers", GetAllTeachers);
-
+teacherRouter.get("/:teacherId/details", getTeacherWithCourses);
 export default teacherRouter;

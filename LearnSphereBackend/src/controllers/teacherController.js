@@ -2,7 +2,7 @@ import Course from "../services/courseModel.js";
 import User from "../services/userModel.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-
+import mongoose from "mongoose";
 const createCourse = async (req, res) => {
   try {
     const { topic, title, description, price, thumbnail, token, demoVideo } =
@@ -371,6 +371,56 @@ const teacherLogin = async (req, res) => {
     });
   }
 };
+
+export const getTeacherWithCourses = async (req, res) => {
+  try {
+    const { teacherId } = req.params;
+
+    const data = await User.aggregate([
+      {
+        $match: { _id: new mongoose.Types.ObjectId(teacherId) }
+      },
+
+      {
+        $lookup: {
+          from: "courses",
+          localField: "_id",
+          foreignField: "teacher",
+          as: "courses"
+        }
+      },
+
+      // IMPORTANT: keep teacherDetails + profilePicture
+      {
+        $project: {
+          password: 0,
+          __v: 0,
+          "courses.__v": 0
+        }
+      }
+    ]);
+
+    if (!data || data.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Teacher not found"
+      });
+    }
+
+    res.json({
+      success: true,
+      data: data[0]
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+};
+
 
 export {
   teacherLogin,
