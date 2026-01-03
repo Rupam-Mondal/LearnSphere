@@ -3,7 +3,7 @@ import { UserContext } from "../../contexts/userContext";
 import { useNavigate } from "react-router-dom";
 import { Book, Hamburger, Home, LogOut, MenuIcon, Pencil } from "lucide-react";
 
-export default function Navbar() {
+export default function TeacherNavbar() {
   const navigate = useNavigate();
   const { token, setToken, user, setUser } = useContext(UserContext);
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
@@ -33,64 +33,30 @@ export default function Navbar() {
         <div className="hidden md:flex flex-1 justify-center space-x-10 text-gray-700 font-medium">
           <button
             onClick={() => {
-              navigate(`/`);
+              navigate(`/teacher-home`);
             }}
             className="hover:text-black cursor-pointer"
           >
             Home
           </button>
-          <button
-            className="hover:text-black cursor-pointer"
-            onClick={() => {
-              navigate(`/student/feed`);
-            }}
-          >
-            Feed
-          </button>
-          <button
-            className="hover:text-black cursor-pointer
-          "
-            onClick={() => {
-              navigate("/practice");
-            }}
-          >
-            Practice
-          </button>
-          <button
-            className="hover:text-black cursor-pointer
-          "
-            onClick={() => {
-              navigate("/all/teachers");
-            }}
-          >
-            Teachers
-          </button>
-          {token && user && user.role === "TEACHER" ? (
+          {token && user ? (
             <button
               className="hover:text-black"
               onClick={() => {
                 navigate(`/teacher-dashboard/${user.id}`);
               }}
             >
-              Teacher Dashboard
+              Your Courses
             </button>
-          ) : token && user && user.role === "STUDENT" ? (
-            <button
-              className="hover:text-black cursor-pointer"
-              onClick={() => {
-                navigate(`/student/dashboard/${user.id}`);
-              }}
-            >
-              Dashboard
-            </button>
+        
           ) : (
             <button
               className="hover:text-black curssor-pointer"
               onClick={() => {
-                navigate("/auth");
+                navigate("/teacher-auth");
               }}
             >
-              DashBoard
+              Your Courses
             </button>
           )}
         </div>
@@ -98,7 +64,6 @@ export default function Navbar() {
         <div className="hidden md:flex items-center">
           {token ? (
             <div className="relative group">
-              {/* Profile Avatar */}
               <img
                 src={
                   user?.profilePicture ||
@@ -146,7 +111,7 @@ export default function Navbar() {
           ) : (
             <div className="flex items-center gap-3">
               <button
-                onClick={() => navigate("/auth")}
+                onClick={() => navigate("/teacher-auth")}
                 className="
           px-5 py-2 text-sm font-medium
           border border-[#59168B] text-[#59168B]
@@ -158,7 +123,7 @@ export default function Navbar() {
               </button>
 
               <button
-                onClick={() => navigate("/auth")}
+                onClick={() => navigate("/teacher-auth")}
                 className="
           px-5 py-2 text-sm font-medium text-white
           bg-[#59168B] rounded-lg
@@ -241,7 +206,7 @@ const Menu = ({ onClose }) => {
               <button
                 className="flex-1 border border-[#59168B] py-2 rounded-md hover:bg-[#ebd9f9] transition"
                 onClick={() => {
-                  navigate("/auth");
+                  navigate("/teacher-auth");
                   onClose();
                 }}
               >
@@ -250,7 +215,7 @@ const Menu = ({ onClose }) => {
               <button
                 className="flex-1 bg-[#59168B] text-white py-2 rounded-md hover:bg-[#4b1278] transition"
                 onClick={() => {
-                  navigate("/auth");
+                  navigate("/teacher-auth");
                   onClose();
                 }}
               >
@@ -266,51 +231,19 @@ const Menu = ({ onClose }) => {
             <MenuItem
               label="Home"
               onClick={() => {
-                navigate("/");
+                navigate("/teacher-home");
                 onClose();
               }}
             />
           </div>
 
           <div className="flex items-center justify-start px-3 w-full rounded-sm transition-all duration-300 hover:bg-gray-100">
-            <Pencil className="w-6 h-6 text-gray-600" />
-            <MenuItem
-              label="Practice"
-              onClick={() => {
-                navigate("/practice");
-                onClose();
-              }}
-            />
-          </div>
-
-          <div className="flex items-center justify-start px-3 w-full rounded-sm transition-all duration-300 hover:bg-gray-100">
-            <Pencil className="w-6 h-6 text-gray-600" />
-            <MenuItem
-              label="Explore"
-              onClick={() => {
-                navigate("/student/feed");
-                onClose();
-              }}
-            />
-          </div>
-
-          <div className="flex items-center justify-start px-3 w-full rounded-sm transition-all duration-300 hover:bg-gray-100">
-            {token && user?.role === "STUDENT" && (
-              <>
-                <Book className="w-6 h-6 text-gray-600" />
-                <MenuItem
-                  label="Dashboard"
-                  onClick={() => {
-                    navigate(`/student/dashboard/${user.id}`);
-                    onClose();
-                  }}
-                />
-              </>
-            )}
+            
+            
 
             {token && user?.role === "TEACHER" && (
               <MenuItem
-                label="Teacher Dashboard"
+                label="Your Courses"
                 onClick={() => {
                   navigate(`/teacher-dashboard/${user.id}`);
                   onClose();

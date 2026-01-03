@@ -1,16 +1,18 @@
 import Course from "../services/courseModel.js";
 import User from "../services/userModel.js";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 
 const createCourse = async (req, res) => {
   try {
-    const {topic, title, description, price, thumbnail, token, demoVideo } = req.body;
+    const { topic, title, description, price, thumbnail, token, demoVideo } =
+      req.body;
 
     if (!token) {
-        return res
-            .status(401)
-            .json({ success: false, message: "Unauthorized access" });
-        }
+      return res
+        .status(401)
+        .json({ success: false, message: "Unauthorized access" });
+    }
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const teacherid = decoded.id;
     if (!teacherid) {
@@ -18,7 +20,7 @@ const createCourse = async (req, res) => {
         .status(401)
         .json({ success: false, message: "Unauthorized access" });
     }
-    
+
     const user = await User.findById(teacherid);
     if (!user || user.role !== "TEACHER") {
       return res
@@ -52,18 +54,22 @@ const createCourse = async (req, res) => {
       teacher: teacherid,
     });
     await newCourse.save();
-    
+
     const teacherName = user.username;
-    await User.findByIdAndUpdate(teacherid, {
+    await User.findByIdAndUpdate(
+      teacherid,
+      {
         $push: { courses: newCourse._id },
-    }, { new: true });
+      },
+      { new: true }
+    );
 
     await user.save();
 
     res.status(201).json({
       success: true,
       message: "Course created successfully",
-      course: { title, description, price, thumbnail, teacher:teacherName },
+      course: { title, description, price, thumbnail, teacher: teacherName },
     });
   } catch (error) {
     console.error("Error creating course:", error);
@@ -72,56 +78,71 @@ const createCourse = async (req, res) => {
 };
 
 const getCourses = async (req, res) => {
-  try{
-    const {token} = req.body;
-    
-    if(!token) {
-      return res.status(401).json({ success: false, message: "Unauthorized access" });
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Unauthorized access" });
     }
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const teacherid = decoded.id;
     if (!teacherid) {
-      return res.status(401).json({ success: false, message: "Unauthorized access" });
+      return res
+        .status(401)
+        .json({ success: false, message: "Unauthorized access" });
     }
     const user = await User.findById(teacherid);
     if (!user || user.role !== "TEACHER") {
-      return res.status(403).json({ success: false, message: "Unauthorized access" });
+      return res
+        .status(403)
+        .json({ success: false, message: "Unauthorized access" });
     }
     const courses = await Course.find({ teacher: teacherid });
     if (!courses || courses.length === 0) {
-      return res.status(404).json({ success: false, message: "No courses found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "No courses found" });
     }
     res.status(200).json({ success: true, courses });
-
-  }catch(error) {
+  } catch (error) {
     console.error("Error fetching courses:", error);
     res.status(500).json({ success: false, message: "Internal Server Error" });
   }
-}
+};
 
 const getCourseInfo = async (req, res) => {
   try {
     const { courseId, token } = req.body;
 
     if (!token) {
-      return res.status(401).json({ success: false, message: "Unauthorized access" });
+      return res
+        .status(401)
+        .json({ success: false, message: "Unauthorized access" });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const teacherid = decoded.id;
 
     if (!teacherid) {
-      return res.status(401).json({ success: false, message: "Unauthorized access" });
+      return res
+        .status(401)
+        .json({ success: false, message: "Unauthorized access" });
     }
 
     const user = await User.findById(teacherid);
     if (!user || user.role !== "TEACHER") {
-      return res.status(403).json({ success: false, message: "Unauthorized access" });
+      return res
+        .status(403)
+        .json({ success: false, message: "Unauthorized access" });
     }
 
     const course = await Course.findById(courseId);
     if (!course) {
-      return res.status(404).json({ success: false, message: "Course not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Course not found" });
     }
 
     res.status(200).json({ success: true, course });
@@ -131,48 +152,57 @@ const getCourseInfo = async (req, res) => {
   }
 };
 
-const uploadLesson = async (req,res) => {
+const uploadLesson = async (req, res) => {
   try {
     const { courseId, title, videoUrl, token, resources } = req.body;
 
     if (!token) {
-      return res.status(401).json({ success: false, message: "Unauthorized access" });
+      return res
+        .status(401)
+        .json({ success: false, message: "Unauthorized access" });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const teacherid = decoded.id;
 
     if (!teacherid) {
-      return res.status(401).json({ success: false, message: "Unauthorized access" });
+      return res
+        .status(401)
+        .json({ success: false, message: "Unauthorized access" });
     }
 
     const user = await User.findById(teacherid);
     if (!user || user.role !== "TEACHER") {
-      return res.status(403).json({ success: false, message: "Unauthorized access" });
+      return res
+        .status(403)
+        .json({ success: false, message: "Unauthorized access" });
     }
 
     const course = await Course.findById(courseId);
     if (!course) {
-      return res.status(404).json({ success: false, message: "Course not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Course not found" });
     }
 
     const newLesson = {
-      videoId: courseId + "-" + title.replace(/\s+/g, '-').toLowerCase(),
+      videoId: courseId + "-" + title.replace(/\s+/g, "-").toLowerCase(),
       title,
       videoUrl,
-      resources:resources || [],
+      resources: resources || [],
     };
 
     course.lessons.push(newLesson);
     await course.save();
 
-    res.status(200).json({ success: true, message: "Lesson uploaded successfully" });
-
+    res
+      .status(200)
+      .json({ success: true, message: "Lesson uploaded successfully" });
   } catch (error) {
     console.error("Error uploading lesson:", error);
     res.status(500).json({ success: false, message: "Internal Server Error" });
   }
-}
+};
 
 const deleteLesson = async (req, res) => {
   try {
@@ -242,9 +272,113 @@ const GetAllTeachers = async (req, res) => {
   }
 };
 
-export default GetAllTeachers;
+const teacherRegistration = async (req, res) => {
+  try {
+    const { username, email, password, role, profilePicture, teacherDetails } =
+      req.body;
 
+    const existingUser = await User.findOne({ email, role: "TEACHER" });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "Teacher with this email already exists",
+      });
+    }
 
+    const genSalt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, genSalt);
 
+    const newTeacher = new User({
+      username,
+      email,
+      password: hashedPassword,
+      role: "TEACHER",
+      profilePicture,
+      teacherDetails: {
+        approved: "pending",
+        rating: 0,
+        qualification: teacherDetails.qualification,
+        experience: teacherDetails.experience,
+        specialization: teacherDetails.specialization,
+        qualificationProof: teacherDetails.qualificationProof,
+      },
+    });
+    await newTeacher.save();
 
-export { createCourse, getCourses, getCourseInfo, uploadLesson, deleteLesson };
+    const token = jwt.sign(
+      {
+        id: newTeacher._id,
+        role: newTeacher.role,
+        username: newTeacher.username,
+        email: newTeacher.email,
+        profilePicture: newTeacher.profilePicture,
+      },
+      process.env.JWT_SECRET
+    );
+
+    res.status(200).json({
+      success: true,
+      token,
+      user: newTeacher,
+      message: "Teacher registered successfully",
+    });
+  } catch (error) {
+    console.error("Error during teacher registration:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+const teacherLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email, role: "TEACHER" });
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid credentials" });
+    }
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid credentials" });
+    }
+    const token = jwt.sign(
+      {
+        id: user._id,
+        role: user.role,
+        username: user.username,
+        email: user.email,
+        profilePicture: user.profilePicture,
+      },
+      process.env.JWT_SECRET
+    );
+    res.status(200).json({
+      success: true,
+      token,
+      user,
+      message: "Login successful",
+    });
+  } catch (error) {
+    console.error("Error during teacher login:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+export {
+  teacherLogin,
+  GetAllTeachers,
+  createCourse,
+  getCourses,
+  getCourseInfo,
+  uploadLesson,
+  deleteLesson,
+  teacherRegistration,
+};

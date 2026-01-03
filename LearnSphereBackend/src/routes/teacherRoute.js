@@ -1,10 +1,13 @@
 import express from "express";
-import GetAllTeachers, {
+import {
+  GetAllTeachers,
   createCourse,
   getCourseInfo,
   getCourses,
   uploadLesson,
   deleteLesson,
+  teacherRegistration,
+  teacherLogin,
 } from "../controllers/teacherController.js";
 
 const teacherRouter = express.Router(); 
@@ -16,6 +19,8 @@ teacherRouter.get("/", (req, res) => {
   });
 });
 
+teacherRouter.post("/auth/register", teacherRegistration);
+teacherRouter.post("/auth/login", teacherLogin);
 teacherRouter.post("/create-course", createCourse);
 teacherRouter.post("/get-courses", getCourses);
 teacherRouter.post("/get-course-info", getCourseInfo);

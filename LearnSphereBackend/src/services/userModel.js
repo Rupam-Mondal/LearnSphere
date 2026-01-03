@@ -44,6 +44,33 @@ const userSchema = new mongoose.Schema(
         ref: "Course",
       },
     ],
+
+    teacherDetails: {
+      approved: {
+        type: String,
+        enum: ["pending", "approved", "rejected"],
+        default: "pending",
+      },
+      qualification: {
+        type: String,
+      },
+      experience: {
+        type: Number,
+      },
+      specialization: {
+        type: String,
+      },
+      qualificationProof: {
+        type: String,
+      },
+      rating: {
+        type: Number,
+        min: 0,
+        max: 5
+      }
+    },
+
+
     profilePicture: {
       type: String,
       default:
