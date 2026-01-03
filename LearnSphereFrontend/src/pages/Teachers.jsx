@@ -224,7 +224,7 @@ export default function Teachers() {
                       </p>
 
                       <button
-                        onClick={() => navigate(`/teacher/${teacher._id}`)}
+                        onClick={() => navigate(`/student/teacher/${teacher._id}`)}
                         className="mt-6 cursor-pointer rounded-xl bg-black text-white py-3 text-sm font-medium hover:bg-gray-800 transition"
                       >
                         View Profile
