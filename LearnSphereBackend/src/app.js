@@ -8,6 +8,9 @@ import teacherRouter from "./routes/teacherRoute.js";
 import adminRouter from "./routes/adminRoute.js";
 import studentRouter from "./routes/studentRoute.js";
 import commentRouter from "./routes/commentRoute.js";
+import interviewRouter from "./routes/interviewRoute.js"
+import evaluateRouter from "./routes/evaluate.js";
+
 const app = express();
 
 app.use(
@@ -40,5 +43,6 @@ app.use("/api/teacher", teacherRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/student", studentRouter);
 app.use("/api/comment", commentRouter);
-
+app.use("/api/interview", interviewRouter);
+app.use("/api/evaluate", evaluateRouter);
 export default app;
