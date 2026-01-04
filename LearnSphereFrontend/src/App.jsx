@@ -28,6 +28,7 @@ import TeacherHome from "./pages/Teacher/TeacherHome";
 import TeacherNavbar from "./Components/Navbar/TeacherNavbar";
 import TeacherAuth from "./pages/Teacher/TeacherAuth";
 import TeacherProfile from "./pages/TeacherProfile";
+import InterviewPage from "./pages/InterviewPage";
 function App() {
   const [bot, setBot] = useState(false);
   const [nav, setNav] = useState(true);
@@ -84,6 +85,10 @@ function App() {
         <Route
           path="/teacher-dashboard/:id/create-course"
           element={<CreateCourse />}
+        />
+        <Route
+          path="/interview/:courseName"
+          element={<InterviewPage />}
         />
       </Routes>
     </div>

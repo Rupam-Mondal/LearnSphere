@@ -1,120 +1,159 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import Vapi from "@vapi-ai/web";
+import axios from "axios";
 
 export default function InterviewPage() {
-  const { courseName } = useParams();
+  const { courseName } = useParams(); // topic
+  const recognitionRef = useRef(null);
+  const speakingRef = useRef(false);
 
-  const vapiRef = useRef(null);
-
-  const [status, setStatus] = useState("idle");
+  const [messages, setMessages] = useState([]);
+  const [status, setStatus] = useState("idle"); // idle | speaking | listening
   const [timeLeft, setTimeLeft] = useState(300);
 
-  const PUBLIC_KEY = import.meta.env.VITE_VAPI_PUBLIC_KEY;
-  const ASSISTANT_ID = import.meta.env.VITE_VAPI_ASSISTANT_ID;
-
+  /* ---------------- INIT SPEECH RECOGNITION ---------------- */
   useEffect(() => {
-    vapiRef.current = new Vapi(PUBLIC_KEY);
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
 
-    return () => {
-      vapiRef.current?.stop();
+    if (!SpeechRecognition) {
+      alert("Speech recognition not supported in this browser");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-US";
+    recognition.interimResults = false;
+    recognition.continuous = false;
+
+    recognition.onresult = (e) => {
+      const userText = e.results[0][0].transcript;
+      handleUserResponse(userText);
     };
-  }, [PUBLIC_KEY]);
 
-  // Countdown Timer
+    recognition.onend = () => {
+      if (!speakingRef.current) {
+        setStatus("idle");
+      }
+    };
+
+    recognitionRef.current = recognition;
+  }, []);
+
+  /* ---------------- TIMER ---------------- */
   useEffect(() => {
-    if (status !== "active") return;
+    if (status === "idle") return;
 
     const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          endInterview();
-          return 0;
-        }
-        return prev - 1;
+      setTimeLeft((t) => {
+        if (t <= 1) return 0;
+        return t - 1;
       });
     }, 1000);
 
     return () => clearInterval(timer);
   }, [status]);
 
-  const startInterview = async () => {
-    setStatus("connecting");
+  /* ---------------- SPEAK FUNCTION ---------------- */
+  const speak = (text) => {
+    speakingRef.current = true;
+    setStatus("speaking");
 
-    try {
-      await vapiRef.current.start({
-        assistantId: ASSISTANT_ID,
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    utterance.lang = "en-US";
 
-        // 🔥 MOST IMPORTANT PART
-        assistantOverrides: {
-          variables: {
-            topic: courseName,
-          },
-        },
-      });
+    utterance.onend = () => {
+      speakingRef.current = false;
+      startListening(); // 🎯 REOPEN MIC AFTER AI SPEAKS
+    };
 
-      setStatus("active");
-    } catch (err) {
-      console.error("Vapi start error:", err);
-      setStatus("idle");
+    speechSynthesis.speak(utterance);
+  };
+
+  /* ---------------- START MIC ---------------- */
+  const startListening = () => {
+    if (!recognitionRef.current) return;
+    setStatus("listening");
+    recognitionRef.current.start();
+  };
+
+  /* ---------------- SEND USER RESPONSE ---------------- */
+  const handleUserResponse = async (userText) => {
+    const updatedMessages = [...messages, { role: "user", content: userText }];
+    setMessages(updatedMessages);
+
+    const res = await axios.post(
+      `${import.meta.env.VITE_BACKEND_URL}/ai/interview`,
+      {
+        topic: courseName,
+        messages: updatedMessages,
+      }
+    );
+
+    const data = res.data;
+
+    if (data?.reply) {
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: data.reply },
+      ]);
+      speak(data.reply);
     }
   };
 
-  const endInterview = async () => {
-    try {
-      await vapiRef.current.stop();
-    } catch (err) {
-      console.error("Vapi stop error:", err);
-    }
-    setStatus("ended");
+  /* ---------------- START INTERVIEW ---------------- */
+  const startInterview = async () => {
+    setStatus("speaking");
+
+    const firstMessage = `Hello! I will be your technical interviewer today.
+
+The interview topic is ${courseName}.
+
+Let us begin.
+
+First question:
+Can you explain the basic fundamentals of ${courseName}?`;
+
+    setMessages([{ role: "assistant", content: firstMessage }]);
+    speak(firstMessage);
   };
 
   return (
-    <div className="h-screen w-full flex flex-col justify-center items-center bg-black text-white gap-6">
-      <h1 className="text-3xl font-semibold capitalize">
-        {courseName} Interview
-      </h1>
+    <div className="h-screen w-full bg-black text-white flex flex-col items-center justify-center gap-6 px-6">
+      <h1 className="text-3xl font-bold capitalize">{courseName} Interview</h1>
+
+      <p className="text-lg">
+        Time Left: {Math.floor(timeLeft / 60)}:
+        {String(timeLeft % 60).padStart(2, "0")}
+      </p>
 
       {status === "idle" && (
         <button
           onClick={startInterview}
-          className="px-6 py-3 bg-green-600 rounded-full text-lg"
+          className="px-8 py-3 bg-green-600 rounded-full text-lg hover:bg-green-700 transition"
         >
           Start Interview
         </button>
       )}
 
-      {status === "connecting" && (
-        <p className="text-yellow-400 text-lg">
-          Connecting to interviewer...
-        </p>
+      {status === "speaking" && (
+        <p className="text-blue-400 text-lg">Interviewer speaking…</p>
       )}
 
-      {status === "active" && (
-        <>
-          <p className="text-green-400 text-lg">
-            Interview in progress
+      {status === "listening" && (
+        <p className="text-green-400 text-lg">Listening… answer now</p>
+      )}
+
+      <div className="w-full max-w-2xl bg-white text-black rounded-xl p-4 overflow-y-auto max-h-64">
+        {messages.map((m, i) => (
+          <p key={i} className="mb-2">
+            <strong>{m.role === "assistant" ? "AI" : "You"}:</strong>{" "}
+            {m.content}
           </p>
-
-          <p className="text-xl">
-            Time Left: {Math.floor(timeLeft / 60)}:
-            {String(timeLeft % 60).padStart(2, "0")}
-          </p>
-
-          <button
-            onClick={endInterview}
-            className="px-6 py-3 bg-red-600 rounded-full"
-          >
-            End Interview
-          </button>
-        </>
-      )}
-
-      {status === "ended" && (
-        <p className="text-blue-400 text-xl">
-          Interview completed. Thank you!
-        </p>
-      )}
+        ))}
+      </div>
     </div>
   );
 }

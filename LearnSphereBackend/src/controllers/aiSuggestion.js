@@ -1,6 +1,13 @@
 import { generateText } from "../services/aiModel.js";
 import Course from "../services/courseModel.js";
 
+import { GoogleGenAI } from "@google/genai";
+
+const ai = new GoogleGenAI({
+  apiKey: process.env.GOOGLE_GEMINI_KEY,
+});
+
+
 function buildGeminiPrompt(userPrompt, courses) {
   const courseList =
     courses.length > 0
@@ -79,3 +86,85 @@ export default async function getResponse(req, res) {
     });
   }
 }
+
+export const interviewController = async (req, res) => {
+  try {
+    const { topic, messages } = req.body;
+
+    if (!topic) {
+      return res.status(400).json({
+        success: false,
+        message: "Interview topic is required",
+      });
+    }
+
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({
+        success: false,
+        message: "Messages array is required",
+      });
+    }
+
+    // Convert chat history into readable conversation
+    const conversation = messages
+      .map((m) =>
+        m.role === "user"
+          ? `Candidate: ${m.content}`
+          : `Interviewer: ${m.content}`
+      )
+      .join("\n");
+
+    const prompt = `
+You are a professional technical interviewer.
+
+Interview topic: ${topic}
+
+STRICT RULES (must follow):
+- This is an INTERVIEW, not a teaching session
+- NEVER explain concepts or correct answers
+- NEVER give detailed feedback during the interview
+- Keep responses SHORT (2–3 lines max)
+- Ask EXACTLY ONE question per response
+
+Interview flow rules:
+- Start with basic questions, then medium, then advanced
+- After each candidate answer:
+  - Give a very brief acknowledgment (e.g. "Okay", "Got it", "Thanks for explaining")
+  - Immediately ask the next question
+- If the answer is unclear or incorrect:
+  - Ask ONE clarifying question only
+- Do NOT restate the candidate’s answer
+- Do NOT summarize concepts
+
+Time rules:
+- Total interview duration is ~5 minutes
+- When approximately 1 minute remains:
+  - Briefly inform the candidate
+  - Ask ONE final wrap-up question
+
+Conversation so far:
+${conversation}
+
+Now continue the interview.
+Respond like a real interviewer.
+Ask the next question only.
+`;
+
+
+    const response = await ai.models.generateContent({
+      model: "gemma-3n-e4b-it", // ✅ FREE + instruction tuned
+      contents: prompt,
+    });
+
+    return res.status(200).json({
+      success: true,
+      reply: response.text,
+    });
+  } catch (error) {
+    console.error("❌ Gemini Interview Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Interview AI failed",
+    });
+  }
+};
