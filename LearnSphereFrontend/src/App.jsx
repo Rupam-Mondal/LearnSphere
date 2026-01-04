@@ -29,6 +29,7 @@ import TeacherNavbar from "./Components/Navbar/TeacherNavbar";
 import TeacherAuth from "./pages/Teacher/TeacherAuth";
 import TeacherProfile from "./pages/TeacherProfile";
 import InterviewPage from "./pages/InterviewPage";
+import VapiInterview from "./pages/VapiInterview";
 function App() {
   const [bot, setBot] = useState(false);
   const [nav, setNav] = useState(true);
@@ -58,7 +59,6 @@ function App() {
       {bot ? <Bot /> : null}
 
       <Routes>
-        {/* student Routes */}
         <Route path="/" element={<Home />} />
         <Route path="/student/feed" element={<StudentFeed />} />
         <Route
@@ -90,6 +90,8 @@ function App() {
           path="/interview/:courseName"
           element={<InterviewPage />}
         />
+
+        <Route path="/vapi/:topic" element={<VapiInterview />} />
       </Routes>
     </div>
   );
