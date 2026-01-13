@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import demo from "../assets/demo/demo.jpg";
 import { UserContext } from "../contexts/userContext";
 import axios from "axios";
+import toast from "react-hot-toast";
 
 const TeacherDashboard = () => {
   const { id } = useParams();
@@ -31,10 +32,10 @@ const TeacherDashboard = () => {
         if (response.data.success) {
           setCourses(response.data.courses);
         } else {
-          console.error("Failed to fetch courses:", response.data.message);
+          toast.error("Failed to fetch courses:", response.data.message);
         }
       } catch (error) {
-        console.error("Error fetching courses:", error);
+        toast.error("Error fetching courses:", error);
       } finally {
         setLoading(false);
       }

@@ -378,10 +378,7 @@ const UploadCourses = ({ course }) => {
                            
                     </p>
                              
-                    <p className="text-sm text-gray-500">
-                                          {lesson.type || "Video"} •
-                      {lesson.duration || "N/A"}         
-                    </p>
+                    
                            
                   </div>
                        
