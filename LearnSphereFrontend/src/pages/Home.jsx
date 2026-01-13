@@ -1,18 +1,15 @@
-import React from 'react'
-import Navbar from '../Components/Navbar/Navbar';
-import Stylebar from '../Components/Stylebar/Stylebar';
-import LandingSection from '../Components/Landing/Landingsection';
+import LandingSection from "../Components/Landing/Landingsection";
+import Courses from "../Components/Landing/Courses";
+import Footer from "../Components/Landing/Footer";
 
 const Home = () => {
   return (
     <div className=" ">
-      <Navbar />
-      <div className="relative py-10 w-full h-auto flex flex-col justify-center items-center min-h-screen">
-        <Stylebar />
-        <LandingSection />
-      </div>
+      <LandingSection />
+      <Courses />
+      <Footer />
     </div>
   );
-}
+};
 
-export default Home
+export default Home;

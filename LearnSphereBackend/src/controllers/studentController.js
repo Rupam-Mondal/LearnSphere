@@ -11,57 +11,59 @@ const getTokenFromHeader = (req) => {
 
 const getAllCourse = async (req, res) => {
   try {
-    const { token } = req.body;
+    const courses = await Course.find({ status: "APPROVED" });
 
-    if (!token) {
-      return res
-        .status(401)
-        .json({ success: false, message: "Unauthorized access" });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const studentId = decoded.id;
-
-    if (!studentId) {
-      return res
-        .status(401)
-        .json({ success: false, message: "Unauthorized access" });
-    }
-
-    const user = await User.findById(studentId);
-    if (!user || user.role !== "STUDENT") {
-      return res
-        .status(403)
-        .json({ success: false, message: "Unauthorized access" });
-    }
-
-    const courses = await Course.find({});
-    if (!courses || courses.length === 0) {
+    if (!courses.length) {
       return res
         .status(404)
         .json({ success: false, message: "No courses found" });
     }
 
-    const publicCourses = courses.filter(
-      (course) => course.status === "APPROVED"
-    );
-
     const coursesWithTeacher = await Promise.all(
-      publicCourses.map(async (course) => {
-        const teacher = await User.findById(course.teacher);
+      courses.map(async (course) => {
+        const teacher = await User.findById(course.teacher).select("username");
+
         return {
-          ...course.toObject(),
-          teacherName: teacher?.username || "Unknown",
+          id: course._id,
+          name: course.title,
+          description: course.description,
+          lessons: `${course.lessons?.length || 0} videos`,
+          price: course.price,
+          image: course.thumbnail,
+          teacher: teacher?.username || "Unknown",
+          enrolled: course.students?.length || 0,
+          topic: course.topic,
+          topicCover: course.topicCover
         };
       })
     );
 
-    res.status(200).json({ success: true, course: coursesWithTeacher });
+    const groupedCourses = Object.values(
+      coursesWithTeacher.reduce((acc, course) => {
+        if (!acc[course.topic]) {
+          acc[course.topic] = {
+            topic: course.topic,
+            course: [],
+          };
+        }
+        acc[course.topic].course.push(course);
+        return acc;
+      }, {})
+    );
+
+    res.status(200).json({
+      success: true,
+      data: groupedCourses,
+    });
   } catch (error) {
     console.error("Error fetching courses:", error);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
   }
 };
+
 
 const getCourseDetails = async (req, res) => {
   try {
@@ -74,7 +76,7 @@ const getCourseDetails = async (req, res) => {
         .json({ success: false, message: "Course ID is required" });
     }
 
-    const course = await Course.findById(courseId);
+    const course = await Course.findById(courseId).populate("lessons teacher");
     if (!course) {
       return res
         .status(404)

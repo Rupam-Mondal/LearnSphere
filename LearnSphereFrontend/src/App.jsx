@@ -1,5 +1,11 @@
 import ReactDOM from "react-dom/client";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  useParams,
+  useLocation,
+} from "react-router-dom";
 import "./App.css";
 import Home from "./pages/Home";
 import TeacherDashBoard from "./pages/TeacherDashBoard";
@@ -11,16 +17,33 @@ import React, { useContext, useEffect, useState } from "react";
 import TeacherCourse from "./Components/TeacherDashBoard/TeacherCourse";
 import { UserContext } from "./contexts/userContext";
 import StudentFeed from "./pages/StudentFeed";
-import StudentCourseDetails from "./pages/StudentCourseDetails";
+import StudentCourseDetails1 from "./pages/StudentCourseDetails1";
 import StudentDashboard from "./Components/StudentDashboard/StudentDashboard";
 import Practice from "./pages/Practice";
 import Java from "./pages/Java";
 import Oops from "./pages/Oops";
-
+import Navbar from "./Components/Navbar/Navbar";
+import Teachers from "./pages/Teachers";
+import TeacherHome from "./pages/Teacher/TeacherHome";
+import TeacherNavbar from "./Components/Navbar/TeacherNavbar";
+import TeacherAuth from "./pages/Teacher/TeacherAuth";
+import TeacherProfile from "./pages/TeacherProfile";
+import InterviewPage from "./pages/InterviewPage";
+import VapiInterview from "./pages/VapiInterview";
 function App() {
   const [bot, setBot] = useState(false);
+  const [nav, setNav] = useState(true);
+
   const { token } = useContext(UserContext);
+  const role = useLocation().pathname.split("/")[1];
+
   useEffect(() => {
+    console.log("role", role);
+    if (role.toLowerCase().includes("teacher")) {
+      setNav(false);
+    } else {
+      setNav(true);
+    }
     if (
       localStorage.getItem("token") &&
       JSON.parse(localStorage.getItem("user"))?.role === "STUDENT"
@@ -29,35 +52,46 @@ function App() {
     } else {
       setBot(false);
     }
-  }, [token]);
+  }, [token, role]);
   return (
     <div className="w-full h-full">
+      {nav ? <Navbar /> : <TeacherNavbar />}
       {bot ? <Bot /> : null}
 
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/teacher-dashboard/:id" element={<TeacherDashBoard />} />
-        <Route
-          path="/student/feed/:id"
-          element={<StudentFeed />}
-        />
+        <Route path="/student/feed" element={<StudentFeed />} />
         <Route
           path="/student/course-details/:id"
-          element={<StudentCourseDetails />}
+          element={<StudentCourseDetails1 />}
         />
-
-
-        <Route
-          path="/teacher-dashboard/:id/create-course"
-          element={<CreateCourse />}
-        />
-        {/* <Route path="/teacher-dashboard/:id" element={<TeacherDashboard />} /> */}
         <Route path="/auth" element={<AuthPage />} />
-        <Route path="/teacher-dashboard/:id/course/:courseId" element={<TeacherCourse />} />
         <Route path="/student/dashboard/:id" element={<StudentDashboard />} />
         <Route path="/practice" element={<Practice />} />
         <Route path="/practice/Java" element={<Java />} />
         <Route path="/practice/oops" element={<Oops />} />
+        <Route path="/all/teachers" element={<Teachers />} />
+        <Route path="/student/teacher/:teacherId" element={<TeacherProfile />} />
+
+
+        {/* Teacher Routes */}
+        <Route path="/teacher-Home" element={<TeacherHome />} />
+        <Route path="/teacher-auth" element={<TeacherAuth />} />
+        <Route
+          path="/teacher-dashboard/:id/course/:courseId"
+          element={<TeacherCourse />}
+        />
+        <Route path="/teacher-dashboard/:id" element={<TeacherDashBoard />} />
+        <Route
+          path="/teacher-dashboard/:id/create-course"
+          element={<CreateCourse />}
+        />
+        <Route
+          path="/interview/:courseName"
+          element={<InterviewPage />}
+        />
+
+        <Route path="/vapi/:topic" element={<VapiInterview />} />
       </Routes>
     </div>
   );

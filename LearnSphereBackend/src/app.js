@@ -8,29 +8,41 @@ import teacherRouter from "./routes/teacherRoute.js";
 import adminRouter from "./routes/adminRoute.js";
 import studentRouter from "./routes/studentRoute.js";
 import commentRouter from "./routes/commentRoute.js";
+import interviewRouter from "./routes/interviewRoute.js"
+import evaluateRouter from "./routes/evaluate.js";
+
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173", // local frontend
+      "https://learn-sphere-7kcz.vercel.app", // deployed frontend
+      "http://localhost:5174"
+    ],
+    credentials: true, // VERY IMPORTANT
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.get("/", (req, res) => {
-  console.log("Received a request at the root endpoint.");
   res.send("Welcome to the LearnSphere Backend!");
 });
 
+
+
 app.use("/api/ai", airouter);
 app.use("/api/auth", authrouter);
-
-
 app.use("/api/teacher", teacherRouter);
-
 app.use("/api/admin", adminRouter);
-
 app.use("/api/student", studentRouter);
-
 app.use("/api/comment", commentRouter);
-
+app.use("/api/interview", interviewRouter);
+app.use("/api/evaluate", evaluateRouter);
 export default app;

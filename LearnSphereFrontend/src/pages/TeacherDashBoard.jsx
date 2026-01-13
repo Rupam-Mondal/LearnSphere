@@ -14,20 +14,12 @@ const TeacherDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem("token");
-    const storedUser = JSON.parse(localStorage.getItem("user"));
-    if (storedUser) setUser(storedUser);
-    if (storedToken) setToken(storedToken);
-    else setToken(null);
-  }, [setToken, setUser]);
-
-  useEffect(() => {
     const fetchCourses = async () => {
       setLoading(true);
       try {
         const response = await axios.post(
           `${import.meta.env.VITE_BACKEND_URL}/teacher/get-courses`,
-          { token: localStorage.getItem("token") }
+          { token: token || localStorage.getItem("token") }
         );
         if (response.data.success) {
           setCourses(response.data.courses);
@@ -84,7 +76,7 @@ const TeacherDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white px-4 py-8 md:px-10">
+    <div className="min-h-screen bg-gradient-to-b from-zinc-50 to-white px-4 py-8 md:px-8 pt-12 md:py-20">
       <header className="text-center mb-16 animate-fade-in-down">
         <h1 className="text-5xl md:text-6xl font-extrabold text-blue-800 drop-shadow-lg leading-tight">
           Teacher Dashboard
@@ -96,6 +88,24 @@ const TeacherDashboard = () => {
           </span>
           ! Manage your courses and track your progress.
         </p>
+
+
+        {
+          user?.teacherDetails?.approved?.toUpperCase()  == "PENDING" && (
+            <div className="mt-4 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700">
+              Your teacher account is currently {user?.teacherDetails?.approved?.toLowerCase()}. Please wait for admin approval to access all features.
+            </div>
+          
+        )
+        }
+        {
+          user?.teacherDetails?.approved?.toUpperCase()  == "REJECTED" && (
+            <div className="mt-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700">
+              Your teacher account is currently {user?.teacherDetails?.approved?.toLowerCase()}. Please contact admin for approval to access all features.
+            </div>
+          
+        )
+        }
       </header>
 
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid gap-6 mb-12 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
@@ -125,7 +135,9 @@ const TeacherDashboard = () => {
           </p>
         </div>
 
-        <div className="sm:col-span-2 md:col-span-3 xl:col-span-4 flex justify-center">
+        {
+          user?.teacherDetails?.approved?.toUpperCase()  === "APPROVED" && (
+            <div className="sm:col-span-2 md:col-span-3 xl:col-span-4 flex justify-center">
           <button
             onClick={() => navigate(`/teacher-dashboard/${id}/create-course`)}
             className="bg-blue-600 text-white px-8 py-3 text-lg rounded-xl hover:bg-blue-700 transition duration-200 shadow-lg w-full sm:w-auto"
@@ -133,6 +145,8 @@ const TeacherDashboard = () => {
             + Create New Course
           </button>
         </div>
+          )
+        }
       </section>
 
       {loading ? (
