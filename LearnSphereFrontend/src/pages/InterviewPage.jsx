@@ -2,26 +2,44 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 
+let LOCKED_VOICE = null;
+
 export default function InterviewPage() {
   const { courseName } = useParams();
 
-  /* ---------------- STATE ---------------- */
   const [messages, setMessages] = useState([]);
-  const [status, setStatus] = useState("idle"); 
+  const [status, setStatus] = useState("idle");
   const [timeLeft, setTimeLeft] = useState(300);
 
-  /* ---------------- REFS ---------------- */
   const recognitionRef = useRef(null);
   const speakingRef = useRef(false);
+  const silenceTimerRef = useRef(null);
 
-  // Audio reactive waveform refs
   const barsRef = useRef([]);
   const analyserRef = useRef(null);
   const audioCtxRef = useRef(null);
   const streamRef = useRef(null);
   const rafRef = useRef(null);
 
-  /* ---------------- INIT SPEECH RECOGNITION ---------------- */
+  /* ---------------- LOCK VOICE ---------------- */
+  const loadVoice = () => {
+    const voices = speechSynthesis.getVoices();
+
+    LOCKED_VOICE =
+      voices.find(v => v.name === "Google US English") ||
+      voices.find(v => v.name.includes("Google")) ||
+      voices.find(v => v.lang === "en-US") ||
+      voices[0];
+
+    console.log("Locked Voice:", LOCKED_VOICE?.name);
+  };
+
+  useEffect(() => {
+    speechSynthesis.onvoiceschanged = loadVoice;
+    loadVoice();
+  }, []);
+
+  /* ---------------- SPEECH RECOGNITION ---------------- */
   useEffect(() => {
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -33,11 +51,27 @@ export default function InterviewPage() {
 
     const recognition = new SpeechRecognition();
     recognition.lang = "en-US";
-    recognition.interimResults = false;
-    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.continuous = true;
+
+    let finalTranscript = "";
 
     recognition.onresult = (e) => {
-      handleUserResponse(e.results[0][0].transcript);
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const transcript = e.results[i][0].transcript;
+
+        if (e.results[i].isFinal) {
+          finalTranscript += transcript + " ";
+        }
+      }
+
+      clearTimeout(silenceTimerRef.current);
+
+      silenceTimerRef.current = setTimeout(() => {
+        recognition.stop();
+        handleUserResponse(finalTranscript.trim());
+        finalTranscript = "";
+      }, 1500);
     };
 
     recognition.onend = () => {
@@ -68,6 +102,11 @@ export default function InterviewPage() {
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "en-US";
+    utterance.rate = 1.1;
+    utterance.pitch = 1.0;
+    utterance.volume = 1;
+
+    if (LOCKED_VOICE) utterance.voice = LOCKED_VOICE;
 
     utterance.onend = () => {
       speakingRef.current = false;
@@ -78,7 +117,7 @@ export default function InterviewPage() {
     speechSynthesis.speak(utterance);
   };
 
-  /* ---------------- START LISTENING ---------------- */
+  /* ---------------- LISTEN ---------------- */
   const startListening = async () => {
     if (!recognitionRef.current) return;
     setStatus("listening");
@@ -88,6 +127,8 @@ export default function InterviewPage() {
 
   /* ---------------- USER RESPONSE ---------------- */
   const handleUserResponse = async (userText) => {
+    if (!userText) return;
+
     const updated = [...messages, { role: "user", content: userText }];
     setMessages(updated);
 
@@ -105,7 +146,7 @@ export default function InterviewPage() {
     }
   };
 
-  /* ---------------- START INTERVIEW ---------------- */
+  /* ---------------- START ---------------- */
   const startInterview = () => {
     const intro = `Hello, I will be your technical interviewer today.
 The topic is ${courseName}.
@@ -117,6 +158,7 @@ Can you explain the fundamentals of ${courseName}?`;
     speak(intro);
   };
 
+  /* ---------------- MIC VISUALIZER ---------------- */
   const startMicVisualizer = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -133,7 +175,6 @@ Can you explain the fundamentals of ${courseName}?`;
       source.connect(analyser);
 
       const dataArray = new Uint8Array(analyser.frequencyBinCount);
-
       const MAX_BAR_HEIGHT = 30;
 
       const animate = () => {
@@ -169,19 +210,17 @@ Can you explain the fundamentals of ${courseName}?`;
     status === "speaking"
       ? "/videos/speaking.mp4"
       : status === "listening"
-        ? "/videos/listening.mp4"
-        : "/videos/idle.mp4";
+      ? "/videos/listening.mp4"
+      : "/videos/idle.mp4";
 
+  /* ---------------- UI ---------------- */
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center px-6">
       <div className="relative w-full max-w-6xl py-6">
-        {/* Soft outer glow */}
         <div className="absolute inset-0 bg-gradient-to-r from-gray-200/40 via-white to-gray-200/40 blur-2xl rounded-[36px]" />
 
-        {/* Main glass card */}
         <div className="relative top-8 h-full bg-white/70 backdrop-blur-xl rounded-[32px] shadow-[0_20px_60px_rgba(0,0,0,0.08)] px-8 py-6">
 
-          {/* HEADER */}
           <div className="mb-4">
             <h1 className="text-3xl font-semibold text-gray-900 capitalize">
               {courseName} Interview
@@ -192,13 +231,9 @@ Can you explain the fundamentals of ${courseName}?`;
             </p>
           </div>
 
-          {/* TWO COLUMN LAYOUT */}
           <div className="grid grid-cols-[1.2fr_1fr] gap-6 h-[calc(100%-56px)]">
 
-            {/* LEFT: INTERVIEW PANEL */}
             <div className="flex flex-col items-center justify-start">
-
-              {/* AVATAR */}
               <div className="relative mb-4">
                 <div className="absolute -inset-2 rounded-full bg-gradient-to-tr from-gray-200 via-white to-gray-300 blur-lg opacity-60" />
                 <div className="relative w-56 h-56 rounded-full overflow-hidden bg-white shadow-xl ring-1 ring-gray-200">
@@ -213,15 +248,15 @@ Can you explain the fundamentals of ${courseName}?`;
                 </div>
               </div>
 
-              {/* WAVEFORM BOX */}
               <div
                 className={`w-[300px] h-[56px] rounded-xl bg-white/90 
-              border border-gray-200 shadow-inner
-              flex items-center justify-center overflow-hidden
-              transition-all duration-300 ${status === "listening"
+                border border-gray-200 shadow-inner
+                flex items-center justify-center overflow-hidden
+                transition-all duration-300 ${
+                  status === "listening"
                     ? "opacity-100 translate-y-0"
                     : "opacity-0 translate-y-2"
-                  }`}
+                }`}
               >
                 <div className="flex gap-[5px] h-10 items-end">
                   {[...Array(14)].map((_, i) => (
@@ -239,7 +274,6 @@ Can you explain the fundamentals of ${courseName}?`;
                 </div>
               </div>
 
-              {/* STATUS */}
               <div className="h-5 mt-3">
                 {status === "speaking" && (
                   <p className="text-blue-600 text-xs animate-pulse">
@@ -253,27 +287,22 @@ Can you explain the fundamentals of ${courseName}?`;
                 )}
               </div>
 
-              {/* START BUTTON */}
               {status === "idle" && (
                 <button
                   onClick={startInterview}
                   className="mt-6 px-10 py-3 rounded-full bg-gray-900 text-white text-sm font-medium
-                shadow hover:shadow-lg hover:scale-[1.03] transition"
+                  shadow hover:shadow-lg hover:scale-[1.03] transition"
                 >
                   Start Interview
                 </button>
               )}
             </div>
 
-            {/* RIGHT: CHAT PANEL */}
             <div className="h-full bg-white/60 backdrop-blur rounded-2xl border border-gray-200 shadow-inner flex flex-col overflow-hidden">
-
-              {/* CHAT HEADER */}
               <div className="px-5 py-4 border-b border-gray-200 text-sm font-medium text-gray-700">
                 Interview Transcript
               </div>
 
-              {/* CHAT BODY */}
               <div className="flex-1 p-6 overflow-y-auto space-y-6">
                 {messages.map((m, i) => {
                   const isAI = m.role === "assistant";
@@ -281,21 +310,25 @@ Can you explain the fundamentals of ${courseName}?`;
                   return (
                     <div
                       key={i}
-                      className={`flex ${isAI ? "justify-start" : "justify-end"}`}
+                      className={`flex ${
+                        isAI ? "justify-start" : "justify-end"
+                      }`}
                     >
                       <div className="max-w-[85%] w-full flex flex-col">
                         <span
-                          className={`mb-1 text-[11px] font-medium tracking-wide uppercase ${isAI ? "text-gray-500" : "text-gray-400"
-                            }`}
+                          className={`mb-1 text-[11px] font-medium tracking-wide uppercase ${
+                            isAI ? "text-gray-500" : "text-gray-400"
+                          }`}
                         >
                           {isAI ? "Interviewer" : "You"}
                         </span>
 
                         <div
-                          className={`px-5 py-4 rounded-2xl text-sm leading-relaxed shadow-sm ${isAI
+                          className={`px-5 py-4 rounded-2xl text-sm leading-relaxed shadow-sm ${
+                            isAI
                               ? "bg-white border border-gray-200 text-gray-800"
                               : "bg-gradient-to-br from-gray-900 to-black text-white"
-                            }`}
+                          }`}
                         >
                           {m.content}
                         </div>
@@ -304,13 +337,11 @@ Can you explain the fundamentals of ${courseName}?`;
                   );
                 })}
               </div>
-
-
             </div>
+
           </div>
         </div>
       </div>
     </div>
   );
-
 }
