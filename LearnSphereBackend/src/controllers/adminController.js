@@ -1,5 +1,5 @@
-import Course from "../services/courseModel.js";
-import User from "../services/userModel.js";
+import Course from "../models/courseModel.js";
+import User from "../models/userModel.js";
 
 const adminLogin = (req, res) => {
   try {
@@ -104,6 +104,43 @@ const pendingTeachers = async (req, res) => {
   }
 };
 
+const getTeacherDatails = async (req, res) => {
+  const { teacherId } = req.query;
+
+  try {
+    const teacher = await User.findById(teacherId).select("-password").populate("courses");
+    if (!teacher) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Teacher not found" });
+    }
+    res.status(200).json({ success: true, teacher });
+  } catch (error) {
+    console.error("Error fetching teacher details:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+const updateTeacherStatus = async (req, res) => {
+  const { teacherId, status } = req.body;
+  try {
+    const teacher = await User.findById(teacherId);
+    if (!teacher) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Teacher not found" });
+    }
+    teacher.teacherDetails.approved = status;
+    await teacher.save();
+    res
+      .status(200)
+      .json({ success: true, message: `Teacher status updated successfully to ${status}` });
+  }
+  catch (error) {
+    console.error("Error updating teacher status:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+}
 
 
-export { pendingTeachers,adminLogin, pendingCourses, approveCourse, rejectCourse };
+export { pendingTeachers,adminLogin, pendingCourses, approveCourse, rejectCourse, getTeacherDatails, updateTeacherStatus };

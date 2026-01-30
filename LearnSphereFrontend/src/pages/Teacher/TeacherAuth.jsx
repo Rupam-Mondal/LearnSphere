@@ -15,6 +15,8 @@ const TeacherAuth = () => {
   const [experience, setExperience] = useState("");
   const [profilePicture, setProfilePicture] = useState("");
   const [qualificationProof, setQualificationProof] = useState("");
+  const [experienceProof, setExperienceProof] = useState("");
+  const [mobileNumber, setMobileNumber] = useState("");
 
   const [loading, setLoading] = useState(false);
   const { setToken, setUser } = useContext(UserContext);
@@ -22,37 +24,46 @@ const TeacherAuth = () => {
 
 
 
-  const handleFileUpload = async (e, type) => {
+  const handleFileUpload = async (e, type, username) => {
     setLoading(true);
     const file = e.target.files[0];
-    if (!file) {
-      toast.error("Please select a file");
-      setLoading(false);
-      return;
-    }
+    if (!file) return;
+
+    const safeUsername = username.trim().toLowerCase().replace(/\s+/g, "_");
+
+    let folder =
+      type === "profile"
+        ? `learnSphere/teachers/${safeUsername}/profile_pics`
+        : `learnSphere/teachers/${safeUsername}/documents`;
 
     const form = new FormData();
     form.append("file", file);
     form.append("upload_preset", import.meta.env.VITE_COLUDINARY_UPLOAD_PRESET);
+    form.append("folder", folder);
+    form.append("public_id", `${type}_${Date.now()}`);
+
+    form.append("quality", "auto");
+    form.append("fetch_format", "auto");
 
     try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_COLUDINARY_URL}/image/upload`,
-        form
+      const res = await axios.post(
+        `${import.meta.env.VITE_COLUDINARY_URL}/auto/upload`,
+        form,
       );
-      if (type === "profile") {
-        setProfilePicture(response.data.secure_url);
-        toast.success("Profile picture uploaded!");
-      } else {
-        setQualificationProof(response.data.secure_url);
-        toast.success("Qualification proof uploaded!");
-      }
-    } catch (error) {
+
+      const url = res.data.secure_url;
+      if (type === "profile") setProfilePicture(url);
+      if (type === "proof") setQualificationProof(url);
+      if (type === "ExProof") setExperienceProof(url);
+
+      toast.success("Uploaded & compressed successfully!");
+    } catch {
       toast.error("Upload failed");
     } finally {
       setLoading(false);
     }
   };
+
 
   const register = async (e) => {
     setLoading(true);
@@ -77,6 +88,8 @@ const TeacherAuth = () => {
             specialization,
             experience,
             qualificationProof,
+            experienceProof,
+            mobileNumber
           },
         }
       );
@@ -87,7 +100,7 @@ const TeacherAuth = () => {
         localStorage.setItem("user", JSON.stringify(response.data.user));
         setToken(response.data.token);
         setUser(response.data.user);
-        navigate("/teacher-dashboard"); 
+        navigate("/teacher-dashboard/" + response.data.user._id); 
       }
     } catch (error) {
       toast.error(error.response?.data?.message || "Registration failed.");
@@ -117,7 +130,7 @@ const TeacherAuth = () => {
         }
       }
     } catch (error) {
-      toast.error("Invalid credentials.");
+      toast.error(error.response?.data?.message || "Login failed.");
     }
     setLoading(false);
   };
@@ -183,6 +196,19 @@ const TeacherAuth = () => {
               placeholder="teacher@school.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div className="group">
+            <label className="block text-xs font-semibold text-gray-500 uppercase mb-1 ml-1">
+              Phome Number
+            </label>
+            <input
+              type="text"
+              className={inputStyle}
+              placeholder="+91 98765 43210"
+              value={mobileNumber}
+              onChange={(e) => setMobileNumber(e.target.value)}
               required
             />
           </div>
@@ -259,7 +285,7 @@ const TeacherAuth = () => {
                       type="file"
                       accept="image/*"
                       className="hidden"
-                      onChange={(e) => handleFileUpload(e, "profile")}
+                      onChange={(e) => handleFileUpload(e, "profile", username)}
                     />
                   </label>
                 </div>
@@ -275,10 +301,26 @@ const TeacherAuth = () => {
                       type="file"
                       accept="image/*,application/pdf"
                       className="hidden"
-                      onChange={(e) => handleFileUpload(e, "proof")}
+                      onChange={(e) => handleFileUpload(e, "proof", username)}
                     />
                   </label>
                 </div>
+              </div>
+              <div className="group">
+                <label className="block text-xs font-semibold text-gray-500 uppercase mb-1 ml-1">
+                  Experience proof PDF/Img
+                </label>
+                <label className="flex flex-col items-center justify-center p-2 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-purple-400">
+                  <span className="text-[10px] text-gray-400">
+                    {experienceProof ? "✅ Uploaded" : "Upload"}
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*,application/pdf"
+                    className="hidden"
+                    onChange={(e) => handleFileUpload(e, "ExProof", username)}
+                  />
+                </label>
               </div>
             </div>
           )}
@@ -291,8 +333,8 @@ const TeacherAuth = () => {
             {loading
               ? "Processing..."
               : isLogin
-              ? "Sign In"
-              : "Create Teacher Account"}
+                ? "Sign In"
+                : "Create Teacher Account"}
           </button>
         </form>
       </div>

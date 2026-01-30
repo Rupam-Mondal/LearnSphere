@@ -48,7 +48,7 @@ const userSchema = new mongoose.Schema(
     teacherDetails: {
       approved: {
         type: String,
-        enum: ["pending", "approved", "rejected"],
+        enum: ["pending", "approved", "rejected" ],
         default: "pending",
       },
       qualification: {
@@ -67,7 +67,13 @@ const userSchema = new mongoose.Schema(
         type: Number,
         min: 0,
         max: 5
-      }
+      },
+      mobileNumber: {
+        type: String,
+      },
+      experienceProof: {
+        type: String,
+      },
     },
 
 

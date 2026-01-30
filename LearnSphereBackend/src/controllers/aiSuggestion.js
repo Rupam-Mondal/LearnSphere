@@ -1,5 +1,5 @@
-import { generateText } from "../services/aiModel.js";
-import Course from "../services/courseModel.js";
+import { generateText } from "../models/aiModel.js";
+import Course from "../models/courseModel.js";
 
 import { GoogleGenAI } from "@google/genai";
 

@@ -1,5 +1,5 @@
-import Course from "../services/courseModel.js";
-import User from "../services/userModel.js";
+import Course from "../models/courseModel.js";
+import User from "../models/userModel.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
@@ -278,6 +278,14 @@ const teacherRegistration = async (req, res) => {
       req.body;
 
     const existingUser = await User.findOne({ email, role: "TEACHER" });
+    const existingMobile = await User.findOne({ "teacherDetails.mobileNumber": teacherDetails.mobileNumber, role: "TEACHER" });
+    if (existingMobile) {
+      return res.status(400).json({
+        success: false,
+        message: "Teacher with this mobile number already exists",
+      });
+    }
+    
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -301,6 +309,8 @@ const teacherRegistration = async (req, res) => {
         experience: teacherDetails.experience,
         specialization: teacherDetails.specialization,
         qualificationProof: teacherDetails.qualificationProof,
+        mobileNumber: teacherDetails.mobileNumber,
+        experienceProof: teacherDetails.experienceProof,
       },
     });
     await newTeacher.save();
@@ -339,7 +349,7 @@ const teacherLogin = async (req, res) => {
     if (!user) {
       return res
         .status(400)
-        .json({ success: false, message: "Invalid credentials" });
+        .json({ success: false, message: "No user found with this email" });
     }
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
@@ -372,7 +382,7 @@ const teacherLogin = async (req, res) => {
   }
 };
 
-export const getTeacherWithCourses = async (req, res) => {
+const getTeacherWithCourses = async (req, res) => {
   try {
     const { teacherId } = req.params;
 
@@ -422,6 +432,8 @@ export const getTeacherWithCourses = async (req, res) => {
 };
 
 
+
+
 export {
   teacherLogin,
   GetAllTeachers,
@@ -431,4 +443,5 @@ export {
   uploadLesson,
   deleteLesson,
   teacherRegistration,
+  getTeacherWithCourses,
 };

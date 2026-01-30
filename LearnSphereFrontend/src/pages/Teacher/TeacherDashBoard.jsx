@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import demo from "../assets/demo/demo.jpg";
-import { UserContext } from "../contexts/userContext";
+import demo from "../../assets/demo/demo.jpg";
+import { UserContext } from "../../contexts/userContext";
 import axios from "axios";
 import toast from "react-hot-toast";
 
@@ -14,8 +14,23 @@ const TeacherDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/admin/get-teacher-details?teacherId=${id}`
+        );
+        if (response.data.success) {
+          setUser(response.data.teacher);
+        } else {
+          toast.error("Failed to fetch user data:", response.data.message);
+        }
+      } catch (error) {
+        toast.error("Error fetching user data:", error);
+      }
+    }
     const fetchCourses = async () => {
       setLoading(true);
+      await fetchUserData();
       try {
         const response = await axios.post(
           `${import.meta.env.VITE_BACKEND_URL}/teacher/get-courses`,
@@ -24,10 +39,10 @@ const TeacherDashboard = () => {
         if (response.data.success) {
           setCourses(response.data.courses);
         } else {
-          toast.error("Failed to fetch courses:", response.data.message);
+          console.error("Failed to fetch courses:", response.data.message);
         }
       } catch (error) {
-        toast.error("Error fetching courses:", error);
+        console.error("Error fetching courses:", error);
       } finally {
         setLoading(false);
       }

@@ -29,4 +29,5 @@ teacherRouter.post("/upload-lesson", uploadLesson);
 teacherRouter.post("/delete-lesson", deleteLesson);
 teacherRouter.get("/all_teachers", GetAllTeachers);
 teacherRouter.get("/:teacherId/details", getTeacherWithCourses);
+
 export default teacherRouter;

@@ -1,6 +1,6 @@
-import Course from "../services/courseModel.js";
-import Progress from "../services/Progress.js";
-import User from "../services/userModel.js";
+import Course from "../models/courseModel.js";
+import Progress from "../models/Progress.js";
+import User from "../models/userModel.js";
 import jwt, { decode } from "jsonwebtoken";
 
 const getTokenFromHeader = (req) => {

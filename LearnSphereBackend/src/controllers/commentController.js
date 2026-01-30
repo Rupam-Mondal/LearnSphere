@@ -1,6 +1,6 @@
-import Comment from "../services/Comments.js";
-import Course from "../services/courseModel.js";
-import User from "../services/userModel.js";
+import Comment from "../models/Comments.js";
+import Course from "../models/courseModel.js";
+import User from "../models/userModel.js";
 import jwt from "jsonwebtoken";
 
 // ✅ Helper: extract token

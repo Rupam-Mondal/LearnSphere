@@ -8,10 +8,10 @@ import {
 } from "react-router-dom";
 import "./App.css";
 import Home from "./pages/Home";
-import TeacherDashBoard from "./pages/TeacherDashBoard";
+import TeacherDashBoard from "./pages/Teacher/TeacherDashBoard";
 import CreateCourse from "./Components/TeacherDashBoard/CreateCourse";
 import AuthPage from "./pages/AuthPage";
-import TeacherDashboard from "./pages/TeacherDashBoard";
+import TeacherDashboard from "./pages/Teacher/TeacherDashBoard";
 import Bot from "./Components/Bot/Bot";
 import React, { useContext, useEffect, useState } from "react";
 import TeacherCourse from "./Components/TeacherDashBoard/TeacherCourse";
