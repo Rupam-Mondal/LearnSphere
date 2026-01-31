@@ -169,41 +169,40 @@ Ask the next question only.
 
 export const quizController = async (req, res) => {
   try {
-    const { topic } = req.query;
+  const { topic } = req.query;
 
-    if (!topic) {
-      return res.status(400).json({
-        success: false,
-        message: "Quiz topic is required",
-      });
-    }
-
-    const prompt = `Generate a quiz on the topic: ${topic}`;
-    console.log("Quiz prompt:", prompt);
-
-    const response = await generateTextForQuiz(prompt);
-
-    let quizQuestions;
-
-    try {
-      quizQuestions = JSON.parse(response.trim());
-    } catch (parseError) {
-      console.error("❌ JSON Parse Error:", response);
-      return res.status(500).json({
-        success: false,
-        message: "Invalid quiz format generated",
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      quiz: quizQuestions, // ✅ ARRAY, not string
-    });
-  } catch (error) {
-    console.error("❌ Gemini Quiz Error:", error);
-    return res.status(500).json({
+  if (!topic) {
+    return res.status(400).json({
       success: false,
-      message: "Quiz AI failed",
+      message: "Quiz topic is required",
     });
   }
+
+  const prompt = topic;
+  const response = await generateTextForQuiz(prompt);
+  console.log("Raw Quiz Response:", response);
+
+  // const start = response.indexOf("[");
+  // const end = response.lastIndexOf("]");
+
+  // if (start === -1 || end === -1) {
+    // throw new Error("No JSON array found");
+  // }
+
+  // const quiz = JSON.parse(response);
+
+  return res.status(200).json({
+    success: true,
+    // quiz:response,
+    rawResponse: response,
+  });
+
+} catch (error) {
+  console.error("❌ Quiz API Error:", error);
+  return res.status(500).json({
+    success: false,
+    message: "Invalid quiz format generated",
+  });
+}
+
 };

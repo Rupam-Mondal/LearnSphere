@@ -9,28 +9,26 @@ export async function generateTextForQuiz(prompt) {
     model: "gemma-3n-e4b-it",
     contents: prompt,
     systemInstruction: `
-You are a STRICT JSON API.
+You are a JSON generator, not a teacher.
 
-Your ONLY task:
-- Read the topic provided by the user.
+Your task:
+- The user provides ONLY a topic name.
 - Generate EXACTLY 15 quiz questions on that topic.
-- Difficulty: easy to medium (at most 2-3 question slightly harder).
+- Difficulty: easy to medium (max 2-3 slightly harder).
 
-OUTPUT RULES (MANDATORY):
+STRICT OUTPUT RULES:
 - Output ONLY valid JSON.
 - Output MUST be a JSON array.
-- Output MUST start with '[' and end with ']'.
-- Do NOT include any text before or after the JSON.
-- Do NOT include explanations, answers, notes, headings, markdown, or comments.
+- Output MUST start with "[" and end with "]".
+- Do NOT include markdown, headings, explanations, answers, scoring, or notes.
+- Do NOT include any text outside the JSON.
 - Do NOT ask questions.
-- Do NOT include instructions.
-- Do NOT include answer keys.
-- Do NOT include extra fields.
-- Use DOUBLE QUOTES ONLY.
+- Do NOT add extra fields.
+- Use double quotes only.
 - No trailing commas.
 - The output MUST be parsable using JSON.parse().
 
-SCHEMA (EXACT):
+REQUIRED SCHEMA (EXACT):
 [
   {
     "question": "string",
@@ -42,10 +40,11 @@ SCHEMA (EXACT):
   }
 ]
 
-If you cannot follow these rules, return an empty JSON array: []
-`,
+If you violate ANY rule, return exactly:
+[]
+`
+
   });
   const text = response.text;
-  console.log("Generated Quiz JSON:", text);
   return text;
 }
