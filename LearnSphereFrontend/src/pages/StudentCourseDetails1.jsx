@@ -82,11 +82,11 @@ const StudentCourseDetails1 = () => {
       try {
         const response = await axios.post(
           `${import.meta.env.VITE_BACKEND_URL}/student/check-progress`,
-          { token: token, courseId: courseId }
+          { token: token, courseId: courseId },
         );
         if (response.data.success) {
           const completed = response.data.completedLessons.map(
-            (lesson) => lesson.videoId
+            (lesson) => lesson.videoId,
           );
           setCompletedLessons(completed);
         }
@@ -96,6 +96,12 @@ const StudentCourseDetails1 = () => {
     };
     fetchProgress();
   }, [courseId, clickedMark === true]);
+
+  useEffect(() => {
+    setLoading(true);
+    const token = localStorage.getItem("token");
+    fetchCourseDetails(token);
+  }, [courseId]);
 
   const toggleLesson = (index) => {
     setOpenLessonIndex(openLessonIndex === index ? null : index);
@@ -121,7 +127,7 @@ const StudentCourseDetails1 = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (response.data.success) {
@@ -151,8 +157,9 @@ const StudentCourseDetails1 = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
+      console.log("Course Details Response:", response.data);
 
       if (response.data.success) {
         setCourseDetails(response.data.course);
@@ -181,7 +188,7 @@ const StudentCourseDetails1 = () => {
           token: token,
           courseId: courseId,
           videoId: videoId,
-        }
+        },
       );
 
       if (response.data.success) {
@@ -196,11 +203,25 @@ const StudentCourseDetails1 = () => {
     }
   }
 
-  useEffect(() => {
-    setLoading(true);
-    const token = localStorage.getItem("token");
-    fetchCourseDetails(token);
-  }, [courseId]);
+  const assessmentController = (assessmentType) => {
+    if (
+      (completedLessons.length / courseDetails.lessons.length) * 100 ===
+      100
+    ) {
+      if (assessmentType === "quiz") {
+        alert("Navigating to Quiz Assessment");
+        navigate(`/quiz`,{
+          state: { courseTitle: courseDetails.title },
+        });
+      } else {
+        navigate(
+          `/interview/${courseDetails.title.replace(/\s+/g, "-").toLowerCase()}`,
+        );
+      }
+    } else {
+      toast.error("Please complete all lessons to proceed to the assessment.");
+    }
+  };
 
   if (loading) {
     return (
@@ -659,20 +680,16 @@ const StudentCourseDetails1 = () => {
             </h2>
             <p className="text-green-700">
               {" "}
-              You are now eligible for the virtual interview, and you will
-              receive your certificate once you pass.{" "}
+              You are now eligible for the {courseDetails.assessmentType}, and
+              you will receive your certificate once you pass.{" "}
             </p>
             <button
               onClick={() => {
-                navigate(
-                  `/interview/${courseDetails.title
-                    .replace(/\s+/g, "-")
-                    .toLowerCase()}`
-                );
+                assessmentController(courseDetails.assessmentType);
               }}
               className="mt-4 cursor-pointer px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
             >
-              Proceed to Virtual Interview
+              Proceed to {courseDetails.assessmentType.toUpperCase()}
             </button>
           </div>
         )}
@@ -733,7 +750,7 @@ const CommentSection = ({ courseId }) => {
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/comment/get-by-course`,
         { courseID: courseId },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       if (response.data.success) {
@@ -761,7 +778,7 @@ const CommentSection = ({ courseId }) => {
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/comment/add`,
         { courseID: courseId, text: newComment.trim() },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       if (response.data.success) {
@@ -784,7 +801,7 @@ const CommentSection = ({ courseId }) => {
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/comment/add-reply`,
         { commentID: commentId, text: replyText.trim() },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       if (response.data.success) {
@@ -847,7 +864,7 @@ const CommentSection = ({ courseId }) => {
                     <button
                       onClick={() =>
                         setReplyingTo(
-                          replyingTo === comment._id ? null : comment._id
+                          replyingTo === comment._id ? null : comment._id,
                         )
                       }
                       className="text-sm text-blue-600 mt-1 hover:underline"

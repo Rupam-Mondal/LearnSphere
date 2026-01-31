@@ -22,17 +22,21 @@ const AuthPage = () => {
     const file = e.target.files[0];
     if (!file) {
       toast.error("Please select a file");
+      setLoading(false);
       return;
     }
-
+    const safeUsername = username.trim().toLowerCase().replace(/\s+/g, "_");
     const form = new FormData();
     form.append("file", file);
-    form.append("upload_preset", import.meta.env.VITE_COLUDINARY_UPLOAD_PRESET);
-    form.append("cloud_name", import.meta.env.VITE_COLUDINARY_CLOUD_NAME);
+    form.append("upload_preset", import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
+    form.append("cloud_name", import.meta.env.VITE_CLOUDINARY_CLOUD_NAME);
+    form.append("folder", `learnSphere/students/${safeUsername}/profile_pics`);
+    form.append("quality", "auto");
+    form.append("fetch_format", "auto");
 
     try {
       const response = await axios.post(
-        import.meta.env.VITE_COLUDINARY_URL + "/image/upload",
+        import.meta.env.VITE_CLOUDINARY_URL + "/image/upload",
         form
       );
       setProfilePicture(response.data.secure_url);

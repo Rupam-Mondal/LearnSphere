@@ -69,6 +69,15 @@ const courseSchema = new mongoose.Schema({
     type: String,
     default: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
   },
+  assessmentType: {
+    type: String,
+    enum: ["quiz", "interview"],
+    default: "quiz",
+  },
+  ratings: {
+    type: [Number],
+    default: [],
+  }
 });
 
 const Course = mongoose.model("Course", courseSchema);

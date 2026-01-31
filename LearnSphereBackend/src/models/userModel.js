@@ -40,15 +40,29 @@ const userSchema = new mongoose.Schema(
     },
     courses: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Course",
+        course: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Course"
+        },
+        percentageGained: {
+          type: Number,
+          default: 0,
+          min: 0,
+          max: 100,
+        },
+        attempts: {
+          type: Number,
+          default: 0,
+          min: 0,
+          max:3
+        },
       },
     ],
 
     teacherDetails: {
       approved: {
         type: String,
-        enum: ["pending", "approved", "rejected" ],
+        enum: ["pending", "approved", "rejected"],
         default: "pending",
       },
       qualification: {
@@ -66,7 +80,7 @@ const userSchema = new mongoose.Schema(
       rating: {
         type: Number,
         min: 0,
-        max: 5
+        max: 5,
       },
       mobileNumber: {
         type: String,
@@ -76,7 +90,6 @@ const userSchema = new mongoose.Schema(
       },
     },
 
-
     profilePicture: {
       type: String,
       default:
@@ -85,7 +98,7 @@ const userSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 const User = mongoose.model("User", userSchema);
 export default User;

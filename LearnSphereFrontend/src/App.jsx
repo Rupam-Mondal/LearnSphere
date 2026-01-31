@@ -30,6 +30,7 @@ import TeacherAuth from "./pages/Teacher/TeacherAuth";
 import TeacherProfile from "./pages/TeacherProfile";
 import InterviewPage from "./pages/InterviewPage";
 import VapiInterview from "./pages/VapiInterview";
+import QuizPage from "./pages/QuizPage";
 function App() {
   const [bot, setBot] = useState(false);
   const [nav, setNav] = useState(true);
@@ -38,10 +39,11 @@ function App() {
   const role = useLocation().pathname.split("/")[1];
 
   useEffect(() => {
-    console.log("role", role);
     if (role.toLowerCase().includes("teacher")) {
       setNav(false);
-    } else {
+    } else if(role.toLowerCase().includes("quiz")){
+      setNav(null);
+    }else {
       setNav(true);
     }
     if (
@@ -55,7 +57,7 @@ function App() {
   }, [token, role]);
   return (
     <div className="w-full h-full">
-      {nav ? <Navbar /> : <TeacherNavbar />}
+      {nav ? <Navbar /> : nav === null ? null : <TeacherNavbar />}
       {bot ? <Bot /> : null}
 
       <Routes>
@@ -72,6 +74,7 @@ function App() {
         <Route path="/practice/oops" element={<Oops />} />
         <Route path="/all/teachers" element={<Teachers />} />
         <Route path="/student/teacher/:teacherId" element={<TeacherProfile />} />
+        <Route path="/quiz" element={<QuizPage />} />
 
 
         {/* Teacher Routes */}

@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { Plus, X, Video, List, Loader2, FileText } from "lucide-react";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { UserContext } from "../../contexts/userContext";
 
 const LessonUploaderForm = ({ onClose, onSuccess }) => {
   const [videoUrl, setVideoUrl] = useState("");
@@ -12,6 +13,7 @@ const LessonUploaderForm = ({ onClose, onSuccess }) => {
   const [uploadMode, setUploadMode] = useState("file");
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [uploadedVideoUrl, setUploadedVideoUrl] = useState("");
+  const {user} = useContext(UserContext);
 
   const courseId = window.location.pathname.split("/").pop();
 
@@ -27,11 +29,18 @@ const LessonUploaderForm = ({ onClose, onSuccess }) => {
     form.append("file", file);
     form.append("upload_preset", "LearnSphereVideo_Preset");
     form.append("cloud_name", "dyjzfkkxl");
+    form.append(
+      "folder",
+      `learnSphere/teachers/${user.username.trim().toLowerCase().replace(/\s+/g, "_")}/courses/lessons/`,
+    );
+    form.append("public_id", `video_${Date.now()}`);
+    form.append("quality", "auto");
+    form.append("fetch_format", "auto");
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_COLUDINARY_URL}/video/upload`,
-        form
+        `${import.meta.env.VITE_CLOUDINARY_URL}/video/upload`,
+        form,
       );
       const videoLink = response.data.secure_url;
       setUploadedVideoUrl(videoLink);
@@ -72,7 +81,7 @@ const LessonUploaderForm = ({ onClose, onSuccess }) => {
 
       const result = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/teacher/upload-lesson`,
-        payload
+        payload,
       );
 
       if (result.data?.success) {
@@ -88,13 +97,13 @@ const LessonUploaderForm = ({ onClose, onSuccess }) => {
         setTimeout(onClose, 1500);
       } else {
         setMessage(
-          `❌ Upload failed: ${result.data?.message || "Unknown error."}`
+          `❌ Upload failed: ${result.data?.message || "Unknown error."}`,
         );
       }
     } catch (error) {
       console.error("API Error:", error);
       setMessage(
-        `❌ Failed to upload lesson: ${error.message || "Network error."}`
+        `❌ Failed to upload lesson: ${error.message || "Network error."}`,
       );
     } finally {
       setIsLoading(false);
@@ -183,9 +192,9 @@ const LessonUploaderForm = ({ onClose, onSuccess }) => {
                 ✅ Uploaded:{" "}
                 <video
                   src={uploadedVideoUrl}
-                  className="mt-2 w-full rounded-lg shadow-md h-[240px]" controls>
-                  {/* <source src={uploadedVideoUrl} type="video/mp4" /> */}
-
+                  className="mt-2 w-full rounded-lg shadow-md h-[240px]"
+                  controls
+                >
                   Your browser does not support the video tag.
                 </video>
               </p>
@@ -260,7 +269,7 @@ const UploadCourses = ({ course }) => {
   const handleDeleteLesson = async (lessonId) => {
     if (
       !window.confirm(
-        "Are you sure you want to delete this lesson? This action cannot be undone."
+        "Are you sure you want to delete this lesson? This action cannot be undone.",
       )
     ) {
       return;
@@ -280,17 +289,17 @@ const UploadCourses = ({ course }) => {
         {
           lessonId,
           token,
-        }
+        },
       );
 
       if (result.data?.success) {
         setLessons((prev) =>
-          prev.filter((lesson) => (lesson._id || lesson.id) !== lessonId)
+          prev.filter((lesson) => (lesson._id || lesson.id) !== lessonId),
         );
         toast.success("✅ Lesson deleted successfully!");
       } else {
         toast.error(
-          `❌ Deletion failed: ${result.data?.message || "Unknown error."}`
+          `❌ Deletion failed: ${result.data?.message || "Unknown error."}`,
         );
       }
     } catch (error) {
@@ -298,7 +307,7 @@ const UploadCourses = ({ course }) => {
       toast.error(
         `❌ Failed to delete lesson: ${
           error.message || "Internal network error."
-        }`
+        }`,
       );
     } finally {
       setIsDeleting(null);
@@ -377,9 +386,7 @@ const UploadCourses = ({ course }) => {
                                           {index + 1}. {lesson.title}           
                            
                     </p>
-                             
-                    
-                           
+                                     
                   </div>
                        
                 </div>

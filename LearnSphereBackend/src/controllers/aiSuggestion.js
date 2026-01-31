@@ -2,11 +2,11 @@ import { generateText } from "../models/aiModel.js";
 import Course from "../models/courseModel.js";
 
 import { GoogleGenAI } from "@google/genai";
+import { generateTextForQuiz } from "../models/quizAiModel.js";
 
 const ai = new GoogleGenAI({
   apiKey: process.env.GOOGLE_GEMINI_KEY,
 });
-
 
 function buildGeminiPrompt(userPrompt, courses) {
   const courseList =
@@ -14,7 +14,7 @@ function buildGeminiPrompt(userPrompt, courses) {
       ? courses
           .map(
             (c, i) =>
-              `${i + 1}. ${c.title} - ${process.env.FRONTEND_URL}/student/course-details/${c._id}`
+              `${i + 1}. ${c.title} - ${process.env.FRONTEND_URL}/student/course-details/${c._id}`,
           )
           .join("\n")
       : "No courses available.";
@@ -50,7 +50,6 @@ EXAMPLE BAD OUTPUT (DO NOT DO THIS):
 `;
 }
 
-
 export default async function getResponse(req, res) {
   const { prompt } = req.body;
 
@@ -64,7 +63,7 @@ export default async function getResponse(req, res) {
   try {
     // 1️⃣ Fetch ALL approved courses
     const courses = await Course.find({ status: "APPROVED" }).select(
-      "_id title topic"
+      "_id title topic",
     );
 
     // 2️⃣ Build Gemini prompt with full course list
@@ -110,7 +109,7 @@ export const interviewController = async (req, res) => {
       .map((m) =>
         m.role === "user"
           ? `Candidate: ${m.content}`
-          : `Interviewer: ${m.content}`
+          : `Interviewer: ${m.content}`,
       )
       .join("\n");
 
@@ -150,7 +149,6 @@ Respond like a real interviewer.
 Ask the next question only.
 `;
 
-
     const response = await ai.models.generateContent({
       model: "gemma-3n-e4b-it", // ✅ FREE + instruction tuned
       contents: prompt,
@@ -165,6 +163,47 @@ Ask the next question only.
     return res.status(500).json({
       success: false,
       message: "Interview AI failed",
+    });
+  }
+};
+
+export const quizController = async (req, res) => {
+  try {
+    const { topic } = req.query;
+
+    if (!topic) {
+      return res.status(400).json({
+        success: false,
+        message: "Quiz topic is required",
+      });
+    }
+
+    const prompt = `Generate a quiz on the topic: ${topic}`;
+    console.log("Quiz prompt:", prompt);
+
+    const response = await generateTextForQuiz(prompt);
+
+    let quizQuestions;
+
+    try {
+      quizQuestions = JSON.parse(response.trim());
+    } catch (parseError) {
+      console.error("❌ JSON Parse Error:", response);
+      return res.status(500).json({
+        success: false,
+        message: "Invalid quiz format generated",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      quiz: quizQuestions, // ✅ ARRAY, not string
+    });
+  } catch (error) {
+    console.error("❌ Gemini Quiz Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Quiz AI failed",
     });
   }
 };

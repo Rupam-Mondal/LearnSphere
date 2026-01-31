@@ -38,7 +38,7 @@ const TeacherAuth = () => {
 
     const form = new FormData();
     form.append("file", file);
-    form.append("upload_preset", import.meta.env.VITE_COLUDINARY_UPLOAD_PRESET);
+    form.append("upload_preset", import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
     form.append("folder", folder);
     form.append("public_id", `${type}_${Date.now()}`);
 
@@ -47,7 +47,7 @@ const TeacherAuth = () => {
 
     try {
       const res = await axios.post(
-        `${import.meta.env.VITE_COLUDINARY_URL}/auto/upload`,
+        `${import.meta.env.VITE_CLOUDINARY_URL}/auto/upload`,
         form,
       );
 

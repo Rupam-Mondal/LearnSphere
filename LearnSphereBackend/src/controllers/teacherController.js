@@ -3,11 +3,20 @@ import User from "../models/userModel.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
+
 const createCourse = async (req, res) => {
   try {
-    const { topic, title, description, price, thumbnail, token, demoVideo } =
-      req.body;
-
+    const {
+      topic,
+      title,
+      description,
+      price,
+      topicCover,
+      thumbnail,
+      token,
+      demoVideo,
+      assessmentType,
+    } = req.body;
     if (!token) {
       return res
         .status(401)
@@ -28,7 +37,13 @@ const createCourse = async (req, res) => {
         .json({ success: false, message: "Unauthorized access" });
     }
 
-    if (!title || !description || !price) {
+    if (
+      !title ||
+      !description ||
+      !price ||
+      !topicCover ||
+      topicCover.length < 3
+    ) {
       return res
         .status(400)
         .json({ success: false, message: "These fields are required" });
@@ -47,10 +62,12 @@ const createCourse = async (req, res) => {
       title,
       description,
       price,
+      topicCover,
       thumbnail:
         thumbnail ||
         "https://instructor-academy.onlinecoursehost.com/content/images/2020/10/react-2.png",
       demoVideo: demoVideo || "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      assessmentType: assessmentType,
       teacher: teacherid,
     });
     await newCourse.save();
@@ -61,7 +78,7 @@ const createCourse = async (req, res) => {
       {
         $push: { courses: newCourse._id },
       },
-      { new: true }
+      { new: true },
     );
 
     await user.save();
@@ -69,7 +86,14 @@ const createCourse = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Course created successfully",
-      course: { title, description, price, thumbnail, teacher: teacherName },
+      course: {
+        title,
+        description,
+        price,
+        thumbnail,
+        teacher: teacherName,
+        assessmentType,
+      },
     });
   } catch (error) {
     console.error("Error creating course:", error);
@@ -235,7 +259,7 @@ const deleteLesson = async (req, res) => {
     }
 
     course.lessons = course.lessons.filter(
-      (lesson) => lesson.videoId !== lessonId
+      (lesson) => lesson.videoId !== lessonId,
     );
     await course.save();
 
@@ -278,14 +302,17 @@ const teacherRegistration = async (req, res) => {
       req.body;
 
     const existingUser = await User.findOne({ email, role: "TEACHER" });
-    const existingMobile = await User.findOne({ "teacherDetails.mobileNumber": teacherDetails.mobileNumber, role: "TEACHER" });
+    const existingMobile = await User.findOne({
+      "teacherDetails.mobileNumber": teacherDetails.mobileNumber,
+      role: "TEACHER",
+    });
     if (existingMobile) {
       return res.status(400).json({
         success: false,
         message: "Teacher with this mobile number already exists",
       });
     }
-    
+
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -323,7 +350,7 @@ const teacherRegistration = async (req, res) => {
         email: newTeacher.email,
         profilePicture: newTeacher.profilePicture,
       },
-      process.env.JWT_SECRET
+      process.env.JWT_SECRET,
     );
 
     res.status(200).json({
@@ -365,7 +392,7 @@ const teacherLogin = async (req, res) => {
         email: user.email,
         profilePicture: user.profilePicture,
       },
-      process.env.JWT_SECRET
+      process.env.JWT_SECRET,
     );
     res.status(200).json({
       success: true,
@@ -388,7 +415,7 @@ const getTeacherWithCourses = async (req, res) => {
 
     const data = await User.aggregate([
       {
-        $match: { _id: new mongoose.Types.ObjectId(teacherId) }
+        $match: { _id: new mongoose.Types.ObjectId(teacherId) },
       },
 
       {
@@ -396,8 +423,8 @@ const getTeacherWithCourses = async (req, res) => {
           from: "courses",
           localField: "_id",
           foreignField: "teacher",
-          as: "courses"
-        }
+          as: "courses",
+        },
       },
 
       // IMPORTANT: keep teacherDetails + profilePicture
@@ -405,34 +432,30 @@ const getTeacherWithCourses = async (req, res) => {
         $project: {
           password: 0,
           __v: 0,
-          "courses.__v": 0
-        }
-      }
+          "courses.__v": 0,
+        },
+      },
     ]);
 
     if (!data || data.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Teacher not found"
+        message: "Teacher not found",
       });
     }
 
     res.json({
       success: true,
-      data: data[0]
+      data: data[0],
     });
-
   } catch (err) {
     console.error(err);
     res.status(500).json({
       success: false,
-      message: "Server error"
+      message: "Server error",
     });
   }
 };
-
-
-
 
 export {
   teacherLogin,

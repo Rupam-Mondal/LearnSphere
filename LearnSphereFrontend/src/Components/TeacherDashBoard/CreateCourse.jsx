@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { UserContext } from "../../contexts/userContext";
 import toast from "react-hot-toast";
 import { FiUploadCloud, FiBook, FiDollarSign, FiAlignLeft, FiPlayCircle, FiList, FiPlus, FiTrash2 } from "react-icons/fi";
-import { IndianRupee } from "lucide-react";
+import { IndianRupee, MessageCircleQuestion } from "lucide-react";
 
 const CreateCourse = () => {
   const { id } = useParams();
@@ -18,6 +18,7 @@ const CreateCourse = () => {
   const [courseThumbnail, setCourseThumbnail] = useState(null);
   const [courseVideo, setCourseVideo] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [assessmentType, setAssessmentType] = useState("quiz");
 
   // New States based on Schema
   const [topic, setTopic] = useState("");
@@ -54,10 +55,14 @@ const CreateCourse = () => {
   const uploadToCloudinary = async (file, resourceType) => {
     const form = new FormData();
     form.append("file", file);
-    form.append("upload_preset", resourceType === "video" ? import.meta.env.VITE_COLUDINARY_UPLOAD_PRESET : import.meta.env.VITE_COLUDINARY_UPLOAD_PRESET);
-    form.append("cloud_name", resourceType === "video" ? import.meta.env.VITE_COLUDINARY_CLOUD_NAME : import.meta.env.VITE_COLUDINARY_CLOUD_NAME);
+    form.append("upload_preset", resourceType === "video" ? import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET : import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
+    form.append("cloud_name", resourceType === "video" ? import.meta.env.VITE_CLOUDINARY_CLOUD_NAME : import.meta.env.VITE_CLOUDINARY_CLOUD_NAME);
+    form.append("folder", `learnSphere/teachers/${user.username.trim().toLowerCase().replace(/\s+/g, "_")}/courses/${courseName.trim().toLowerCase().replace(/\s+/g, "_")}/${resourceType}s`);
+    form.append("public_id", `${resourceType}_${Date.now()}`);
+    form.append("quality", "auto");
+    form.append("fetch_format", "auto");
 
-    const res = await axios.post(`${import.meta.env.VITE_COLUDINARY_URL}/${resourceType}/upload`, form);
+    const res = await axios.post(`${import.meta.env.VITE_CLOUDINARY_URL}/${resourceType}/upload`, form);
     return res.data.secure_url;
   };
 
@@ -94,8 +99,9 @@ const CreateCourse = () => {
       thumbnail: courseThumbnail,
       demoVideo: courseVideo,
       token: token || localStorage.getItem("token"),
+      assessmentType: assessmentType,
     };
-
+    
     try {
       await axios.post(`${import.meta.env.VITE_BACKEND_URL}/teacher/create-course`, courseData);
       toast.success("Course launched successfully!");
@@ -147,6 +153,22 @@ const CreateCourse = () => {
                     >
                       <option value="">Select a topic</option>
                       {categories.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+
+                <div>
+                  <label className={labelClass}><MessageCircleQuestion /> Final Assignment Type</label>
+                  <div className="relative">
+                    <MessageCircleQuestion className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <select 
+                      className={`${inputClass} appearance-none cursor-pointer`}
+                      value={assessmentType}
+                      onChange={(e) => setAssessmentType(e.target.value)}
+                    >
+                      <option value="">Select an assignment type</option>
+                      {["quiz", "interview"].map((cat) => <option key={cat} value={cat}>{cat}</option>)}
                     </select>
                   </div>
                 </div>
