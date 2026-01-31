@@ -13,7 +13,7 @@ function Practice() {
       gradient: "from-yellow-400/20 via-yellow-300/20 to-orange-300/20",
       iconBg: "bg-yellow-100",
       icon: <FaSadTear className="text-yellow-500 text-3xl" />,
-      route: "/practice/Java",
+      route: "/interview/Java",
     },
     {
       title: "OOPs Test",
@@ -22,7 +22,7 @@ function Practice() {
       gradient: "from-blue-400/20 via-cyan-300/20 to-blue-300/20",
       iconBg: "bg-blue-100",
       icon: <FaUserTie className="text-blue-500 text-3xl" />,
-      route: "/practice/oops",
+      route: "/interview/oops",
     },
   ];
 
