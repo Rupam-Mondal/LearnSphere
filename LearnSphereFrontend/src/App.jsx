@@ -31,6 +31,7 @@ import TeacherProfile from "./pages/TeacherProfile";
 import InterviewPage from "./pages/InterviewPage";
 import VapiInterview from "./pages/VapiInterview";
 import QuizPage from "./pages/QuizPage";
+import CertificatePage from "./pages/CertificatePage";
 function App() {
   const [bot, setBot] = useState(false);
   const [nav, setNav] = useState(true);
@@ -75,7 +76,7 @@ function App() {
         <Route path="/all/teachers" element={<Teachers />} />
         <Route path="/student/teacher/:teacherId" element={<TeacherProfile />} />
         <Route path="/quiz" element={<QuizPage />} />
-
+        <Route path="/certificate" element={<CertificatePage/>} />
 
         {/* Teacher Routes */}
         <Route path="/teacher-Home" element={<TeacherHome />} />
