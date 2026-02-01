@@ -2,39 +2,37 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 
+const TOTAL_QUESTIONS = 5;
 let LOCKED_VOICE = null;
 
 export default function InterviewPage() {
   const { courseName } = useParams();
 
-  const [messages, setMessages] = useState([]);
-  const [status, setStatus] = useState("idle");
-  const [timeLeft, setTimeLeft] = useState(300);
+  /* ---------------- STATES ---------------- */
+  const [interviewState, setInterviewState] = useState("idle");
+  // idle | running | completed
 
+  const [status, setStatus] = useState("idle");
+  // idle | speaking | listening
+
+  const [messages, setMessages] = useState([]);
+  const [answerCount, setAnswerCount] = useState(0);
+  const [result, setResult] = useState(null);
+
+  /* ---------------- REFS ---------------- */
   const recognitionRef = useRef(null);
   const speakingRef = useRef(false);
-  const silenceTimerRef = useRef(null);
 
-  const barsRef = useRef([]);
-  const analyserRef = useRef(null);
-  const audioCtxRef = useRef(null);
-  const streamRef = useRef(null);
-  const rafRef = useRef(null);
-
-  /* ---------------- LOCK VOICE ---------------- */
-  const loadVoice = () => {
-    const voices = speechSynthesis.getVoices();
-
-    LOCKED_VOICE =
-      voices.find(v => v.name === "Google US English") ||
-      voices.find(v => v.name.includes("Google")) ||
-      voices.find(v => v.lang === "en-US") ||
-      voices[0];
-
-    console.log("Locked Voice:", LOCKED_VOICE?.name);
-  };
-
+  /* ---------------- VOICE LOCK ---------------- */
   useEffect(() => {
+    const loadVoice = () => {
+      const voices = speechSynthesis.getVoices();
+      LOCKED_VOICE =
+        voices.find(v => v.name === "Google US English") ||
+        voices.find(v => v.lang === "en-US") ||
+        voices[0];
+    };
+
     speechSynthesis.onvoiceschanged = loadVoice;
     loadVoice();
   }, []);
@@ -51,296 +49,182 @@ export default function InterviewPage() {
 
     const recognition = new SpeechRecognition();
     recognition.lang = "en-US";
-    recognition.interimResults = true;
-    recognition.continuous = true;
-
-    let finalTranscript = "";
+    recognition.interimResults = false;
+    recognition.continuous = false;
 
     recognition.onresult = (e) => {
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        const transcript = e.results[i][0].transcript;
-
-        if (e.results[i].isFinal) {
-          finalTranscript += transcript + " ";
-        }
-      }
-
-      clearTimeout(silenceTimerRef.current);
-
-      silenceTimerRef.current = setTimeout(() => {
-        recognition.stop();
-        handleUserResponse(finalTranscript.trim());
-        finalTranscript = "";
-      }, 1500);
+      const userText = e.results[0][0].transcript.trim();
+      console.log("🎤 User:", userText);
+      handleUserAnswer(userText);
     };
 
-    recognition.onend = () => {
-      if (!speakingRef.current) {
-        stopMicVisualizer();
-        setStatus("idle");
-      }
+    recognition.onerror = (e) => {
+      console.error("Speech error:", e.error);
+      setStatus("idle");
     };
 
     recognitionRef.current = recognition;
-  }, []);
+  }, [messages, answerCount]);
 
-  /* ---------------- TIMER ---------------- */
-  useEffect(() => {
-    if (status === "idle") return;
-
-    const timer = setInterval(() => {
-      setTimeLeft((t) => Math.max(t - 1, 0));
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [status]);
-
-  /* ---------------- SPEAK ---------------- */
-  const speak = (text) => {
+  /* ---------------- SPEAK AI ---------------- */
+  const speakAI = (text) => {
     speakingRef.current = true;
     setStatus("speaking");
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "en-US";
-    utterance.rate = 1.1;
-    utterance.pitch = 1.0;
-    utterance.volume = 1;
+    speechSynthesis.cancel();
 
-    if (LOCKED_VOICE) utterance.voice = LOCKED_VOICE;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.voice = LOCKED_VOICE;
+    utterance.rate = 1.05;
 
     utterance.onend = () => {
       speakingRef.current = false;
       startListening();
     };
 
-    speechSynthesis.cancel();
     speechSynthesis.speak(utterance);
   };
 
-  /* ---------------- LISTEN ---------------- */
-  const startListening = async () => {
+  /* ---------------- LISTEN USER ---------------- */
+  const startListening = () => {
     if (!recognitionRef.current) return;
     setStatus("listening");
-    await startMicVisualizer();
     recognitionRef.current.start();
   };
 
-  /* ---------------- USER RESPONSE ---------------- */
-  const handleUserResponse = async (userText) => {
-    if (!userText) return;
+  /* ---------------- HANDLE ANSWER ---------------- */
+  const handleUserAnswer = async (userText) => {
+    recognitionRef.current.stop();
+    setStatus("idle");
 
-    const updated = [...messages, { role: "user", content: userText }];
-    setMessages(updated);
+    const updatedMessages = [
+      ...messages,
+      { role: "user", content: userText },
+    ];
+    setMessages(updatedMessages);
 
+    const newCount = answerCount + 1;
+    setAnswerCount(newCount);
+
+    // ✅ END INTERVIEW AFTER 5 ANSWERS
+    if (newCount >= TOTAL_QUESTIONS) {
+      finishInterview(updatedMessages);
+      return;
+    }
+
+    // 🔁 GET NEXT QUESTION
     const res = await axios.post(
       `${import.meta.env.VITE_BACKEND_URL}/ai/interview`,
-      { topic: courseName, messages: updated }
+      {
+        topic: courseName,
+        messages: updatedMessages,
+      }
     );
 
-    if (res.data?.reply) {
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: res.data.reply },
-      ]);
-      speak(res.data.reply);
-    }
+    const aiText = res.data.reply;
+
+    setMessages(prev => [
+      ...prev,
+      { role: "assistant", content: aiText },
+    ]);
+
+    speakAI(aiText);
   };
 
-  /* ---------------- START ---------------- */
-  const startInterview = () => {
-    const intro = `Hello, I will be your technical interviewer today.
-The topic is ${courseName}.
-Let us begin.
+  /* ---------------- START INTERVIEW ---------------- */
+  const startInterview = async () => {
+    setInterviewState("running");
+    setAnswerCount(0);
+    setMessages([]);
 
-Can you explain the fundamentals of ${courseName}?`;
+    const introQuestion = `Can you explain the fundamentals of ${courseName}?`;
 
-    setMessages([{ role: "assistant", content: intro }]);
-    speak(intro);
+    setMessages([{ role: "assistant", content: introQuestion }]);
+    speakAI(introQuestion);
   };
 
-  /* ---------------- MIC VISUALIZER ---------------- */
-  const startMicVisualizer = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      streamRef.current = stream;
+  const finishInterview = async (finalMessages) => {
+    setInterviewState("completed");
+    setStatus("idle");
 
-      const audioCtx = new AudioContext();
-      audioCtxRef.current = audioCtx;
+    const res = await axios.post(
+      `${import.meta.env.VITE_BACKEND_URL}/ai/result`,
+      {
+        topic: courseName,
+        messages: finalMessages,
+      }
+    );
 
-      const source = audioCtx.createMediaStreamSource(stream);
-      const analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 64;
-      analyserRef.current = analyser;
-
-      source.connect(analyser);
-
-      const dataArray = new Uint8Array(analyser.frequencyBinCount);
-      const MAX_BAR_HEIGHT = 30;
-
-      const animate = () => {
-        analyser.getByteFrequencyData(dataArray);
-
-        barsRef.current.forEach((bar, i) => {
-          if (!bar) return;
-          const value = dataArray[i] || 0;
-          const height = Math.min(MAX_BAR_HEIGHT, Math.max(8, value / 3));
-          bar.style.height = `${height}px`;
-        });
-
-        rafRef.current = requestAnimationFrame(animate);
-      };
-
-      animate();
-    } catch (err) {
-      console.error("Mic permission denied", err);
-    }
+    setResult(res.data);
   };
 
-  const stopMicVisualizer = () => {
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    streamRef.current?.getTracks().forEach((t) => t.stop());
-    audioCtxRef.current?.close();
+  /* ---------------- RESULT UI ---------------- */
+  if (interviewState === "completed" && result) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-xl shadow max-w-xl w-full">
+          <h2 className="text-2xl font-bold mb-2">Interview Result</h2>
+          <p><b>Score:</b> {result.score}/10</p>
+          <p><b>Level:</b> {result.level}</p>
 
-    barsRef.current.forEach((bar) => {
-      if (bar) bar.style.height = "8px";
-    });
-  };
-
-  const videoSrc =
-    status === "speaking"
-      ? "/videos/speaking.mp4"
-      : status === "listening"
-      ? "/videos/listening.mp4"
-      : "/videos/idle.mp4";
-
-  /* ---------------- UI ---------------- */
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center px-6">
-      <div className="relative w-full max-w-6xl py-6">
-        <div className="absolute inset-0 bg-gradient-to-r from-gray-200/40 via-white to-gray-200/40 blur-2xl rounded-[36px]" />
-
-        <div className="relative top-8 h-full bg-white/70 backdrop-blur-xl rounded-[32px] shadow-[0_20px_60px_rgba(0,0,0,0.08)] px-8 py-6">
-
-          <div className="mb-4">
-            <h1 className="text-3xl font-semibold text-gray-900 capitalize">
-              {courseName} Interview
-            </h1>
-            <p className="text-xs text-gray-500 mt-1 tracking-wide">
-              Remaining Time · {Math.floor(timeLeft / 60)}:
-              {String(timeLeft % 60).padStart(2, "0")}
-            </p>
+          <div className="mt-4">
+            <b>Strengths</b>
+            <ul className="list-disc ml-6">
+              {result.strengths.map(s => <li key={s}>{s}</li>)}
+            </ul>
           </div>
 
-          <div className="grid grid-cols-[1.2fr_1fr] gap-6 h-[calc(100%-56px)]">
-
-            <div className="flex flex-col items-center justify-start">
-              <div className="relative mb-4">
-                <div className="absolute -inset-2 rounded-full bg-gradient-to-tr from-gray-200 via-white to-gray-300 blur-lg opacity-60" />
-                <div className="relative w-56 h-56 rounded-full overflow-hidden bg-white shadow-xl ring-1 ring-gray-200">
-                  <video
-                    src={videoSrc}
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              </div>
-
-              <div
-                className={`w-[300px] h-[56px] rounded-xl bg-white/90 
-                border border-gray-200 shadow-inner
-                flex items-center justify-center overflow-hidden
-                transition-all duration-300 ${
-                  status === "listening"
-                    ? "opacity-100 translate-y-0"
-                    : "opacity-0 translate-y-2"
-                }`}
-              >
-                <div className="flex gap-[5px] h-10 items-end">
-                  {[...Array(14)].map((_, i) => (
-                    <span
-                      key={i}
-                      ref={(el) => (barsRef.current[i] = el)}
-                      className="w-[3px] rounded-full transition-all duration-75"
-                      style={{
-                        height: "8px",
-                        background:
-                          "linear-gradient(to top, #16a34a, #4ade80)",
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <div className="h-5 mt-3">
-                {status === "speaking" && (
-                  <p className="text-blue-600 text-xs animate-pulse">
-                    Interviewer speaking
-                  </p>
-                )}
-                {status === "listening" && (
-                  <p className="text-green-600 text-xs animate-pulse">
-                    Listening · Speak now
-                  </p>
-                )}
-              </div>
-
-              {status === "idle" && (
-                <button
-                  onClick={startInterview}
-                  className="mt-6 px-10 py-3 rounded-full bg-gray-900 text-white text-sm font-medium
-                  shadow hover:shadow-lg hover:scale-[1.03] transition"
-                >
-                  Start Interview
-                </button>
-              )}
-            </div>
-
-            <div className="h-full bg-white/60 backdrop-blur rounded-2xl border border-gray-200 shadow-inner flex flex-col overflow-hidden">
-              <div className="px-5 py-4 border-b border-gray-200 text-sm font-medium text-gray-700">
-                Interview Transcript
-              </div>
-
-              <div className="flex-1 p-6 overflow-y-auto space-y-6">
-                {messages.map((m, i) => {
-                  const isAI = m.role === "assistant";
-
-                  return (
-                    <div
-                      key={i}
-                      className={`flex ${
-                        isAI ? "justify-start" : "justify-end"
-                      }`}
-                    >
-                      <div className="max-w-[85%] w-full flex flex-col">
-                        <span
-                          className={`mb-1 text-[11px] font-medium tracking-wide uppercase ${
-                            isAI ? "text-gray-500" : "text-gray-400"
-                          }`}
-                        >
-                          {isAI ? "Interviewer" : "You"}
-                        </span>
-
-                        <div
-                          className={`px-5 py-4 rounded-2xl text-sm leading-relaxed shadow-sm ${
-                            isAI
-                              ? "bg-white border border-gray-200 text-gray-800"
-                              : "bg-gradient-to-br from-gray-900 to-black text-white"
-                          }`}
-                        >
-                          {m.content}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
+          <div className="mt-4">
+            <b>Weaknesses</b>
+            <ul className="list-disc ml-6">
+              {result.weaknesses.map(w => <li key={w}>{w}</li>)}
+            </ul>
           </div>
+
+          <p className="mt-4 font-medium">{result.recommendation}</p>
         </div>
+      </div>
+    );
+  }
+
+  /* ---------------- MAIN UI ---------------- */
+  return (
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="bg-white w-full max-w-3xl rounded-xl shadow p-6">
+
+        {interviewState === "idle" && (
+          <button
+            onClick={startInterview}
+            className="px-10 py-4 rounded-full bg-black text-white mx-auto block"
+          >
+            Start Interview
+          </button>
+        )}
+
+        {interviewState === "running" && (
+          <>
+            <div className="text-sm mb-4">
+              <p>Status: <b>{status}</b></p>
+              <p>Answers: <b>{answerCount}/{TOTAL_QUESTIONS}</b></p>
+            </div>
+
+            <div className="space-y-4 max-h-[400px] overflow-y-auto">
+              {messages.map((m, i) => (
+                <div
+                  key={i}
+                  className={`p-4 rounded-xl ${
+                    m.role === "assistant"
+                      ? "bg-gray-100 text-left"
+                      : "bg-black text-white text-right"
+                  }`}
+                >
+                  <b>{m.role === "assistant" ? "Interviewer" : "You"}:</b>
+                  <p>{m.content}</p>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
