@@ -48,3 +48,61 @@ If you violate ANY rule, return exactly:
   const text = response.text;
   return text;
 }
+
+
+export async function generateQuiz(topic) {
+  const prompt = `
+Generate EXACTLY 2 quiz questions on the topic "${topic}".
+
+STRICT RULES (VERY IMPORTANT):
+- Output ONLY plain text
+- NO explanations
+- NO introductions
+- NO conclusions
+- NO headings
+- NO numbering
+- NO markdown
+- NO emojis
+- NO extra sentences
+- Assume the topic is being studied by a student preparing for an exam, mainly from programming world.
+
+FORMAT (repeat EXACTLY 10 times):
+
+Question text
+["option1","option2","option3","option4"]
+
+If you output ANYTHING else, the response is INVALID and unusable.
+`;
+
+  const response = await ai.models.generateContent({
+    model: "gemma-3n-e4b-it",
+    contents: prompt,
+  });
+
+  return response.text;
+}
+
+export async function checkAnswer(questionList, userAnswersList) {
+  const prompt = `
+You are a quiz answer evaluator.
+You are given a list of questions with options and a list of user's answers.
+Evaluate the user's answers and provide a score.
+For each question, if the user's answer matches the correct option, award 1 point; otherwise, award 0 points.
+Format the output as a JSON object with the total score and an array with format like ["correct", "incorrect", ...].
+The question list is: ${JSON.stringify(questionList)}
+The user's answers are: ${JSON.stringify(userAnswersList)}
+Provide the output in the following JSON format:
+{
+  "totalScore": number,
+  "results": ["correct" or "incorrect", ...]
+}
+- Do NOT include any explanations or additional text.
+- Ensure the output is valid JSON.
+`
+  const response = await ai.models.generateContent({
+    model: "gemma-3n-e4b-it",
+    contents: prompt,
+  });
+  const text = response.text;
+  return text;
+}

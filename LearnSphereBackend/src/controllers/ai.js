@@ -1,8 +1,8 @@
-import { generateQuiz, generateText } from "../models/aiModel.js";
+import { generateText } from "../models/aiModel.js";
 import Course from "../models/courseModel.js";
 
 import { GoogleGenAI } from "@google/genai";
-import { generateTextForQuiz } from "../models/quizAiModel.js";
+import { checkAnswer, generateQuiz } from "../models/quizAiModel.js";
 
 const ai = new GoogleGenAI({
   apiKey: process.env.GOOGLE_GEMINI_KEY,
@@ -206,3 +206,31 @@ export const quizController = async (req, res) => {
     });
   }
 };
+
+export const answerCheckController = async (req, res) => {
+  try {
+    const { questionList, userAnswersList } = req.body;
+    if (!questionList || !userAnswersList) {
+      return res.status(400).json({
+        success: false,
+        message: "Question and selected option are required",
+      });
+    }
+    const response = await checkAnswer(questionList, userAnswersList);
+    const cleanedResponse = response.match(/\{[\s\S]*\}/)[0];
+    const result = JSON.parse(cleanedResponse);
+    return res.status(200).json({
+      success: true,
+      questionList, 
+      userAnswersList,
+      score: (result.totalScore / questionList.length) * 100 + "%",
+      result: result,
+    });
+  } catch (error) {
+    console.error("❌ Answer Check API Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Answer check failed",
+    });
+  }
+}
