@@ -145,7 +145,7 @@ const QuizPage = () => {
                   <p>
                     <span className="font-medium">Correct Answer:</span>{" "}
                     <span className="text-green-700 font-semibold">
-                      {result.correctAnswers[index]}
+                      {result?.correctAnswers?.[index]}
                     </span>
                   </p>
                 )}
