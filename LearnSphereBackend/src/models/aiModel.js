@@ -13,3 +13,38 @@ export async function generateText(Prompt) {
   const text = response.text;
   return text;
 }
+
+export async function generateQuiz(topic) {
+  const prompt = `
+Generate EXACTLY 10 quiz questions on the topic "${topic}".
+
+STRICT RULES (VERY IMPORTANT):
+- Output ONLY plain text
+- NO explanations
+- NO introductions
+- NO conclusions
+- NO headings
+- NO numbering
+- NO markdown
+- NO emojis
+- NO extra sentences
+- Assume the topic is being studied by a student preparing for an exam, mainly from programming world.
+
+FORMAT (repeat EXACTLY 10 times):
+
+Question text
+["option1","option2","option3","option4"]
+
+If you output ANYTHING else, the response is INVALID and unusable.
+`;
+
+  const response = await ai.models.generateContent({
+    model: "gemma-3n-e4b-it",
+    contents: prompt,
+  });
+
+  return response.text;
+}
+
+
+

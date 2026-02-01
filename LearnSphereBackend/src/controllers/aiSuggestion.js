@@ -1,4 +1,4 @@
-import { generateText } from "../models/aiModel.js";
+import { generateQuiz, generateText } from "../models/aiModel.js";
 import Course from "../models/courseModel.js";
 
 import { GoogleGenAI } from "@google/genai";
@@ -169,40 +169,40 @@ Ask the next question only.
 
 export const quizController = async (req, res) => {
   try {
-  const { topic } = req.query;
+    const { topic } = req.query;
 
-  if (!topic) {
-    return res.status(400).json({
+    if (!topic) {
+      return res.status(400).json({
+        success: false,
+        message: "Quiz topic is required",
+      });
+    }
+
+    const response = await generateQuiz(topic);
+    console.log("Raw Quiz Response:", response);
+    const lines = response
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    const quiz = [];
+
+    for (let i = 0; i < lines.length; i += 2) {
+      quiz.push({
+        question: lines[i],
+        options: JSON.parse(lines[i + 1]),
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      quiz,
+    });
+  } catch (error) {
+    console.error("❌ Quiz API Error:", error);
+    return res.status(500).json({
       success: false,
-      message: "Quiz topic is required",
+      message: "Invalid quiz format generated",
     });
   }
-
-  const prompt = topic;
-  const response = await generateTextForQuiz(prompt);
-  console.log("Raw Quiz Response:", response);
-
-  // const start = response.indexOf("[");
-  // const end = response.lastIndexOf("]");
-
-  // if (start === -1 || end === -1) {
-    // throw new Error("No JSON array found");
-  // }
-
-  // const quiz = JSON.parse(response);
-
-  return res.status(200).json({
-    success: true,
-    // quiz:response,
-    rawResponse: response,
-  });
-
-} catch (error) {
-  console.error("❌ Quiz API Error:", error);
-  return res.status(500).json({
-    success: false,
-    message: "Invalid quiz format generated",
-  });
-}
-
 };
