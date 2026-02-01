@@ -167,6 +167,72 @@ Ask the next question only.
   }
 };
 
+export const interviewResultController = async (req, res) => {
+  try {
+    const { topic, messages } = req.body;
+
+    if (!messages || !messages.length) {
+      return res.status(400).json({ error: "No messages provided" });
+    }
+
+    const conversation = messages
+      .map(m =>
+        m.role === "user"
+          ? `Candidate: ${m.content}`
+          : `Interviewer: ${m.content}`
+      )
+      .join("\n");
+
+    const prompt = `
+You are a strict technical interviewer.
+
+Interview topic: ${topic}
+
+Evaluate ONLY the candidate answers.
+
+Return ONLY valid JSON.
+No markdown.
+No explanation.
+No extra text.
+
+JSON format:
+{
+  "score": number (0-10),
+  "level": "Beginner" | "Intermediate" | "Advanced",
+  "strengths": [string, string, string],
+  "weaknesses": [string, string],
+  "recommendation": string
+}
+
+Conversation:
+${conversation}
+`;
+
+    const response = await ai.models.generateContent({
+      model: "gemma-3n-e4b-it",
+      contents: prompt,
+    });
+
+    let text = response.text.trim();
+
+    // 🔥 SAFETY: remove code fences if present
+    if (text.startsWith("```")) {
+      text = text.replace(/```json|```/g, "").trim();
+    }
+
+    const parsed = JSON.parse(text);
+
+    return res.json(parsed);
+  } catch (error) {
+    console.error("❌ Result generation error:", error.message);
+    return res.status(500).json({
+      error: "Result generation failed",
+    });
+  }
+};
+
+
+
 export const quizController = async (req, res) => {
   try {
     const { topic } = req.query;
