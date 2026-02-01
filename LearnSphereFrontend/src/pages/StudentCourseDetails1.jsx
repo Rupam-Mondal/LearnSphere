@@ -159,7 +159,6 @@ const StudentCourseDetails1 = () => {
           },
         },
       );
-      console.log("Course Details Response:", response.data);
 
       if (response.data.success) {
         setCourseDetails(response.data.course);
@@ -209,9 +208,8 @@ const StudentCourseDetails1 = () => {
       100
     ) {
       if (assessmentType === "quiz") {
-        alert("Navigating to Quiz Assessment");
         navigate(`/quiz`,{
-          state: { courseTitle: courseDetails.title },
+          state: { courseTitle: courseDetails.title, courseId: courseId},
         });
       } else {
         navigate(

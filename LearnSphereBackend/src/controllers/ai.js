@@ -176,10 +176,10 @@ export const interviewResultController = async (req, res) => {
     }
 
     const conversation = messages
-      .map(m =>
+      .map((m) =>
         m.role === "user"
           ? `Candidate: ${m.content}`
-          : `Interviewer: ${m.content}`
+          : `Interviewer: ${m.content}`,
       )
       .join("\n");
 
@@ -231,8 +231,6 @@ ${conversation}
   }
 };
 
-
-
 export const quizController = async (req, res) => {
   try {
     const { topic } = req.query;
@@ -245,19 +243,31 @@ export const quizController = async (req, res) => {
     }
 
     const response = await generateQuiz(topic);
-    console.log("Raw Quiz Response:", response);
+    // console.log("Raw Quiz Response:", response);
     const lines = response
       .split("\n")
       .map((line) => line.trim())
       .filter(Boolean);
 
     const quiz = [];
+    let currentQuestion = null;
 
-    for (let i = 0; i < lines.length; i += 2) {
-      quiz.push({
-        question: lines[i],
-        options: JSON.parse(lines[i + 1]),
-      });
+    for (const line of lines) {
+      if (line.startsWith("[")) {
+        if (currentQuestion) {
+          try {
+            quiz.push({
+              question: currentQuestion,
+              options: JSON.parse(line),
+            });
+            currentQuestion = null;
+          } catch (err) {
+            console.error("Invalid JSON options:", line);
+          }
+        }
+      } else {
+        currentQuestion = line;
+      }
     }
 
     return res.status(200).json({
@@ -287,9 +297,9 @@ export const answerCheckController = async (req, res) => {
     const result = JSON.parse(cleanedResponse);
     return res.status(200).json({
       success: true,
-      questionList, 
+      questionList,
       userAnswersList,
-      score: (result.totalScore / questionList.length) * 100 + "%",
+      score: (result.totalScore / questionList.length) * 100 ,
       result: result,
     });
   } catch (error) {
@@ -299,4 +309,4 @@ export const answerCheckController = async (req, res) => {
       message: "Answer check failed",
     });
   }
-}
+};

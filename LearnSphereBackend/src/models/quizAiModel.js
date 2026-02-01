@@ -52,9 +52,16 @@ If you violate ANY rule, return exactly:
 
 export async function generateQuiz(topic) {
   const prompt = `
-Generate EXACTLY 2 quiz questions on the topic "${topic}".
+Generate EXACTLY 15 quiz questions on the topic "${topic}".
 
 STRICT RULES (VERY IMPORTANT):
+- Each question MUST have EXACTLY 4 options.
+- Do NOT provide answers or explanations.
+- Use simple language.
+- Focus on core concepts.
+- Avoid overly complex questions.
+- Ensure variety in question types.
+- keep difficulty easy to medium (max 2-3 slightly harder).
 - Output ONLY plain text
 - NO explanations
 - NO introductions
@@ -66,7 +73,7 @@ STRICT RULES (VERY IMPORTANT):
 - NO extra sentences
 - Assume the topic is being studied by a student preparing for an exam, mainly from programming world.
 
-FORMAT (repeat EXACTLY 10 times):
+FORMAT (repeat EXACTLY 15 times):
 
 Question text
 ["option1","option2","option3","option4"]
@@ -95,6 +102,7 @@ Provide the output in the following JSON format:
 {
   "totalScore": number,
   "results": ["correct" or "incorrect", ...]
+  "correctAnswers": ["correct option1", "correct option2", ...]
 }
 - Do NOT include any explanations or additional text.
 - Ensure the output is valid JSON.
