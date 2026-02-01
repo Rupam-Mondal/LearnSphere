@@ -3,6 +3,7 @@ import Course from "../models/courseModel.js";
 
 import { GoogleGenAI } from "@google/genai";
 import { checkAnswer, generateQuiz } from "../models/quizAiModel.js";
+import User from "../models/userModel.js";
 
 const ai = new GoogleGenAI({
   apiKey: process.env.GOOGLE_GEMINI_KEY,
@@ -299,7 +300,7 @@ export const answerCheckController = async (req, res) => {
       success: true,
       questionList,
       userAnswersList,
-      score: (result.totalScore / questionList.length) * 100 ,
+      score: (result.totalScore / questionList.length) * 100,
       result: result,
     });
   } catch (error) {
@@ -307,6 +308,52 @@ export const answerCheckController = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Answer check failed",
+    });
+  }
+};
+
+export const updateAttempts = async (req, res) => {
+  const { userId, courseId } = req.body;
+  if (!userId || !courseId) {
+    return res.status(400).json({
+      success: false,
+      message: "User ID and Course ID are required",
+    });
+  }
+
+  try {
+    const student = await User.findById(userId);
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const courseEntry = student.courses.find(
+      (c) => c._id.toString() === courseId,
+    );
+
+    if (!courseEntry) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found for this student",
+      });
+    }
+
+    courseEntry.attempts += 1;
+    await student.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Attempts updated",
+      attempts: courseEntry.attempts,
+    });
+  } catch (error) {
+    console.error("❌ Update Attempts Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
     });
   }
 };

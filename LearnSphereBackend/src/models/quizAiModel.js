@@ -52,7 +52,7 @@ If you violate ANY rule, return exactly:
 
 export async function generateQuiz(topic) {
   const prompt = `
-Generate EXACTLY 15 quiz questions on the topic "${topic}".
+Generate EXACTLY 10 quiz questions on the topic "${topic}".
 
 STRICT RULES (VERY IMPORTANT):
 - Each question MUST have EXACTLY 4 options.
@@ -73,7 +73,7 @@ STRICT RULES (VERY IMPORTANT):
 - NO extra sentences
 - Assume the topic is being studied by a student preparing for an exam, mainly from programming world.
 
-FORMAT (repeat EXACTLY 15 times):
+FORMAT (repeat EXACTLY 10 times):
 
 Question text
 ["option1","option2","option3","option4"]
