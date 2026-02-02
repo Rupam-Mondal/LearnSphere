@@ -72,7 +72,29 @@ const StudentCourseDetails1 = () => {
   const [openLessonIndex, setOpenLessonIndex] = useState(null);
   const [completedLessons, setCompletedLessons] = useState([]);
   const [clickedMark, setClickedMark] = useState(false);
-  const { token } = useContext(UserContext);
+  const { token, user, setUser } = useContext(UserContext);
+  const userId = user?.id;
+
+  useEffect(() => {
+    console.log("User ID from context:", userId);
+    const fetchUserData = async () => {
+      if (token) {
+        try {
+          const res = await axios.post(
+            `${import.meta.env.VITE_BACKEND_URL}/student/get-info`,
+            { studentId: userId },
+          );
+          console.log("Fetched user data:", res.data);
+          if (res.data.success) {
+            setUser(res.data.student);
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+        }
+      }
+    };
+    fetchUserData();
+  }, [userId]);
 
   useEffect(() => {
     const fetchProgress = async () => {
@@ -208,8 +230,8 @@ const StudentCourseDetails1 = () => {
       100
     ) {
       if (assessmentType === "quiz") {
-        navigate(`/quiz`,{
-          state: { courseTitle: courseDetails.title, courseId: courseId},
+        navigate(`/quiz`, {
+          state: { courseTitle: courseDetails.title, courseId: courseId },
         });
       } else {
         navigate(
@@ -413,12 +435,6 @@ const StudentCourseDetails1 = () => {
                   <span className="text-6xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-cyan-600">
                     ₹{courseDetails?.price || "499"}
                   </span>
-                  {/* <span className="text-slate-400 line-through text-xl font-semibold">
-                    ₹1,999
-                  </span>
-                  <span className="ml-2 px-3 py-1 bg-gradient-to-r from-emerald-500 to-green-500 text-white text-sm font-black rounded-full shadow-lg">
-                    75% OFF
-                  </span> */}
                 </div>
 
                 {enrolled ? (
@@ -480,22 +496,6 @@ const StudentCourseDetails1 = () => {
           </div>
         </div>
       </div>
-
-      {/* {!enrolled && (
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t p-4 z-50 flex items-center justify-between px-6">
-          <div>
-            <p className="text-2xl font-black">
-              ₹{courseDetails?.price || "499"}
-            </p>
-            <p className="text-purple-600 font-bold text-xs">
-              Limited time offer
-            </p>
-          </div>
-          <button className="bg-purple-600 text-white px-8 py-3 rounded-xl font-bold">
-            Enroll
-          </button>
-        </div>
-      )} */}
 
       {enrolled &&
         courseDetails.lessons &&
@@ -669,28 +669,69 @@ const StudentCourseDetails1 = () => {
           </div>
         )}
 
-      {courseDetails.lessons.length > 0 &&
-        (completedLessons.length / courseDetails.lessons.length) * 100 ===
-          100 && (
-          <div className="mt-10 p-6 bg-green-100 border border-green-300 text-center">
-            <h2 className="text-2xl font-bold text-green-800 mb-2">
-              🎉 Congratulations You have Completed the Course! 🎉
-            </h2>
-            <p className="text-green-700">
-              {" "}
-              You are now eligible for the {courseDetails.assessmentType}, and
-              you will receive your certificate once you pass.{" "}
-            </p>
-            <button
-              onClick={() => {
-                assessmentController(courseDetails.assessmentType);
-              }}
-              className="mt-4 cursor-pointer px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-            >
-              Proceed to {courseDetails.assessmentType.toUpperCase()}
-            </button>
-          </div>
-        )}
+      {courseDetails?.lessons?.length > 0 &&
+      (completedLessons.length / courseDetails.lessons.length) * 100 === 100 &&
+      user?.courses?.find((c) => c._id?.toString() === courseId)
+        ?.isValidforCertificate ? (
+        <div className="mt-10 p-6 bg-green-100 border border-green-300 text-center">
+          <h2 className="text-2xl font-bold text-green-800 mb-2">
+            🎉 Congratulations! You have Cleared the Course! 🎉
+          </h2>
+          <button className="mt-4 cursor-pointer px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+            DownLoad Certificate
+          </button>
+        </div>
+      ) : user?.courses?.find((c) => c._id?.toString() === courseId)
+          ?.attempts <= 3 ? (
+        <div className="mt-10 p-6 bg-green-100 border border-green-300 text-center">
+          <h2 className="text-2xl font-bold text-green-800 mb-2">
+            🎉 Congratulations You have Completed the Course! 🎉
+          </h2>
+          <p className="text-green-700">
+            {" "}
+            You are now eligible for the {courseDetails.assessmentType}, and you
+            will receive your certificate once you pass.
+            <br />
+            You have total 3 attempts to clear the exam ️. <br />
+            You attempted{" "}
+            {user
+              ? user.courses.find(
+                  (course) => course?._id.toString() === courseId,
+                ).attempts
+              : 0}{" "}
+            times.
+            {user && (
+              <p>
+                <br />
+                Best of luck,{" "}
+                {user.username.split(" ")[0].charAt(0).toUpperCase() +
+                  user.username.split(" ")[0].slice(1)}
+                !
+              </p>
+            )}
+          </p>
+          <button
+            onClick={() => {
+              assessmentController(courseDetails.assessmentType);
+            }}
+            className="mt-4 cursor-pointer px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+          >
+            Proceed to {courseDetails.assessmentType.toUpperCase()}
+          </button>
+        </div>
+      ) : (
+        <div className="mt-10 p-6 bg-red-100 border border-red-300 text-center">
+          <h2 className="text-2xl font-bold text-red-800 mb-2">
+            ❌ You have exhausted all your attempts for the{" "}
+            {courseDetails.assessmentType}. ❌
+          </h2>
+          <p className="text-red-700">
+            Unfortunately, you have used all 3 attempts to clear the
+            {courseDetails.assessmentType}. You will not be able to receive the
+            certificate for this course.
+          </p>
+        </div>
+      )}
 
       {enrolled && (
         <div className="max-w-7xl mx-auto px-6 pb-20 mt-10">

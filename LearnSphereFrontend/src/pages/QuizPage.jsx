@@ -58,6 +58,16 @@ const QuizPage = () => {
       setScore(res.data.score);
       setResult(res.data.result);
       setShowResult(true);
+
+      await axios.put(
+        `${import.meta.env.VITE_BACKEND_URL}/ai/quiz/updateMarks`,
+        {
+          courseId,
+          userId: user.id,
+          marks: res.data.score,
+        },
+      );
+
     } catch (err) {
       console.error("Error checking answers");
     } finally {

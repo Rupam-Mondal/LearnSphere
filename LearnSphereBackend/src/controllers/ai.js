@@ -312,7 +312,7 @@ export const answerCheckController = async (req, res) => {
   }
 };
 
-export const updateAttempts = async (req, res) => {
+export const updateAttemptsController = async (req, res) => {
   const { userId, courseId } = req.body;
   if (!userId || !courseId) {
     return res.status(400).json({
@@ -341,6 +341,24 @@ export const updateAttempts = async (req, res) => {
       });
     }
 
+    if (courseEntry.attempts === undefined) {
+      courseEntry.attempts = 0;
+    }
+
+    if(courseEntry.isValidforCertificate){
+      return res.status(400).json({
+        success: false,
+        message: "Course already completed. No further attempts allowed.",
+      });
+    }
+
+    if(courseEntry.attempts >= 3){
+      return res.status(400).json({
+        success: false,
+        message: "Maximum number of attempts reached.",
+      });
+    }
+
     courseEntry.attempts += 1;
     await student.save();
 
@@ -351,6 +369,58 @@ export const updateAttempts = async (req, res) => {
     });
   } catch (error) {
     console.error("❌ Update Attempts Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
+export const updateMarksController = async (req, res) => {
+  const { userId, courseId, marks } = req.body;
+  if (!userId || !courseId || marks === undefined) {
+    return res.status(400).json({
+      success: false,
+      message: "User ID, Course ID, and marks are required",
+    });
+  }
+
+  try {
+    const student = await User.findById(userId);
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const courseEntry = student.courses.find(
+      (c) => c._id.toString() === courseId,
+    );
+
+    if (!courseEntry) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found for this student",
+      });
+    }
+
+
+    courseEntry.percentageGained = marks;
+    if(marks >= 70){
+      courseEntry.dateOfCompletion = new Date();
+      courseEntry.isValidforCertificate = true;
+    }
+
+    await student.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Marks updated",
+      marks: courseEntry.marks,
+    });
+  } catch (error) {
+    console.error("❌ Update Marks Error:", error);
     res.status(500).json({
       success: false,
       message: "Server error",
