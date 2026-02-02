@@ -6,11 +6,8 @@ import axios from "axios";
 const QuizPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { courseTitle, courseId } = location.state || {};
+  const { courseTitle, courseId,userId } = location.state || {};
   const { user } = useContext(UserContext);
-  console.log("user", user);
-  // console.log("userId from outside useEffect", user.id);
-  // const userId = user.id;
 
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
@@ -24,7 +21,7 @@ const QuizPage = () => {
   const [result, setResult] = useState(null);
 
   useEffect(() => {
-    if (!user || !courseTitle || !courseId) return;
+    if (!userId || !courseTitle || !courseId) return;
 
     const fetchAIQuestions = async () => {
       setLoader(true);
@@ -58,12 +55,11 @@ const QuizPage = () => {
       setScore(res.data.score);
       setResult(res.data.result);
       setShowResult(true);
-
-      await axios.put(
+      const response = await axios.put(
         `${import.meta.env.VITE_BACKEND_URL}/ai/quiz/updateMarks`,
         {
           courseId,
-          userId: user.id,
+          userId,
           marks: res.data.score,
         },
       );
@@ -88,7 +84,7 @@ const QuizPage = () => {
     }
   };
 
-  if (!location.state) return <Navigate to="/courses" />;
+  if (!location.state) return <Navigate to="/" />;
 
 
   if (loader) {

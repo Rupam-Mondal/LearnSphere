@@ -23,6 +23,7 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 import { jwtDecode } from "jwt-decode";
 import { UserContext } from "../contexts/userContext";
+import { generateCertificate } from "../lib/cirtificateGenerator";
 
 const VideoPlayerModal = ({ videoUrl, onClose }) => {
   const embedUrl = videoUrl
@@ -76,7 +77,6 @@ const StudentCourseDetails1 = () => {
   const userId = user?.id;
 
   useEffect(() => {
-    console.log("User ID from context:", userId);
     const fetchUserData = async () => {
       if (token) {
         try {
@@ -84,7 +84,6 @@ const StudentCourseDetails1 = () => {
             `${import.meta.env.VITE_BACKEND_URL}/student/get-info`,
             { studentId: userId },
           );
-          console.log("Fetched user data:", res.data);
           if (res.data.success) {
             setUser(res.data.student);
           }
@@ -231,7 +230,7 @@ const StudentCourseDetails1 = () => {
     ) {
       if (assessmentType === "quiz") {
         navigate(`/quiz`, {
-          state: { courseTitle: courseDetails.title, courseId: courseId },
+          state: { courseTitle: courseDetails.title, courseId: courseId, userId: user._id},
         });
       } else {
         navigate(
@@ -677,7 +676,27 @@ const StudentCourseDetails1 = () => {
           <h2 className="text-2xl font-bold text-green-800 mb-2">
             🎉 Congratulations! You have Cleared the Course! 🎉
           </h2>
-          <button className="mt-4 cursor-pointer px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+          <button
+            onClick={() => {
+              generateCertificate({
+                studentName: user.username.charAt(0).toUpperCase() +
+                  user.username.slice(1).split(" ")[0] + " " + user.username.slice(1).split(" ")[1]?.charAt(0).toUpperCase() + user.username.slice(1).split(" ")[1]?.slice(1) + ".",
+                courseName: courseDetails.title,
+                teacherName: courseDetails.teacherName,
+                percentage:
+                  user.courses.find((c) => c._id?.toString() === courseId)
+                    ?.percentageGained + "%",
+                certificateId:
+                  "LS-" +
+                  user.courses.find((c) => c._id?.toString() === courseId)
+                    ?.dateOfCompletion,
+                date: user.courses.find(
+                  (c) => c._id?.toString() === courseId,
+                )?.dateOfCompletion,
+              });
+            }}
+            className="mt-4 cursor-pointer px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+          >
             DownLoad Certificate
           </button>
         </div>
