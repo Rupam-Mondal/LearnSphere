@@ -230,7 +230,11 @@ const StudentCourseDetails1 = () => {
     ) {
       if (assessmentType === "quiz") {
         navigate(`/quiz`, {
-          state: { courseTitle: courseDetails.title, courseId: courseId, userId: user._id},
+          state: {
+            courseTitle: courseDetails.title,
+            courseId: courseId,
+            userId: user._id,
+          },
         });
       } else {
         navigate(
@@ -668,7 +672,8 @@ const StudentCourseDetails1 = () => {
           </div>
         )}
 
-      {courseDetails?.lessons?.length > 0 &&
+      {enrolled &&
+      courseDetails?.lessons?.length > 0 &&
       (completedLessons.length / courseDetails.lessons.length) * 100 === 100 &&
       user?.courses?.find((c) => c._id?.toString() === courseId)
         ?.isValidforCertificate ? (
@@ -679,8 +684,17 @@ const StudentCourseDetails1 = () => {
           <button
             onClick={() => {
               generateCertificate({
-                studentName: user.username.charAt(0).toUpperCase() +
-                  user.username.slice(1).split(" ")[0] + " " + user.username.slice(1).split(" ")[1]?.charAt(0).toUpperCase() + user.username.slice(1).split(" ")[1]?.slice(1) + ".",
+                studentName:
+                  user.username.charAt(0).toUpperCase() +
+                  user.username.slice(1).split(" ")[0] +
+                  " " +
+                  user.username
+                    .slice(1)
+                    .split(" ")[1]
+                    ?.charAt(0)
+                    .toUpperCase() +
+                  user.username.slice(1).split(" ")[1]?.slice(1) +
+                  ".",
                 courseName: courseDetails.title,
                 teacherName: courseDetails.teacherName,
                 percentage:
@@ -690,9 +704,8 @@ const StudentCourseDetails1 = () => {
                   "LS-" +
                   user.courses.find((c) => c._id?.toString() === courseId)
                     ?.dateOfCompletion,
-                date: user.courses.find(
-                  (c) => c._id?.toString() === courseId,
-                )?.dateOfCompletion,
+                date: user.courses.find((c) => c._id?.toString() === courseId)
+                  ?.dateOfCompletion,
               });
             }}
             className="mt-4 cursor-pointer px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
@@ -700,7 +713,7 @@ const StudentCourseDetails1 = () => {
             DownLoad Certificate
           </button>
         </div>
-      ) : user?.courses?.find((c) => c._id?.toString() === courseId)
+      ) : enrolled && courseDetails?.lessons?.length > 0 && user?.courses?.find((c) => c._id?.toString() === courseId)
           ?.attempts <= 3 ? (
         <div className="mt-10 p-6 bg-green-100 border border-green-300 text-center">
           <h2 className="text-2xl font-bold text-green-800 mb-2">
@@ -739,17 +752,20 @@ const StudentCourseDetails1 = () => {
           </button>
         </div>
       ) : (
-        <div className="mt-10 p-6 bg-red-100 border border-red-300 text-center">
-          <h2 className="text-2xl font-bold text-red-800 mb-2">
-            ❌ You have exhausted all your attempts for the{" "}
-            {courseDetails.assessmentType}. ❌
-          </h2>
-          <p className="text-red-700">
-            Unfortunately, you have used all 3 attempts to clear the
-            {courseDetails.assessmentType}. You will not be able to receive the
-            certificate for this course.
-          </p>
-        </div>
+        enrolled && courseDetails?.lessons?.length > 0 && user?.courses?.find((c) => c._id?.toString() === courseId)
+          ?.attempts > 3 && (
+          <div className="mt-10 p-6 bg-red-100 border border-red-300 text-center">
+            <h2 className="text-2xl font-bold text-red-800 mb-2">
+              ❌ You have exhausted all your attempts for the{" "}
+              {courseDetails.assessmentType}. ❌
+            </h2>
+            <p className="text-red-700">
+              Unfortunately, you have used all 3 attempts to clear the
+              {courseDetails.assessmentType}. You will not be able to receive
+              the certificate for this course.
+            </p>
+          </div>
+        )
       )}
 
       {enrolled && (
