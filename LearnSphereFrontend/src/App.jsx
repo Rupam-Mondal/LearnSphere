@@ -32,6 +32,7 @@ import InterviewPage from "./pages/InterviewPage";
 import VapiInterview from "./pages/VapiInterview";
 import QuizPage from "./pages/QuizPage";
 import CertificatePage from "./pages/CertificatePage";
+import InterviewPage1 from "./pages/InterviewPage1";
 function App() {
   const [bot, setBot] = useState(false);
   const [nav, setNav] = useState(true);
@@ -94,7 +95,10 @@ function App() {
           path="/interview/:courseName"
           element={<InterviewPage />}
         />
-
+        <Route
+          path="/interview1/:courseName"
+          element={<InterviewPage1/>}
+        />
         <Route path="/vapi/:topic" element={<VapiInterview />} />
       </Routes>
     </div>
