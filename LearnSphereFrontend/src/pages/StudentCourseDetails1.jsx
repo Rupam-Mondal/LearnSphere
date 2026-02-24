@@ -78,8 +78,10 @@ const StudentCourseDetails1 = () => {
 
   useEffect(() => {
     const fetchUserData = async () => {
+      console.log(userId)
       if (token) {
         try {
+
           const res = await axios.post(
             `${import.meta.env.VITE_BACKEND_URL}/student/get-info`,
             { studentId: userId },
@@ -180,6 +182,8 @@ const StudentCourseDetails1 = () => {
           },
         },
       );
+
+      console.log("Course details response:", response.data.course);
 
       if (response.data.success) {
         setCourseDetails(response.data.course);
@@ -370,14 +374,14 @@ const StudentCourseDetails1 = () => {
 
             <div className="items-center gap-5 p-5 bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 inline-flex shadow-xl hover:shadow-2xl hover:bg-white/15 transition-all duration-300">
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center font-black text-3xl shadow-xl ring-4 ring-white/20">
-                {courseDetails?.teacherName?.charAt(0)}
+                {courseDetails?.teacher?.username?.charAt(0)}
               </div>
               <div>
                 <p className="text-sm font-semibold text-slate-400 mb-1">
                   Created by
                 </p>
                 <p className="font-black text-xl text-cyan-400 hover:text-cyan-300 cursor-pointer transition-colors">
-                  {courseDetails?.teacherName}
+                  {courseDetails?.teacher?.username}
                 </p>
               </div>
             </div>

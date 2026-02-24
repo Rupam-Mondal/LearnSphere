@@ -5,9 +5,9 @@ const courseSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  topicCover:{
+  topicCover: {
     type: [String],
-    default: []
+    default: [],
   },
   title: {
     type: String,
@@ -16,7 +16,7 @@ const courseSchema = new mongoose.Schema({
   },
   description: {
     type: String,
-    required: true
+    required: true,
   },
   price: {
     type: Number,
@@ -41,7 +41,7 @@ const courseSchema = new mongoose.Schema({
   ],
   lessons: [
     {
-      videoId:{
+      videoId: {
         type: String,
         required: true,
       },
@@ -74,10 +74,36 @@ const courseSchema = new mongoose.Schema({
     enum: ["quiz", "interview"],
     default: "quiz",
   },
+
+  overallRating: {
+    type: Number,
+    min: 0,
+    max: 5,
+    default: 0,
+  },
+
   ratings: {
-    type: [Number],
+    type: [
+      {
+        student: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
+        rating: {
+          type: Number,
+          required: true,
+          min: 1,
+          max: 5,
+        },
+        feedback: {
+          type: String,
+          trim: true,
+        },
+      },
+    ],
     default: [],
-  }
+  },
 });
 
 const Course = mongoose.model("Course", courseSchema);

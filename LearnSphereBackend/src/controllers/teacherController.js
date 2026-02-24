@@ -17,47 +17,53 @@ const createCourse = async (req, res) => {
       demoVideo,
       assessmentType,
     } = req.body;
-    if (!token) {
-      return res
-        .status(401)
-        .json({ success: false, message: "Unauthorized access" });
-    }
+
+    if (!token)
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized access",
+      });
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const teacherid = decoded.id;
-    if (!teacherid) {
-      return res
-        .status(401)
-        .json({ success: false, message: "Unauthorized access" });
+
+    if (!mongoose.Types.ObjectId.isValid(teacherid)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid teacher ID",
+      });
     }
 
     const user = await User.findById(teacherid);
     if (!user || user.role !== "TEACHER") {
-      return res
-        .status(403)
-        .json({ success: false, message: "Unauthorized access" });
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized access",
+      });
     }
 
     if (
       !title ||
       !description ||
       !price ||
-      !topicCover ||
+      !Array.isArray(topicCover) ||
       topicCover.length < 3
     ) {
-      return res
-        .status(400)
-        .json({ success: false, message: "These fields are required" });
+      return res.status(400).json({
+        success: false,
+        message: "Required fields missing",
+      });
     }
 
-    let course = await Course.findOne({ title, teacher: teacherid });
-
-    if (course) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Course already exists" });
+    const existing = await Course.findOne({ title, teacher: teacherid });
+    if (existing) {
+      return res.status(400).json({
+        success: false,
+        message: "Course already exists",
+      });
     }
 
-    let newCourse = new Course({
+    const newCourse = await Course.create({
       topic,
       title,
       description,
@@ -67,37 +73,34 @@ const createCourse = async (req, res) => {
         thumbnail ||
         "https://instructor-academy.onlinecoursehost.com/content/images/2020/10/react-2.png",
       demoVideo: demoVideo || "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      assessmentType: assessmentType,
+      assessmentType,
       teacher: teacherid,
     });
-    await newCourse.save();
 
-    const teacherName = user.username;
-    await User.findByIdAndUpdate(
-      teacherid,
-      {
-        $push: { courses: newCourse._id },
-      },
-      { new: true },
-    );
-
-    await user.save();
-
-    res.status(201).json({
-      success: true,
-      message: "Course created successfully",
-      course: {
-        title,
-        description,
-        price,
-        thumbnail,
-        teacher: teacherName,
-        assessmentType,
+    await User.findByIdAndUpdate(teacherid, {
+      $addToSet: {
+        courses: {
+          course: newCourse._id,
+          percentageGained: 0,
+          attempts: 0,
+          dateOfCompletion: null,
+          isValidforCertificate: false,
+        },
       },
     });
+
+    return res.status(201).json({
+      success: true,
+      message: "Course created successfully",
+      course: newCourse,
+    });
+
   } catch (error) {
     console.error("Error creating course:", error);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
   }
 };
 

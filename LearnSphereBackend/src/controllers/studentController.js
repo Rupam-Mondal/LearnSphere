@@ -1,5 +1,6 @@
 import Course from "../models/courseModel.js";
 import Progress from "../models/Progress.js";
+import mongoose from "mongoose";
 import User from "../models/userModel.js";
 import jwt, { decode } from "jsonwebtoken";
 
@@ -11,35 +12,31 @@ const getTokenFromHeader = (req) => {
 
 const getAllCourse = async (req, res) => {
   try {
-    const courses = await Course.find({ status: "APPROVED" });
+    const courses = await Course.find({ status: "APPROVED" })
+      .populate("teacher", "username");
 
     if (!courses.length) {
-      return res
-        .status(404)
-        .json({ success: false, message: "No courses found" });
+      return res.status(404).json({
+        success: false,
+        message: "No courses found",
+      });
     }
 
-    const coursesWithTeacher = await Promise.all(
-      courses.map(async (course) => {
-        const teacher = await User.findById(course.teacher).select("username");
-
-        return {
-          id: course._id,
-          name: course.title,
-          description: course.description,
-          lessons: `${course.lessons?.length || 0} videos`,
-          price: course.price,
-          image: course.thumbnail,
-          teacher: teacher?.username || "Unknown",
-          enrolled: course.students?.length || 0,
-          topic: course.topic,
-          topicCover: course.topicCover
-        };
-      })
-    );
+    const formattedCourses = courses.map((course) => ({
+      id: course._id,
+      name: course.title,
+      description: course.description,
+      lessons: `${course.lessons?.length || 0} videos`,
+      price: course.price,
+      image: course.thumbnail,
+      teacher: course.teacher?.username || "Unknown",
+      enrolled: course.students?.length || 0,
+      topic: course.topic,
+      topicCover: course.topicCover,
+    }));
 
     const groupedCourses = Object.values(
-      coursesWithTeacher.reduce((acc, course) => {
+      formattedCourses.reduce((acc, course) => {
         if (!acc[course.topic]) {
           acc[course.topic] = {
             topic: course.topic,
@@ -51,19 +48,19 @@ const getAllCourse = async (req, res) => {
       }, {})
     );
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       data: groupedCourses,
     });
+
   } catch (error) {
     console.error("Error fetching courses:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Internal Server Error",
     });
   }
 };
-
 
 const getCourseDetails = async (req, res) => {
   try {
@@ -71,23 +68,21 @@ const getCourseDetails = async (req, res) => {
     const { courseId } = req.body;
 
     if (!courseId) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Course ID is required" });
+      return res.status(400).json({
+        success: false,
+        message: "Course ID is required",
+      });
     }
 
-    const course = await Course.findById(courseId).populate("lessons teacher");
+    const course = await Course.findById(courseId)
+      .populate("teacher", "username");
+
     if (!course) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Course not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Course not found",
+      });
     }
-
-    const teacher = await User.findById(course.teacher);
-    const courseDetails = {
-      ...course.toObject(),
-      teacherName: teacher?.username || "Unknown",
-    };
 
     let enrolled = false;
 
@@ -97,44 +92,57 @@ const getCourseDetails = async (req, res) => {
         const studentId = decoded.id;
 
         enrolled = course.students.some(
-          (studentIdFromCourse) => studentIdFromCourse.toString() === studentId
+          (id) => id.toString() === studentId.toString()
         );
       } catch (err) {
-        console.warn("Invalid token for enrollment check:", err.message);
+        console.warn("Invalid token:", err.message);
       }
     }
 
-    res.status(200).json({ success: true, course: courseDetails, enrolled });
+    return res.status(200).json({
+      success: true,
+      course,
+      enrolled,
+    });
+
   } catch (error) {
     console.error("Error fetching course details:", error);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
   }
 };
-
 const enrollCourse = async (req, res) => {
   try {
     const token = getTokenFromHeader(req);
     const { courseId } = req.body;
 
     if (!courseId || !token) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Course ID and token required" });
+      return res.status(400).json({
+        success: false,
+        message: "Course ID and token required",
+      });
+    }
+
+    // ✅ Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(courseId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid course ID",
+      });
     }
 
     let decoded;
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
     } catch (jwtError) {
-      if (jwtError.name === "TokenExpiredError") {
-        return res.status(401).json({
-          success: false,
-          message: "Token expired. Please log in again.",
-        });
-      }
       return res.status(401).json({
         success: false,
-        message: "Invalid token. Please log in again.",
+        message:
+          jwtError.name === "TokenExpiredError"
+            ? "Token expired. Please log in again."
+            : "Invalid token. Please log in again.",
       });
     }
 
@@ -146,37 +154,66 @@ const enrollCourse = async (req, res) => {
     ]);
 
     if (!student || student.role !== "STUDENT") {
-      return res
-        .status(403)
-        .json({ success: false, message: "Unauthorized access" });
-    }
-
-    if (!course) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Course not found." });
-    }
-
-    if (course.students.includes(studentId)) {
-      return res.status(400).json({
+      return res.status(403).json({
         success: false,
-        message: "You are already enrolled in this course.",
+        message: "Unauthorized access",
       });
     }
 
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found",
+      });
+    }
+
+    // ✅ FIX: Proper ObjectId comparison
+    const alreadyEnrolledInCourse = course.students.some(
+      (id) => id.toString() === studentId.toString()
+    );
+
+    if (alreadyEnrolledInCourse) {
+      return res.status(400).json({
+        success: false,
+        message: "You are already enrolled in this course",
+      });
+    }
+
+    // ✅ Prevent duplicate in student.courses
+    const alreadyInStudent = student.courses.some(
+      (c) => c.course.toString() === courseId.toString()
+    );
+
+    if (alreadyInStudent) {
+      return res.status(400).json({
+        success: false,
+        message: "Enrollment record already exists",
+      });
+    }
+
+    // ✅ Push correctly structured object
     course.students.push(studentId);
-    student.courses.push(courseId);
+
+    student.courses.push({
+      course: courseId,
+      percentageGained: 0,
+      attempts: 0,
+      dateOfCompletion: null,
+      isValidforCertificate: false,
+    });
 
     await Promise.all([course.save(), student.save()]);
 
-    res
-      .status(200)
-      .json({ success: true, message: "Successfully enrolled in the course." });
+    return res.status(200).json({
+      success: true,
+      message: "Successfully enrolled in the course",
+    });
+
   } catch (error) {
     console.error("Error enrolling in course:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: "Internal Server Error during enrollment.",
+      message: "Internal Server Error during enrollment",
     });
   }
 };
@@ -265,12 +302,10 @@ const markAsDone = async (req, res) => {
   const { token, courseId, videoId } = req.body;
   try {
     if (!token || !courseId || !videoId) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Token, Course ID, and Video ID are required",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Token, Course ID, and Video ID are required",
+      });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -319,16 +354,14 @@ const markAsDone = async (req, res) => {
   }
 };
 
-const checkForProgress =  async (req,res) =>{
-  const {token, courseId} = req.body;
-  try{
+const checkForProgress = async (req, res) => {
+  const { token, courseId } = req.body;
+  try {
     if (!token || !courseId) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Token and Course ID are required",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Token and Course ID are required",
+      });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -355,18 +388,123 @@ const checkForProgress =  async (req,res) =>{
         .status(200)
         .json({ success: true, completedLessons: progress.completedLessons });
     } else {
-      return res
-        .status(200)
-        .json({ success: true, completedLessons: [] });
+      return res.status(200).json({ success: true, completedLessons: [] });
     }
-  }
-  catch(error){
+  } catch (error) {
     console.error("Error checking progress:", error);
     return res
       .status(500)
       .json({ success: false, message: "Internal Server Error" });
   }
-}
+};
+
+const sendFeedback = async (req, res) => {
+  const { token, courseId, rating, feedback } = req.body;
+
+  try {
+    if (!token || !courseId || rating === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: "Token, Course ID, and Rating are required",
+      });
+    }
+
+    if (rating < 1 || rating > 5) {
+      return res.status(400).json({
+        success: false,
+        message: "Rating must be between 1 and 5",
+      });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    if (!decoded || decoded.role !== "STUDENT") {
+      return res.status(403).json({
+        success: false,
+        message: "Only students can rate courses",
+      });
+    }
+
+    const studentId = decoded.id;
+
+    const course = await Course.findById(courseId);
+
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found",
+      });
+    }
+
+    const isEnrolled = course.students.some(
+      (id) => id.toString() === studentId.toString()
+    );
+
+    if (!isEnrolled) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not enrolled in this course",
+      });
+    }
+
+    const alreadyRated = course.ratings.find(
+      (r) => r.student.toString() === studentId.toString()
+    );
+
+    if (alreadyRated) {
+      return res.status(400).json({
+        success: false,
+        message: "You have already rated this course",
+      });
+    }
+
+    course.ratings.push({
+      student: studentId,
+      rating,
+      feedback: feedback || "",
+    });
+
+    const totalRating = course.ratings.reduce(
+      (sum, r) => sum + r.rating,
+      0
+    );
+
+    course.overallRating = totalRating / course.ratings.length;
+
+    await course.save();
+
+    const teacherCourses = await Course.find({
+      teacher: course.teacher,
+    });
+
+    const teacherTotal = teacherCourses.reduce(
+      (sum, c) => sum + (c.overallRating || 0),
+      0
+    );
+
+    const teacher = await User.findById(course.teacher);
+
+    if (teacher && teacher.teacherDetails) {
+      teacher.teacherDetails.rating =
+        teacherCourses.length > 0
+          ? teacherTotal / teacherCourses.length
+          : 0;
+
+      await teacher.save();
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Feedback submitted successfully",
+    });
+  } catch (error) {
+    console.error("Error in sendFeedback:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
 
 export {
   getAllCourse,
@@ -377,4 +515,5 @@ export {
   getTeacherName,
   markAsDone,
   checkForProgress,
+  sendFeedback,
 };
