@@ -395,7 +395,7 @@ export const updateMarksController = async (req, res) => {
     }
 
     const courseEntry = student.courses.find(
-      (c) => c._id.toString() === courseId,
+      (c) => c.course.toString() === courseId,
     );
 
     if (!courseEntry) {
@@ -417,7 +417,7 @@ export const updateMarksController = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Marks updated",
-      marks: courseEntry.marks,
+      marks: courseEntry.percentageGained,
     });
   } catch (error) {
     console.error("❌ Update Marks Error:", error);

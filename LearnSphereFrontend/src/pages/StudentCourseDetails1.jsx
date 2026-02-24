@@ -78,10 +78,9 @@ const StudentCourseDetails1 = () => {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      console.log(userId)
+      console.log(userId);
       if (token) {
         try {
-
           const res = await axios.post(
             `${import.meta.env.VITE_BACKEND_URL}/student/get-info`,
             { studentId: userId },
@@ -224,6 +223,7 @@ const StudentCourseDetails1 = () => {
       toast.error("An error occurred while marking the lesson.");
     } finally {
       setClickedMark(false);
+      window.reload();
     }
   }
 
@@ -311,10 +311,22 @@ const StudentCourseDetails1 = () => {
     );
   }
 
+  // const progressPercentage =
+  //   courseDetails.lessons.length > 0
+  //     ? (completedLessons.length / courseDetails.lessons.length) * 100
+  //     : 0;
+
+  const enrolledCourse = user?.courses?.find(
+    (c) => c.course?.toString() === courseId,
+  );
+
+  const totalLessons = courseDetails?.lessons?.length || 0;
   const progressPercentage =
-    courseDetails.lessons.length > 0
-      ? (completedLessons.length / courseDetails.lessons.length) * 100
-      : 0;
+    totalLessons > 0 ? (completedLessons.length / totalLessons) * 100 : 0;
+
+  const hasCompleted = progressPercentage === 100;
+  const hasCertificate = enrolledCourse?.isValidforCertificate;
+  const attempts = enrolledCourse?.attempts || 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/40">
@@ -676,100 +688,73 @@ const StudentCourseDetails1 = () => {
           </div>
         )}
 
-      {enrolled &&
-      courseDetails?.lessons?.length > 0 &&
-      (completedLessons.length / courseDetails.lessons.length) * 100 === 100 &&
-      user?.courses?.find((c) => c._id?.toString() === courseId)
-        ?.isValidforCertificate ? (
-        <div className="mt-10 p-6 bg-green-100 border border-green-300 text-center">
-          <h2 className="text-2xl font-bold text-green-800 mb-2">
-            🎉 Congratulations! You have Cleared the Course! 🎉
-          </h2>
-          <button
-            onClick={() => {
-              generateCertificate({
-                studentName:
-                  user.username.charAt(0).toUpperCase() +
-                  user.username.slice(1).split(" ")[0] +
-                  " " +
-                  user.username
-                    .slice(1)
-                    .split(" ")[1]
-                    ?.charAt(0)
-                    .toUpperCase() +
-                  user.username.slice(1).split(" ")[1]?.slice(1) +
-                  ".",
-                courseName: courseDetails.title,
-                teacherName: courseDetails.teacherName,
-                percentage:
-                  user.courses.find((c) => c._id?.toString() === courseId)
-                    ?.percentageGained + "%",
-                certificateId:
-                  "LS-" +
-                  user.courses.find((c) => c._id?.toString() === courseId)
-                    ?.dateOfCompletion,
-                date: user.courses.find((c) => c._id?.toString() === courseId)
-                  ?.dateOfCompletion,
-              });
-            }}
-            className="mt-4 cursor-pointer px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-          >
-            DownLoad Certificate
-          </button>
-        </div>
-      ) : enrolled && courseDetails?.lessons?.length > 0 && user?.courses?.find((c) => c._id?.toString() === courseId)
-          ?.attempts <= 3 ? (
-        <div className="mt-10 p-6 bg-green-100 border border-green-300 text-center">
-          <h2 className="text-2xl font-bold text-green-800 mb-2">
-            🎉 Congratulations You have Completed the Course! 🎉
-          </h2>
-          <p className="text-green-700">
-            {" "}
-            You are now eligible for the {courseDetails.assessmentType}, and you
-            will receive your certificate once you pass.
-            <br />
-            You have total 3 attempts to clear the exam ️. <br />
-            You attempted{" "}
-            {user
-              ? user.courses.find(
-                  (course) => course?._id.toString() === courseId,
-                ).attempts
-              : 0}{" "}
-            times.
-            {user && (
-              <p>
+      {enrolled && totalLessons > 0 && hasCompleted && (
+        <>
+          {hasCertificate ? (
+            // 🎓 CERTIFICATE AVAILABLE
+            <div className="mt-10 p-6 bg-green-100 border border-green-300 text-center">
+              <h2 className="text-2xl font-bold text-green-800 mb-2">
+                🎉 Congratulations! You have Cleared the Course! 🎉
+              </h2>
+
+              <button
+                onClick={() =>
+                  generateCertificate({
+                    studentName: user.username,
+                    courseName: courseDetails.title,
+                    teacherName: courseDetails.teacherName,
+                    percentage: enrolledCourse?.percentageGained + "%",
+                    certificateId: "LS-" + enrolledCourse?.dateOfCompletion,
+                    date: enrolledCourse?.dateOfCompletion,
+                  })
+                }
+                className="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+              >
+                Download Certificate
+              </button>
+            </div>
+          ) : attempts <= 3 ? (
+            // 📝 ELIGIBLE FOR ASSESSMENT
+            <div className="mt-10 p-6 bg-green-100 border border-green-300 text-center">
+              <h2 className="text-2xl font-bold text-green-800 mb-2">
+                🎉 Congratulations! You have Completed the Course! 🎉
+              </h2>
+
+              <p className="text-green-700">
+                You are now eligible for the {courseDetails.assessmentType}.
                 <br />
-                Best of luck,{" "}
-                {user.username.split(" ")[0].charAt(0).toUpperCase() +
-                  user.username.split(" ")[0].slice(1)}
-                !
+                You have 3 total attempts.
+                <br />
+                You attempted {attempts} times.
+                <br />
+                <br />
+                Best of luck, {user?.username?.split(" ")[0]}!
               </p>
-            )}
-          </p>
-          <button
-            onClick={() => {
-              assessmentController(courseDetails.assessmentType);
-            }}
-            className="mt-4 cursor-pointer px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-          >
-            Proceed to {courseDetails.assessmentType.toUpperCase()}
-          </button>
-        </div>
-      ) : (
-        enrolled && courseDetails?.lessons?.length > 0 && user?.courses?.find((c) => c._id?.toString() === courseId)
-          ?.attempts > 3 && (
-          <div className="mt-10 p-6 bg-red-100 border border-red-300 text-center">
-            <h2 className="text-2xl font-bold text-red-800 mb-2">
-              ❌ You have exhausted all your attempts for the{" "}
-              {courseDetails.assessmentType}. ❌
-            </h2>
-            <p className="text-red-700">
-              Unfortunately, you have used all 3 attempts to clear the
-              {courseDetails.assessmentType}. You will not be able to receive
-              the certificate for this course.
-            </p>
-          </div>
-        )
+
+              <button
+                onClick={() =>
+                  assessmentController(courseDetails.assessmentType)
+                }
+                className="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+              >
+                Proceed to {courseDetails.assessmentType.toUpperCase()}
+              </button>
+            </div>
+          ) : (
+            // ❌ ATTEMPTS EXHAUSTED
+            <div className="mt-10 p-6 bg-red-100 border border-red-300 text-center">
+              <h2 className="text-2xl font-bold text-red-800 mb-2">
+                ❌ You have exhausted all attempts for the{" "}
+                {courseDetails.assessmentType}.
+              </h2>
+
+              <p className="text-red-700">
+                You have used all 3 attempts. You are no longer eligible to
+                receive the certificate for this course.
+              </p>
+            </div>
+          )}
+        </>
       )}
 
       {enrolled && (

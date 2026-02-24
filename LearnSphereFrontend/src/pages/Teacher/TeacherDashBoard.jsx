@@ -132,7 +132,7 @@ const TeacherDashboard = () => {
         </div>
 
         <div className="bg-white shadow-xl rounded-2xl p-6 text-center">
-          <h2 className="text-lg font-medium text-gray-600">Total Students</h2>
+          <h2 className="text-lg font-medium text-gray-600">Total Enrollments</h2>
           <p className="text-4xl font-bold text-indigo-600 mt-3">
             {countStudents(courses)}
           </p>
