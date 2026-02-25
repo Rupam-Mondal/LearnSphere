@@ -28,8 +28,8 @@ import { generateCertificate } from "../lib/cirtificateGenerator";
 const VideoPlayerModal = ({ videoUrl, onClose }) => {
   const embedUrl = videoUrl
     ? videoUrl
-        .replace("watch?v=", "embed/")
-        .replace("youtu.be/", "youtube.com/embed/")
+      .replace("watch?v=", "embed/")
+      .replace("youtu.be/", "youtube.com/embed/")
     : null;
 
   if (!embedUrl) return null;
@@ -74,6 +74,7 @@ const StudentCourseDetails1 = () => {
   const [completedLessons, setCompletedLessons] = useState([]);
   const [clickedMark, setClickedMark] = useState(false);
   const { token, user, setUser } = useContext(UserContext);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const userId = user?.id;
 
   useEffect(() => {
@@ -565,11 +566,10 @@ const StudentCourseDetails1 = () => {
                 >
                   <button
                     className={`w-full text-left p-5 flex justify-between items-center transition-colors duration-200
-                                        ${
-                                          openLessonIndex === index
-                                            ? "bg-blue-50"
-                                            : "bg-gray-50 hover:bg-gray-100"
-                                        }`}
+                                        ${openLessonIndex === index
+                        ? "bg-blue-50"
+                        : "bg-gray-50 hover:bg-gray-100"
+                      }`}
                     onClick={() => toggleLesson(index)}
                   >
                     <span className="text-lg font-semibold text-gray-800 flex-1">
@@ -697,21 +697,32 @@ const StudentCourseDetails1 = () => {
                 🎉 Congratulations! You have Cleared the Course! 🎉
               </h2>
 
-              <button
-                onClick={() =>
-                  generateCertificate({
-                    studentName: user.username,
-                    courseName: courseDetails.title,
-                    teacherName: courseDetails.teacherName,
-                    percentage: enrolledCourse?.percentageGained + "%",
-                    certificateId: "LS-" + enrolledCourse?.dateOfCompletion,
-                    date: enrolledCourse?.dateOfCompletion,
-                  })
-                }
-                className="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-              >
-                Download Certificate
-              </button>
+              <div className="flex flex-col sm:flex-row justify-center gap-4">
+
+                <button
+                  onClick={() =>
+                    generateCertificate({
+                      studentName: user.username,
+                      courseName: courseDetails.title,
+                      teacherName: courseDetails.teacherName,
+                      percentage: enrolledCourse?.percentageGained + "%",
+                      certificateId: "LS-" + enrolledCourse?.dateOfCompletion,
+                      date: enrolledCourse?.dateOfCompletion,
+                    })
+                  }
+                  className="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition shadow-lg font-semibold"
+                >
+                  🎓 Download Certificate
+                </button>
+
+                <button
+                  onClick={() => setShowFeedbackModal(true)}
+                  className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl hover:from-blue-700 hover:to-cyan-700 transition shadow-lg font-semibold"
+                >
+                  ⭐ Give Feedback
+                </button>
+
+              </div>
             </div>
           ) : attempts <= 3 ? (
             // 📝 ELIGIBLE FOR ASSESSMENT
@@ -780,6 +791,12 @@ const StudentCourseDetails1 = () => {
         <VideoPlayerModal
           videoUrl={currentVideoUrl}
           onClose={() => setShowLessonVideoModal(false)}
+        />
+      )}
+      {showFeedbackModal && (
+        <FeedbackModal
+          courseId={courseId}
+          onClose={() => setShowFeedbackModal(false)}
         />
       )}
     </div>
@@ -986,5 +1003,123 @@ const CommentSection = ({ courseId }) => {
     </div>
   );
 };
+const StarRating = ({ rating, setRating }) => {
+  return (
+    <div className="flex gap-2">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <Star
+          key={star}
+          onClick={() => setRating(star)}
+          className={`w-8 h-8 cursor-pointer transition-all duration-200 ${star <= rating
+            ? "text-yellow-400 fill-yellow-400 scale-110"
+            : "text-gray-300 hover:text-yellow-300"
+            }`}
+        />
+      ))}
+    </div>
+  );
+};
 
+const FeedbackModal = ({ onClose, courseId }) => {
+  const token = localStorage.getItem("token");
+
+  const [courseRating, setCourseRating] = useState(0);
+  const [facultyRating, setFacultyRating] = useState(0);
+  const [videoRating, setVideoRating] = useState(0);
+  const [moduleRating, setModuleRating] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (
+      !courseRating ||
+      !facultyRating ||
+      !videoRating ||
+      !moduleRating
+    ) {
+      toast.error("Please rate all categories.");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/feedback/add`,
+        {
+          courseId,
+          courseRating,
+          facultyRating,
+          videoRating,
+          moduleRating,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      toast.success("Thank you for your feedback!");
+      onClose();
+    } catch (error) {
+      toast.error("Failed to submit feedback.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed top-10 inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-4">
+      <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl p-10 relative animate-scaleIn">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        <h2 className="text-2xl font-black text-slate-900 mb-4 text-center">
+          Course Feedback
+        </h2>
+
+        <div className="space-y-4">
+
+          <div>
+            <p className="font-semibold text-slate-700 mb-2">
+              How was the overall course?
+            </p>
+            <StarRating rating={courseRating} setRating={setCourseRating} />
+          </div>
+
+          <div>
+            <p className="font-semibold text-slate-700 mb-2">
+              How was the faculty?
+            </p>
+            <StarRating rating={facultyRating} setRating={setFacultyRating} />
+          </div>
+
+          <div>
+            <p className="font-semibold text-slate-700 mb-2">
+              How were the lesson videos?
+            </p>
+            <StarRating rating={videoRating} setRating={setVideoRating} />
+          </div>
+
+          <div>
+            <p className="font-semibold text-slate-700 mb-2">
+              How were the modules & structure?
+            </p>
+            <StarRating rating={moduleRating} setRating={setModuleRating} />
+          </div>
+
+          <button
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="w-full mt-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white py-3 rounded-xl font-bold shadow-lg transition-all"
+          >
+            {submitting ? "Submitting..." : "Submit Feedback"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 export default StudentCourseDetails1;
