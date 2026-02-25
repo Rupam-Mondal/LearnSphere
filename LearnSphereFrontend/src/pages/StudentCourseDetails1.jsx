@@ -182,7 +182,7 @@ const StudentCourseDetails1 = () => {
         },
       );
 
-      console.log("Course details response:", response.data.course);
+      // console.log("Course details response:", response.data.course);
 
       if (response.data.success) {
         setCourseDetails(response.data.course);
@@ -222,8 +222,7 @@ const StudentCourseDetails1 = () => {
     } catch (error) {
       toast.error("An error occurred while marking the lesson.");
     } finally {
-      setClickedMark(false);
-      window.reload();
+      setClickedMark(false)
     }
   }
 
@@ -243,6 +242,7 @@ const StudentCourseDetails1 = () => {
       } else {
         navigate(
           `/interview/${courseDetails.title.replace(/\s+/g, "-").toLowerCase()}`,
+          {state: {courseTitle: courseDetails.title, courseId: courseId, userId: user._id}}
         );
       }
     } else {
