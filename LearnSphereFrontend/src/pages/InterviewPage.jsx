@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import axios from "axios";
 
 const TOTAL_QUESTIONS = 5;
@@ -8,6 +8,7 @@ let LOCKED_VOICE = null;
 export default function InterviewPage() {
   const { courseName } = useParams();
 
+  const { courseTitle, courseId, userId } = useLocation().state || {};
   /* ---------------- STATES ---------------- */
   const [interviewState, setInterviewState] = useState("idle");
   // idle | running | completed
@@ -28,8 +29,8 @@ export default function InterviewPage() {
     const loadVoice = () => {
       const voices = speechSynthesis.getVoices();
       LOCKED_VOICE =
-        voices.find(v => v.name === "Google US English") ||
-        voices.find(v => v.lang === "en-US") ||
+        voices.find((v) => v.name === "Google US English") ||
+        voices.find((v) => v.lang === "en-US") ||
         voices[0];
     };
 
@@ -97,10 +98,7 @@ export default function InterviewPage() {
     recognitionRef.current.stop();
     setStatus("idle");
 
-    const updatedMessages = [
-      ...messages,
-      { role: "user", content: userText },
-    ];
+    const updatedMessages = [...messages, { role: "user", content: userText }];
     setMessages(updatedMessages);
 
     const newCount = answerCount + 1;
@@ -118,15 +116,12 @@ export default function InterviewPage() {
       {
         topic: courseName,
         messages: updatedMessages,
-      }
+      },
     );
 
     const aiText = res.data.reply;
 
-    setMessages(prev => [
-      ...prev,
-      { role: "assistant", content: aiText },
-    ]);
+    setMessages((prev) => [...prev, { role: "assistant", content: aiText }]);
 
     speakAI(aiText);
   };
@@ -147,15 +142,29 @@ export default function InterviewPage() {
     setInterviewState("completed");
     setStatus("idle");
 
-    const res = await axios.post(
-      `${import.meta.env.VITE_BACKEND_URL}/ai/result`,
-      {
-        topic: courseName,
-        messages: finalMessages,
-      }
-    );
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/ai/result`,
+        {
+          topic: courseName,
+          messages: finalMessages,
+        },
+      );
 
-    setResult(res.data);
+      await axios.put(
+        `${import.meta.env.VITE_BACKEND_URL}/ai/quiz/updateMarks`,
+        {
+          courseId,
+          userId,
+          marks: res.data.score,
+        },
+      );
+
+      setResult(res.data);
+    } catch (err) {
+      console.error("Error fetching result:", err);
+      alert("An error occurred while fetching the result. Please try again.");
+    }
   };
 
   /* ---------------- RESULT UI ---------------- */
@@ -164,20 +173,28 @@ export default function InterviewPage() {
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="bg-white p-8 rounded-xl shadow max-w-xl w-full">
           <h2 className="text-2xl font-bold mb-2">Interview Result</h2>
-          <p><b>Score:</b> {result.score}/10</p>
-          <p><b>Level:</b> {result.level}</p>
+          <p>
+            <b>Score:</b> {result.score}/10
+          </p>
+          <p>
+            <b>Level:</b> {result.level}
+          </p>
 
           <div className="mt-4">
             <b>Strengths</b>
             <ul className="list-disc ml-6">
-              {result.strengths.map(s => <li key={s}>{s}</li>)}
+              {result.strengths.map((s) => (
+                <li key={s}>{s}</li>
+              ))}
             </ul>
           </div>
 
           <div className="mt-4">
             <b>Weaknesses</b>
             <ul className="list-disc ml-6">
-              {result.weaknesses.map(w => <li key={w}>{w}</li>)}
+              {result.weaknesses.map((w) => (
+                <li key={w}>{w}</li>
+              ))}
             </ul>
           </div>
 
@@ -191,11 +208,13 @@ export default function InterviewPage() {
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">
       <div className="bg-white w-full max-w-3xl rounded-xl shadow p-6">
-
+        <h1 className="text-2xl font-bold text-center mb-4">
+          {courseTitle} Interview
+        </h1>
         {interviewState === "idle" && (
           <button
             onClick={startInterview}
-            className="px-10 py-4 rounded-full bg-black text-white mx-auto block"
+            className="px-10 py-4 bg-black text-white rounded-full mx-auto block"
           >
             Start Interview
           </button>
@@ -204,8 +223,15 @@ export default function InterviewPage() {
         {interviewState === "running" && (
           <>
             <div className="text-sm mb-4">
-              <p>Status: <b>{status}</b></p>
-              <p>Answers: <b>{answerCount}/{TOTAL_QUESTIONS}</b></p>
+              <p>
+                Status: <b>{status}</b>
+              </p>
+              <p>
+                Answers:{" "}
+                <b>
+                  {answerCount}/{TOTAL_QUESTIONS}
+                </b>
+              </p>
             </div>
 
             <div className="space-y-4 max-h-[400px] overflow-y-auto">
