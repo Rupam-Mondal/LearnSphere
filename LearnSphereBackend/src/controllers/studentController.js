@@ -12,8 +12,10 @@ const getTokenFromHeader = (req) => {
 
 const getAllCourse = async (req, res) => {
   try {
-    const courses = await Course.find({ status: "APPROVED" })
-      .populate("teacher", "username");
+    const courses = await Course.find({ status: "APPROVED" }).populate(
+      "teacher",
+      "username",
+    );
 
     if (!courses.length) {
       return res.status(404).json({
@@ -45,14 +47,13 @@ const getAllCourse = async (req, res) => {
         }
         acc[course.topic].course.push(course);
         return acc;
-      }, {})
+      }, {}),
     );
 
     return res.status(200).json({
       success: true,
       data: groupedCourses,
     });
-
   } catch (error) {
     console.error("Error fetching courses:", error);
     return res.status(500).json({
@@ -74,8 +75,10 @@ const getCourseDetails = async (req, res) => {
       });
     }
 
-    const course = await Course.findById(courseId)
-      .populate("teacher", "username");
+    const course = await Course.findById(courseId).populate(
+      "teacher",
+      "username",
+    );
 
     if (!course) {
       return res.status(404).json({
@@ -92,7 +95,7 @@ const getCourseDetails = async (req, res) => {
         const studentId = decoded.id;
 
         enrolled = course.students.some(
-          (id) => id.toString() === studentId.toString()
+          (id) => id.toString() === studentId.toString(),
         );
       } catch (err) {
         console.warn("Invalid token:", err.message);
@@ -104,7 +107,6 @@ const getCourseDetails = async (req, res) => {
       course,
       enrolled,
     });
-
   } catch (error) {
     console.error("Error fetching course details:", error);
     return res.status(500).json({
@@ -169,7 +171,7 @@ const enrollCourse = async (req, res) => {
 
     // ✅ FIX: Proper ObjectId comparison
     const alreadyEnrolledInCourse = course.students.some(
-      (id) => id.toString() === studentId.toString()
+      (id) => id.toString() === studentId.toString(),
     );
 
     if (alreadyEnrolledInCourse) {
@@ -181,7 +183,7 @@ const enrollCourse = async (req, res) => {
 
     // ✅ Prevent duplicate in student.courses
     const alreadyInStudent = student.courses.some(
-      (c) => c.course.toString() === courseId.toString()
+      (c) => c.course.toString() === courseId.toString(),
     );
 
     if (alreadyInStudent) {
@@ -208,7 +210,6 @@ const enrollCourse = async (req, res) => {
       success: true,
       message: "Successfully enrolled in the course",
     });
-
   } catch (error) {
     console.error("Error enrolling in course:", error);
     return res.status(500).json({
@@ -427,23 +428,40 @@ const sendFeedback = async (req, res) => {
 
     const studentId = decoded.id;
 
+    const student = await User.findById(studentId);
+
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found",
+      });
+    }
+
+    const enrolledCourse = student.courses.find(
+      (c) => c.course.toString() === courseId.toString()
+    );
+
+    if (!enrolledCourse) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not enrolled in this course",
+      });
+    }
+
+    if (enrolledCourse.percentageGained < 70) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "You must complete at least 70% of the course before rating it",
+      });
+    }
+
     const course = await Course.findById(courseId);
 
     if (!course) {
       return res.status(404).json({
         success: false,
         message: "Course not found",
-      });
-    }
-
-    const isEnrolled = course.students.some(
-      (id) => id.toString() === studentId.toString()
-    );
-
-    if (!isEnrolled) {
-      return res.status(403).json({
-        success: false,
-        message: "You are not enrolled in this course",
       });
     }
 
@@ -469,7 +487,10 @@ const sendFeedback = async (req, res) => {
       0
     );
 
-    course.overallRating = totalRating / course.ratings.length;
+    course.overallRating =
+      course.ratings.length > 0
+        ? totalRating / course.ratings.length
+        : 0;
 
     await course.save();
 
@@ -477,17 +498,22 @@ const sendFeedback = async (req, res) => {
       teacher: course.teacher,
     });
 
-    const teacherTotal = teacherCourses.reduce(
-      (sum, c) => sum + (c.overallRating || 0),
-      0
-    );
+    let teacherTotal = 0;
+    let totalRatingsCount = 0;
+
+    teacherCourses.forEach((c) => {
+      c.ratings.forEach((r) => {
+        teacherTotal += r.rating;
+        totalRatingsCount++;
+      });
+    });
 
     const teacher = await User.findById(course.teacher);
 
     if (teacher && teacher.teacherDetails) {
       teacher.teacherDetails.rating =
-        teacherCourses.length > 0
-          ? teacherTotal / teacherCourses.length
+        totalRatingsCount > 0
+          ? teacherTotal / totalRatingsCount
           : 0;
 
       await teacher.save();
