@@ -242,7 +242,7 @@ const StudentCourseDetails1 = () => {
         });
       } else {
         navigate(
-          `/interview/${courseDetails.title.replace(/\s+/g, "-").toLowerCase()}`,
+          `/interview1/${courseDetails.title.replace(/\s+/g, "-").toLowerCase()}`,
           {state: {courseTitle: courseDetails.title, courseId: courseId, userId: user._id}}
         );
       }
