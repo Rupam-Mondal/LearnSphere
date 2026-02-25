@@ -209,7 +209,7 @@ export default function InterviewPage() {
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">
       <div className="bg-white w-full max-w-3xl rounded-xl shadow p-6">
         <h1 className="text-2xl font-bold text-center mb-4">
-          {courseTitle} Interview {courseId} {userId}
+          {courseTitle} Interview
         </h1>
         {interviewState === "idle" && (
           <button
