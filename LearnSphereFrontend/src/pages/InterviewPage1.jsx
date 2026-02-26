@@ -27,6 +27,10 @@ export default function InterviewPage() {
   const submittedRef = useRef(false);
   const isListeningRef = useRef(false);
 
+  function GeneratePdf(){
+    console.log("Generating PDF...");
+  }
+
   const { courseTitle, courseId, userId } = useLocation().state || {};
   /* ---------------- VOICE LOCK ---------------- */
   useEffect(() => {
@@ -272,7 +276,9 @@ export default function InterviewPage() {
                   </p>
                 </div>
 
-                <button className="text-sm px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition">
+                <button
+                  onClick={GeneratePdf}
+                 className="text-sm px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition">
                   Download PDF
                 </button>
               </div>
