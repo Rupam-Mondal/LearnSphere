@@ -251,45 +251,136 @@ export default function InterviewPage() {
     }
   };
 
-  /* ---------------- RESULT UI ---------------- */
   if (interviewState === "completed") {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-xl shadow max-w-xl w-full">
+      <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 pt-24 px-6">
+        <div className="max-w-6xl mx-auto bg-white p-10 rounded-2xl shadow-lg border border-gray-200">
           {!result ? (
-            <h2 className="text-xl font-semibold text-center">
+            <h2 className="text-xl font-semibold text-center text-gray-600 animate-pulse">
               Generating Result...
             </h2>
           ) : (
             <>
-              <h2 className="text-2xl font-bold mb-4 text-center">
-                Interview Result 🎉
-              </h2>
+              {/* Header */}
+              <div className="flex justify-between items-center mb-8">
+                <div>
+                  <h2 className="text-3xl font-bold text-gray-800">
+                    Interview Result 🎉
+                  </h2>
+                  <p className="text-gray-500 text-sm">
+                    Review your performance and improve with suggested courses
+                  </p>
+                </div>
 
-              <p>
-                <b>Score:</b> {result.score}/10
-              </p>
-              <p>
-                <b>Level:</b> {result.level}
-              </p>
-
-              <div className="mt-4">
-                <b>Strengths</b>
-                <ul className="list-disc ml-6">
-                  {Array.isArray(result.strengths) &&
-                    result.strengths.map((s, i) => <li key={i}>{s}</li>)}
-                </ul>
+                <button className="text-sm px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition">
+                  Download PDF
+                </button>
               </div>
 
-              <div className="mt-4">
-                <b>Weaknesses</b>
-                <ul className="list-disc ml-6">
-                  {Array.isArray(result.weaknesses) &&
-                    result.weaknesses.map((w, i) => <li key={i}>{w}</li>)}
-                </ul>
+              {/* Score + Level */}
+              <div className="grid md:grid-cols-2 gap-6 mb-8">
+                <div className="bg-blue-50 p-6 rounded-xl">
+                  <p className="text-gray-500 text-sm">Score</p>
+                  <p className="text-3xl font-bold text-blue-600">
+                    {result.score}/10
+                  </p>
+                </div>
+
+                <div className="bg-green-50 p-6 rounded-xl">
+                  <p className="text-gray-500 text-sm">Level</p>
+                  <p className="text-3xl font-bold text-green-600">
+                    {result.level}
+                  </p>
+                </div>
               </div>
 
-              <p className="mt-4 font-medium">{result.recommendation}</p>
+              {/* Strengths and Weaknesses side by side */}
+              <div className="grid md:grid-cols-2 gap-8 mb-8">
+                {/* Strengths */}
+                <div>
+                  <h3 className="font-semibold text-gray-800 mb-3 text-lg">
+                    Strengths
+                  </h3>
+
+                  <div className="space-y-2">
+                    {result.strengths?.map((s, i) => (
+                      <div
+                        key={i}
+                        className="bg-green-50 text-green-700 px-4 py-3 rounded-lg"
+                      >
+                        {s}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Weaknesses */}
+                <div>
+                  <h3 className="font-semibold text-gray-800 mb-3 text-lg">
+                    Areas to Improve
+                  </h3>
+
+                  <div className="space-y-2">
+                    {result.weaknesses?.map((w, i) => (
+                      <div
+                        key={i}
+                        className="bg-red-50 text-red-700 px-4 py-3 rounded-lg"
+                      >
+                        {w}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Recommendation full width */}
+              <div className="mb-8">
+                <h3 className="font-semibold text-gray-800 mb-3 text-lg">
+                  Recommendation
+                </h3>
+
+                <div className="bg-gray-50 p-5 rounded-lg text-gray-700">
+                  {result.recommendation}
+                </div>
+              </div>
+
+              {/* Suggested Courses full horizontal cards */}
+              {result.suggestedCourses?.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-gray-800 mb-4 text-lg">
+                    Suggested Courses to Improve
+                  </h3>
+
+                  <div className="grid md:grid-cols-2 gap-6">
+                    {result.suggestedCourses.map((course, i) => (
+                      <div
+                        key={i}
+                        className="border border-gray-200 rounded-xl p-6 hover:shadow-md transition flex flex-col justify-between"
+                      >
+                        <div>
+                          <h4 className="text-lg font-semibold text-gray-800 mb-2">
+                            {course.title}
+                          </h4>
+
+                          <p className="text-gray-600 text-sm mb-4">
+                            {course.reason}
+                          </p>
+                        </div>
+
+                        {/* Highlighted button */}
+                        <a
+                          href={course.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-block text-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium"
+                        >
+                          View Course →
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>

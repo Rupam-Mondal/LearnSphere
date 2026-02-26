@@ -4,7 +4,7 @@ import Course from "../models/courseModel.js";
 import { GoogleGenAI } from "@google/genai";
 import { checkAnswer, generateQuiz } from "../models/quizAiModel.js";
 import User from "../models/userModel.js";
-
+import CourseAli from "../models/courseModel.js";
 const ai = new GoogleGenAI({
   apiKey: process.env.GOOGLE_GEMINI_KEY,
 });
@@ -176,6 +176,7 @@ export const interviewResultController = async (req, res) => {
       return res.status(400).json({ error: "No messages provided" });
     }
 
+    // Convert conversation
     const conversation = messages
       .map((m) =>
         m.role === "user"
@@ -184,12 +185,23 @@ export const interviewResultController = async (req, res) => {
       )
       .join("\n");
 
+    // 🔥 Fetch all courses from DB
+    const courses = await CourseAli.find({}, "_id title description");
+
+    const courseListForAI = courses
+      .map(
+        (c) => `ID: ${c._id}\nTitle: ${c.title}\nDescription: ${c.description}`,
+      )
+      .join("\n\n");
+
     const prompt = `
-You are a strict technical interviewer.
+You are a strict technical interviewer and career mentor.
 
 Interview topic: ${topic}
 
 Evaluate ONLY the candidate answers.
+
+Also suggest the MOST relevant courses from the provided course list.
 
 Return ONLY valid JSON.
 No markdown.
@@ -202,11 +214,20 @@ JSON format:
   "level": "Beginner" | "Intermediate" | "Advanced",
   "strengths": [string, string, string],
   "weaknesses": [string, string],
-  "recommendation": string
+  "recommendation": string,
+  "suggestedCourses": [
+    {
+      "courseId": string,
+      "reason": string
+    }
+  ]
 }
 
 Conversation:
 ${conversation}
+
+Available Courses:
+${courseListForAI}
 `;
 
     const response = await ai.models.generateContent({
@@ -216,14 +237,35 @@ ${conversation}
 
     let text = response.text.trim();
 
-    // 🔥 SAFETY: remove code fences if present
+    // Remove code fences if present
     if (text.startsWith("```")) {
       text = text.replace(/```json|```/g, "").trim();
     }
 
     const parsed = JSON.parse(text);
 
-    return res.json(parsed);
+    // 🔥 Attach frontend links
+    const FRONTEND_URL = process.env.FRONTEND_URL;
+
+    const suggestedCourses = parsed.suggestedCourses.map((sc) => {
+      const course = courses.find((c) => c._id.toString() === sc.courseId);
+
+      return {
+        id: sc.courseId,
+        title: course?.title || "Course",
+        link: `${FRONTEND_URL}/student/course-details/${sc.courseId}`,
+        reason: sc.reason,
+      };
+    });
+
+    return res.json({
+      score: parsed.score,
+      level: parsed.level,
+      strengths: parsed.strengths,
+      weaknesses: parsed.weaknesses,
+      recommendation: parsed.recommendation,
+      suggestedCourses,
+    });
   } catch (error) {
     console.error("❌ Result generation error:", error.message);
     return res.status(500).json({
@@ -345,14 +387,14 @@ export const updateAttemptsController = async (req, res) => {
       courseEntry.attempts = 0;
     }
 
-    if(courseEntry.isValidforCertificate){
+    if (courseEntry.isValidforCertificate) {
       return res.status(400).json({
         success: false,
         message: "Course already completed. No further attempts allowed.",
       });
     }
 
-    if(courseEntry.attempts >= 3){
+    if (courseEntry.attempts >= 3) {
       return res.status(400).json({
         success: false,
         message: "Maximum number of attempts reached.",
@@ -405,9 +447,8 @@ export const updateMarksController = async (req, res) => {
       });
     }
 
-
     courseEntry.percentageGained = marks;
-    if(marks >= 70){
+    if (marks >= 70) {
       courseEntry.dateOfCompletion = new Date();
       courseEntry.isValidforCertificate = true;
     }
