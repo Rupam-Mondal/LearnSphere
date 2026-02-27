@@ -28,8 +28,8 @@ import { generateCertificate } from "../lib/cirtificateGenerator";
 const VideoPlayerModal = ({ videoUrl, onClose }) => {
   const embedUrl = videoUrl
     ? videoUrl
-      .replace("watch?v=", "embed/")
-      .replace("youtu.be/", "youtube.com/embed/")
+        .replace("watch?v=", "embed/")
+        .replace("youtu.be/", "youtube.com/embed/")
     : null;
 
   if (!embedUrl) return null;
@@ -223,7 +223,7 @@ const StudentCourseDetails1 = () => {
     } catch (error) {
       toast.error("An error occurred while marking the lesson.");
     } finally {
-      setClickedMark(false)
+      setClickedMark(false);
     }
   }
 
@@ -243,7 +243,13 @@ const StudentCourseDetails1 = () => {
       } else {
         navigate(
           `/interview1/${courseDetails.title.replace(/\s+/g, "-").toLowerCase()}`,
-          {state: {courseTitle: courseDetails.title, courseId: courseId, userId: user._id}}
+          {
+            state: {
+              courseTitle: courseDetails.title,
+              courseId: courseId,
+              userId: user._id,
+            },
+          },
         );
       }
     } else {
@@ -566,10 +572,11 @@ const StudentCourseDetails1 = () => {
                 >
                   <button
                     className={`w-full text-left p-5 flex justify-between items-center transition-colors duration-200
-                                        ${openLessonIndex === index
-                        ? "bg-blue-50"
-                        : "bg-gray-50 hover:bg-gray-100"
-                      }`}
+                                        ${
+                                          openLessonIndex === index
+                                            ? "bg-blue-50"
+                                            : "bg-gray-50 hover:bg-gray-100"
+                                        }`}
                     onClick={() => toggleLesson(index)}
                   >
                     <span className="text-lg font-semibold text-gray-800 flex-1">
@@ -698,7 +705,6 @@ const StudentCourseDetails1 = () => {
               </h2>
 
               <div className="flex flex-col sm:flex-row justify-center gap-4">
-
                 <button
                   onClick={() =>
                     generateCertificate({
@@ -721,7 +727,6 @@ const StudentCourseDetails1 = () => {
                 >
                   ⭐ Give Feedback
                 </button>
-
               </div>
             </div>
           ) : attempts <= 3 ? (
@@ -1010,10 +1015,11 @@ const StarRating = ({ rating, setRating }) => {
         <Star
           key={star}
           onClick={() => setRating(star)}
-          className={`w-8 h-8 cursor-pointer transition-all duration-200 ${star <= rating
-            ? "text-yellow-400 fill-yellow-400 scale-110"
-            : "text-gray-300 hover:text-yellow-300"
-            }`}
+          className={`w-8 h-8 cursor-pointer transition-all duration-200 ${
+            star <= rating
+              ? "text-yellow-400 fill-yellow-400 scale-110"
+              : "text-gray-300 hover:text-yellow-300"
+          }`}
         />
       ))}
     </div>
@@ -1028,14 +1034,10 @@ const FeedbackModal = ({ onClose, courseId }) => {
   const [videoRating, setVideoRating] = useState(0);
   const [moduleRating, setModuleRating] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [feedback, setFeedback] = useState("");
 
   const handleSubmit = async () => {
-    if (
-      !courseRating ||
-      !facultyRating ||
-      !videoRating ||
-      !moduleRating
-    ) {
+    if (!courseRating || !facultyRating || !videoRating || !moduleRating) {
       toast.error("Please rate all categories.");
       return;
     }
@@ -1043,21 +1045,21 @@ const FeedbackModal = ({ onClose, courseId }) => {
     try {
       setSubmitting(true);
 
-      await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/feedback/add`,
+      const res = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/student/send-feedback`,
         {
+          token,
           courseId,
-          courseRating,
-          facultyRating,
-          videoRating,
-          moduleRating,
+          rating:
+            (courseRating + facultyRating + videoRating + moduleRating) / 4,
+          feedback, 
         },
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
-
-      toast.success("Thank you for your feedback!");
+      
+      toast.success(res.data.message);
       onClose();
     } catch (error) {
       toast.error("Failed to submit feedback.");
@@ -1081,7 +1083,6 @@ const FeedbackModal = ({ onClose, courseId }) => {
         </h2>
 
         <div className="space-y-4">
-
           <div>
             <p className="font-semibold text-slate-700 mb-2">
               How was the overall course?
@@ -1108,6 +1109,19 @@ const FeedbackModal = ({ onClose, courseId }) => {
               How were the modules & structure?
             </p>
             <StarRating rating={moduleRating} setRating={setModuleRating} />
+          </div>
+
+          <div>
+            <p className="font-semibold text-slate-700 mb-2">
+              Give a feedback in brief (optional)
+            </p>
+            <textarea
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              rows="3"
+              placeholder="Enter your feedback here..."
+              value={feedback}
+              onChange={(e) => setFeedback(e.target.value)}
+            />
           </div>
 
           <button
