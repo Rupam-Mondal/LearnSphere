@@ -243,36 +243,76 @@ const getInfo = async (req, res) => {
   }
 };
 
-async function GetUserRegisteredCourse(req, res) {
+const GetUserRegisteredCourse = async (req, res) => {
   try {
-    const { token } = req.body;
+    // ✅ Get token from header
+    const token = req.headers.authorization?.split(" ")[1];
 
     if (!token) {
-      return res
-        .status(401)
-        .json({ success: false, message: "Unauthorized access" });
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: No token provided",
+      });
     }
 
+    // ✅ Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const studentId = decoded.id;
+    const studentId = decoded?.id;
+
     if (!studentId) {
-      return res
-        .status(401)
-        .json({ success: false, message: "Unauthorized access" });
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: Invalid token",
+      });
     }
-    const user = await User.findById(studentId).populate("courses");
-    const registeredCourses = user.courses;
-    return res.json({
+
+    const user = await User.findById(studentId)
+      .populate({
+        path: "courses.course",
+        select: "title description thumbnail price overallRating teacher",
+        populate: {
+          path: "teacher",
+          select: "username profilePicture",
+        },
+      })
+      .lean(); 
+
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const registeredCourses = user.courses.map((item) => ({
+      _id: item.course._id,
+      title: item.course.title,
+      description: item.course.description,
+      thumbnail: item.course.thumbnail,
+      // price: item.course.price,
+      overallRating: item.course.overallRating,
+      teacherName: item.course.teacher?.username || "Instructor",
+      percentageGained: item.percentageGained,
+      attempts: item.attempts,
+      dateOfCompletion: item.dateOfCompletion,
+      isValidforCertificate: item.isValidforCertificate,
+      teacherPhoto: item.course.teacher?.profilePicture || null,
+    }));
+
+    return res.status(200).json({
       success: true,
       registeredCourses,
     });
   } catch (error) {
-    return res.json({
+    console.error("GetUserRegisteredCourse Error:", error);
+
+    return res.status(500).json({
       success: false,
       message: "Internal Server Error",
     });
   }
-}
+};
 
 const getTeacherName = async (req, res) => {
   try {
