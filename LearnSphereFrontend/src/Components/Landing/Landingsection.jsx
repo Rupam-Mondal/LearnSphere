@@ -15,7 +15,7 @@ const Landingsection = () => {
           </p>
 
           <div className="mt-8 flex justify-center md:justify-start">
-            <button className="bg-purple-600 hover:bg-purple-700 transition-all text-white px-8 py-3 rounded-xl font-semibold text-lg shadow-lg">
+            <button className="bg-purple-600 hover:bg-purple-700 transition-all text-white px-8 py-3 rounded-xl font-semibold text-lg shadow-lg cursor-pointer">
               Start Learning Now
             </button>
           </div>

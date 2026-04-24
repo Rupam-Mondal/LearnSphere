@@ -111,7 +111,7 @@ const AdminDashboard = () => {
         <nav className="flex-1 space-y-2">
           <button
             onClick={() => setActiveTab("courses")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all ${
+            className={`w-full flex cursor-pointer items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all ${
               activeTab === "courses"
                 ? "bg-indigo-600 text-white shadow-lg shadow-indigo-100"
                 : "text-slate-500 hover:bg-slate-100"
@@ -127,7 +127,7 @@ const AdminDashboard = () => {
 
           <button
             onClick={() => setActiveTab("teachers")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all ${
+            className={`w-full flex items-center cursor-pointer gap-3 px-4 py-3 rounded-xl font-semibold transition-all ${
               activeTab === "teachers"
                 ? "bg-indigo-600 text-white shadow-lg shadow-indigo-100"
                 : "text-slate-500 hover:bg-slate-100"
@@ -143,7 +143,7 @@ const AdminDashboard = () => {
 
           <button
             onClick={() => setActiveTab("allTeachers")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all ${
+            className={`w-full flex cursor-pointer items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all ${
               activeTab === "allTeachers"
                 ? "bg-indigo-600 text-white shadow-lg shadow-indigo-100"
                 : "text-slate-500 hover:bg-slate-100"
@@ -160,7 +160,7 @@ const AdminDashboard = () => {
 
         <button
           onClick={handleLogout}
-          className="mt-auto flex items-center gap-3 px-4 py-3 text-red-500 font-semibold hover:bg-red-50 rounded-xl transition-all"
+          className="mt-auto flex cursor-pointer items-center gap-3 px-4 py-3 text-red-500 font-semibold hover:bg-red-50 rounded-xl transition-all"
         >
           <FiLogOut /> Logout
         </button>
@@ -252,13 +252,13 @@ const CourseCard = ({ course, onAction }) => (
     <div className="mt-6 flex gap-3">
       <button
         onClick={() => onAction(course._id, "approve")}
-        className="flex-1 bg-green-500 hover:bg-green-600 text-white py-2.5 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all"
+        className="flex-1 bg-green-500 cursor-pointer hover:bg-green-600 text-white py-2.5 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all"
       >
         <FiCheck /> Approve
       </button>
       <button
         onClick={() => onAction(course._id, "reject")}
-        className="flex-1 bg-slate-100 hover:bg-red-50 hover:text-red-600 text-slate-600 py-2.5 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all"
+        className="flex-1 bg-slate-100 cursor-pointer  hover:bg-red-50 hover:text-red-600 text-slate-600 py-2.5 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all"
       >
         <FiX /> Reject
       </button>
@@ -302,7 +302,7 @@ const TeacherRow = ({ teacher }) => {
           onClick={() => {
             navigate(`/admin/teacher-profile/${teacher._id}`);
           }}
-          className="w-full border border-blue-800 hover:bg-blue-600 text-black hover:text-white py-2.5 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all duration-300 mb-2 capitalize"
+          className="w-full cursor-pointer border border-blue-800 hover:bg-blue-600 text-black hover:text-white py-2.5 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all duration-300 mb-2 capitalize"
         >
           view profile <FiExternalLink className="inline-block mb-1" />
         </button>

@@ -125,7 +125,7 @@ const CertificateGenerator = () => {
     const footerY = pageHeight - 50;
 
     doc.setFontSize(13);
-    doc.text(`Instructor:  ${teacherName}`, leftX, footerY);
+    // doc.text(`Instructor:  ${teacherName}`, leftX, footerY);
 
     doc.line(leftX, footerY + 6, leftX + 60, footerY + 6);
     doc.addImage(
@@ -185,6 +185,7 @@ const CertificateGenerator = () => {
           borderRadius: "8px",
           cursor: "pointer",
           marginTop: "150px",
+          cursor: "pointer",
         }}
       >
         🎓 Get Certificate
