@@ -716,14 +716,14 @@ const StudentCourseDetails1 = () => {
                       date: enrolledCourse?.dateOfCompletion,
                     })
                   }
-                  className="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition shadow-lg font-semibold"
+                  className="px-6 py-3 bg-green-600 text-white cursor-pointer rounded-xl hover:bg-green-700 transition shadow-lg font-semibold"
                 >
                   🎓 Download Certificate
                 </button>
 
                 <button
                   onClick={() => setShowFeedbackModal(true)}
-                  className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl hover:from-blue-700 hover:to-cyan-700 transition shadow-lg font-semibold"
+                  className="px-6 py-3 cursor-pointer bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl hover:from-blue-700 hover:to-cyan-700 transition shadow-lg font-semibold"
                 >
                   ⭐ Give Feedback
                 </button>

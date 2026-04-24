@@ -10,6 +10,7 @@ import studentRouter from "./routes/studentRoute.js";
 import commentRouter from "./routes/commentRoute.js";
 import interviewRouter from "./routes/interviewRoute.js"
 import evaluateRouter from "./routes/evaluate.js";
+import paymentrouter from "./routes/paymentRouter.js";
 
 const app = express();
 
@@ -45,4 +46,5 @@ app.use("/api/student", studentRouter);
 app.use("/api/comment", commentRouter);
 app.use("/api/interview", interviewRouter);
 app.use("/api/evaluate", evaluateRouter);
+app.use("/api/purchase" , paymentrouter);
 export default app;
