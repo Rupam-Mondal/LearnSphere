@@ -46,6 +46,8 @@ function App() {
       setNav(false);
     } else if(role.toLowerCase().includes("quiz")){
       setNav(null);
+    }else if(role.toLowerCase().includes("video")){
+      setNav(null);
     }else {
       setNav(true);
     }

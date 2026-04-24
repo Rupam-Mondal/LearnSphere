@@ -13,13 +13,16 @@ const SocketProvider = ({ children }) => {
   const [callEnded, setCallEnded] = useState(false);
   const [name, setName] = useState("");
   const [idToCall, setIdToCall] = useState("");
+  const [isMuted, setIsMuted] = useState(false);
+  const [isSharingScreen, setIsSharingScreen] = useState(false);
 
   const myVideo = useRef();
   const userVideo = useRef();
   const connectionRef = useRef();
 
   useEffect(() => {
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+    navigator.mediaDevices
+      .getUserMedia({ video: true, audio: true })
       .then((currentStream) => {
         setStream(currentStream);
         if (myVideo.current) {
@@ -90,6 +93,52 @@ const SocketProvider = ({ children }) => {
     connectionRef.current?.destroy();
     window.location.reload();
   };
+  const toggleMute = () => {
+    if (!stream) return;
+
+    stream.getAudioTracks().forEach((track) => {
+      track.enabled = isMuted; // toggle
+    });
+
+    setIsMuted((prev) => !prev);
+  };
+
+  const toggleScreenShare = async () => {
+    if (!connectionRef.current) return;
+
+    if (!isSharingScreen) {
+      const screenStream = await navigator.mediaDevices.getDisplayMedia({
+        video: true,
+      });
+
+      const screenTrack = screenStream.getVideoTracks()[0];
+
+      const sender = connectionRef.current._pc
+        .getSenders()
+        .find((s) => s.track.kind === "video");
+
+      sender.replaceTrack(screenTrack);
+
+      screenTrack.onended = () => {
+        stopScreenShare();
+      };
+
+      setIsSharingScreen(true);
+    } else {
+      stopScreenShare();
+    }
+  };
+  const stopScreenShare = () => {
+    const videoTrack = stream.getVideoTracks()[0];
+
+    const sender = connectionRef.current._pc
+      .getSenders()
+      .find((s) => s.track.kind === "video");
+
+    sender.replaceTrack(videoTrack);
+
+    setIsSharingScreen(false);
+  };
 
   return (
     <socketContext.Provider
@@ -108,6 +157,10 @@ const SocketProvider = ({ children }) => {
         callUser,
         leaveCall,
         answerCall,
+        toggleMute,
+        isMuted,
+        toggleScreenShare,
+        isSharingScreen,
       }}
     >
       {children}
