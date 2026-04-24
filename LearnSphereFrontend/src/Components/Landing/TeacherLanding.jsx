@@ -25,7 +25,7 @@ const TeacherLanding = () => {
             <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
               <button 
                 onClick={() => navigate("/teacher-auth")}
-                className="bg-gray-900 hover:bg-gray-800 transition-all text-white px-10 py-4 rounded-lg font-bold text-lg shadow-xl"
+                className="bg-gray-900 cursor-pointer hover:bg-gray-800 transition-all text-white px-10 py-4 rounded-lg font-bold text-lg shadow-xl"
               >
                 Get Started
               </button>
@@ -119,7 +119,7 @@ const HowToBegin = () => {
             <button
               key={index}
               onClick={() => setActiveTab(index)}
-              className={`px-4 md:px-8 py-4 text-lg font-bold transition-all duration-300 whitespace-nowrap border-b-2 ${
+              className={`px-4 md:px-8 py-4 text-lg font-bold transition-all cursor-pointer duration-300 whitespace-nowrap border-b-2 ${
                 activeTab === index
                   ? "border-gray-900 text-gray-900"
                   : "border-transparent text-gray-500 hover:text-gray-700"

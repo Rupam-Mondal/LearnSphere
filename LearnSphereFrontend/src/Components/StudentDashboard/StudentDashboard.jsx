@@ -128,7 +128,7 @@ const StudentDashboard = () => {
             <p className="text-slate-500 mb-6">{error}</p>
             <button
               onClick={() => window.location.reload()}
-              className="px-6 py-2 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 transition-colors"
+              className="px-6 py-2 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 transition-colors cursor-pointer"
             >
               Try Again
             </button>
@@ -146,7 +146,7 @@ const StudentDashboard = () => {
             <p className="text-slate-500 mb-8">
               Start your journey by exploring our available courses.
             </p>
-            <button className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200">
+            <button className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 cursor-pointer flex items-center justify-center gap-2">
               Browse Catalogue
             </button>
           </div>
@@ -253,7 +253,7 @@ const StudentDashboard = () => {
                       onClick={() =>
                         navigate(`/student/course-details/${course._id}`)
                       }
-                      className="p-3 cursor-pointer bg-slate-50 text-slate-900 rounded-xl group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 shadow-sm group-hover:shadow-md"
+                      className="p-3 cursor-pointer bg-slate-50 text-slate-900 rounded-xl group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 shadow-sm cursor-pointer group-hover:shadow-md"
                     >
                       <ArrowRight className="w-5 h-5" />
                     </button>

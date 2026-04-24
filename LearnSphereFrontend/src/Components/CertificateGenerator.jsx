@@ -185,6 +185,7 @@ const CertificateGenerator = () => {
           borderRadius: "8px",
           cursor: "pointer",
           marginTop: "150px",
+          cursor: "pointer",
         }}
       >
         🎓 Get Certificate

@@ -191,7 +191,7 @@ const CreateCourse = () => {
                 <div>
                   <div className="flex justify-between items-center mb-2">
                     <label className="flex items-center gap-2 text-sm font-semibold text-gray-600 ml-1"><FiList /> What students will learn</label>
-                    <button type="button" onClick={addPoint} className="text-indigo-600 hover:text-indigo-800 text-sm font-bold flex items-center gap-1"><FiPlus /> Add</button>
+                    <button type="button" onClick={addPoint} className="text-indigo-600 hover:text-indigo-800 text-sm font-bold flex items-center gap-1 cursor-pointer"><FiPlus /> Add</button>
                   </div>
                   <div className="space-y-3">
                     {topicCover.map((point, index) => (
@@ -203,7 +203,7 @@ const CreateCourse = () => {
                           value={point}
                           onChange={(e) => handlePointChange(index, e.target.value)}
                         />
-                        <button type="button" onClick={() => removePoint(index)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"><FiTrash2 /></button>
+                        <button type="button" onClick={() => removePoint(index)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"><FiTrash2 /></button>
                       </div>
                     ))}
                   </div>

@@ -12,7 +12,7 @@ const Footer = () => {
           </h2>
           <button 
             onClick={() => navigate('/teacher-home')}
-          className="border border-gray-400 cursor-pointer hover:bg-gray-700 hover:border-white text-white font-medium py-2 px-6 rounded-lg transition duration-300 whitespace-nowrap">
+          className="border border-gray-400 cursor-pointer hover:bg-gray-700 hover:border-white text-white font-medium py-2 px-6 rounded-lg transition duration-300 whitespace-nowrap cursor-pointer">
             Get Started
           </button>
         </div>
