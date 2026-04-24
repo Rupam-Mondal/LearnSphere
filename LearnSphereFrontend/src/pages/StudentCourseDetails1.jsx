@@ -181,9 +181,33 @@ const StudentCourseDetails1 = () => {
         name: "LearnSphere",
         description: `Payment for course: ${courseDetails.title}`,
         order_id: order.id,
-        handler: function (response) {
-          console.log("Payment response:", response);
-          toast.success("Payment completed (verification pending)");
+        handler: async function (response) {
+          try {
+            console.log("Payment response:", response);
+
+            const verifyResponse = await axios.post(
+              `${import.meta.env.VITE_BACKEND_URL}/purchase/verify-payment`,
+              {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              },
+            );
+
+            if (verifyResponse.data.success) {
+              toast.success(
+                "Payment successful! Enrolling you in the course...",
+              );
+              await enrollCourse();
+            } else {
+              toast.error(
+                "Payment verification failed. Please contact support.",
+              );
+            }
+          } catch (error) {
+            console.error("Verify error:", error);
+            toast.error("Something went wrong during verification");
+          }
         },
       };
       const rzp = new window.Razorpay(options);
@@ -505,10 +529,10 @@ const StudentCourseDetails1 = () => {
                 ) : (
                   <button
                     onClick={handlePayment}
-                    className="w-full bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-600 hover:from-blue-700 hover:via-blue-600 hover:to-cyan-700 text-white py-5 rounded-2xl font-black text-lg mb-5 shadow-[0_8px_24px_rgba(37,99,235,0.4)] hover:shadow-[0_12px_32px_rgba(37,99,235,0.5)] transition-all duration-300 transform hover:scale-[1.02] active:scale-95 relative overflow-hidden group"
+                    className="w-full cursor-pointer bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-600 hover:from-blue-700 hover:via-blue-600 hover:to-cyan-700 text-white py-5 rounded-2xl font-black text-lg mb-5 shadow-[0_8px_24px_rgba(37,99,235,0.4)] hover:shadow-[0_12px_32px_rgba(37,99,235,0.5)] transition-all duration-300 transform hover:scale-[1.02] active:scale-95 relative overflow-hidden group"
                   >
                     <span className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-400 opacity-0 group-hover:opacity-30 transition-opacity duration-300"></span>
-                    <span className="relative z-10 flex items-center justify-center gap-2">
+                    <span className="relative z-10 flex items-center justify-center gap-2 cursor-pointer">
                       Enroll Now
                       <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </span>
