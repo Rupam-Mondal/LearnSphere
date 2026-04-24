@@ -165,6 +165,35 @@ const StudentCourseDetails1 = () => {
     }
   };
 
+  const handlePayment = async () => {
+    try {
+      const { data } = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/purchase/create-order`,
+        { id: courseId },
+      );
+
+      const order = data.order;
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount: order.amount,
+        currency: order.currency,
+        name: "LearnSphere",
+        description: `Payment for course: ${courseDetails.title}`,
+        order_id: order.id,
+        handler: function (response) {
+          console.log("Payment response:", response);
+          toast.success("Payment completed (verification pending)");
+        },
+      };
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (error) {
+      console.error(error);
+      toast.error("Payment failed");
+    }
+  };
+
   const fetchCourseDetails = async (token) => {
     if (!token) {
       setError("You need to be logged in to view course details.");
@@ -475,7 +504,7 @@ const StudentCourseDetails1 = () => {
                   </button>
                 ) : (
                   <button
-                    onClick={enrollCourse}
+                    onClick={handlePayment}
                     className="w-full bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-600 hover:from-blue-700 hover:via-blue-600 hover:to-cyan-700 text-white py-5 rounded-2xl font-black text-lg mb-5 shadow-[0_8px_24px_rgba(37,99,235,0.4)] hover:shadow-[0_12px_32px_rgba(37,99,235,0.5)] transition-all duration-300 transform hover:scale-[1.02] active:scale-95 relative overflow-hidden group"
                   >
                     <span className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-400 opacity-0 group-hover:opacity-30 transition-opacity duration-300"></span>
@@ -1052,13 +1081,13 @@ const FeedbackModal = ({ onClose, courseId }) => {
           courseId,
           rating:
             (courseRating + facultyRating + videoRating + moduleRating) / 4,
-          feedback, 
+          feedback,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
         },
       );
-      
+
       toast.success(res.data.message);
       onClose();
     } catch (error) {
