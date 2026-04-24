@@ -33,6 +33,7 @@ import VapiInterview from "./pages/VapiInterview";
 import QuizPage from "./pages/QuizPage";
 import CertificatePage from "./pages/CertificatePage";
 import InterviewPage1 from "./pages/InterviewPage1";
+import Video from "./pages/videoChat/Video";
 function App() {
   const [bot, setBot] = useState(false);
   const [nav, setNav] = useState(true);
@@ -100,6 +101,10 @@ function App() {
           element={<InterviewPage1/>}
         />
         <Route path="/vapi/:topic" element={<VapiInterview />} />
+
+
+
+        <Route path="/video-chat" element={<Video />} />
       </Routes>
     </div>
   );
