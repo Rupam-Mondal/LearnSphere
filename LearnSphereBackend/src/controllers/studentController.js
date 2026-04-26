@@ -75,10 +75,9 @@ const getCourseDetails = async (req, res) => {
       });
     }
 
-    const course = await Course.findById(courseId).populate(
-      "teacher",
-      "username",
-    );
+    const course = await Course.findById(courseId)
+      .populate("teacher", "username profilePicture")
+      .populate("ratings.student", "username profilePicture"); // ✅ FIX
 
     if (!course) {
       return res.status(404).json({
@@ -95,7 +94,7 @@ const getCourseDetails = async (req, res) => {
         const studentId = decoded.id;
 
         enrolled = course.students.some(
-          (id) => id.toString() === studentId.toString(),
+          (id) => id.toString() === studentId.toString()
         );
       } catch (err) {
         console.warn("Invalid token:", err.message);
@@ -115,6 +114,8 @@ const getCourseDetails = async (req, res) => {
     });
   }
 };
+
+
 const enrollCourse = async (req, res) => {
   try {
     const token = getTokenFromHeader(req);
