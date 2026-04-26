@@ -106,7 +106,7 @@ function App() {
 
 
 
-        {/* <Route path="/video-chat" element={<Video />} /> */}
+        <Route path="/video-chat" element={<Video />} />
       </Routes>
     </div>
   );
