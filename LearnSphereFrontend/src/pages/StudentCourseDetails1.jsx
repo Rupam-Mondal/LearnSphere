@@ -79,7 +79,6 @@ const StudentCourseDetails1 = () => {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      console.log(userId);
       if (token) {
         try {
           const res = await axios.post(
@@ -236,11 +235,9 @@ const StudentCourseDetails1 = () => {
         },
       );
 
-      // console.log("Course details response:", response.data.course);
 
       if (response.data.success) {
         setCourseDetails(response.data.course);
-        console.log("Course details set:", response.data.course);
         setEnrolled(response.data.enrolled);
       } else {
         setError(response.data.message);

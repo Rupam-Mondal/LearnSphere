@@ -12,11 +12,17 @@ const getTokenFromHeader = (req) => {
 
 const getAllCourse = async (req, res) => {
   try {
-    const courses = await Course.find({ status: "APPROVED" }).populate(
-      "teacher",
-      "username",
-    );
+    const courses = await Course.find({ status: "APPROVED" }).populate("teacher", "username").lean();
 
+    let overallRatings = courses.map((course) => {
+      if (course.ratings.length === 0) return 0;
+      const total = course.ratings.reduce((sum, r) => sum + r.rating, 0);
+      return total / course.ratings.length;
+    });
+
+     courses.forEach((course, index) => {
+      course.overallRating = overallRatings[index];
+    });
     if (!courses.length) {
       return res.status(404).json({
         success: false,
@@ -26,6 +32,7 @@ const getAllCourse = async (req, res) => {
 
     const formattedCourses = courses.map((course) => ({
       id: course._id,
+      overallRating: course.overallRating,
       name: course.title,
       description: course.description,
       lessons: `${course.lessons?.length || 0} videos`,
