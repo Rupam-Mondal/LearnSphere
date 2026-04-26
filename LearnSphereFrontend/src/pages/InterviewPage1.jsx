@@ -3,7 +3,7 @@ import { useLocation, useParams } from "react-router-dom";
 import axios from "axios";
 
 const TOTAL_QUESTIONS = 5;
-const QUESTION_TIME = 30;
+const QUESTION_TIME = 15; // seconds
 
 let LOCKED_VOICE = null;
 
@@ -27,7 +27,7 @@ export default function InterviewPage() {
   const submittedRef = useRef(false);
   const isListeningRef = useRef(false);
 
-  function GeneratePdf(){
+  function GeneratePdf() {
     console.log("Generating PDF...");
   }
 
@@ -256,201 +256,219 @@ export default function InterviewPage() {
   };
 
   if (interviewState === "completed") {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 pt-24 px-6">
-        <div className="max-w-6xl mx-auto bg-white p-10 rounded-2xl shadow-lg border border-gray-200">
-          {!result ? (
-            <h2 className="text-xl font-semibold text-center text-gray-600 animate-pulse">
-              Generating Result...
-            </h2>
-          ) : (
-            <>
-              {/* Header */}
-              <div className="flex justify-between items-center mb-8">
-                <div>
-                  <h2 className="text-3xl font-bold text-gray-800">
-                    Interview Result 🎉
-                  </h2>
-                  <p className="text-gray-500 text-sm">
-                    Review your performance and improve with suggested courses
-                  </p>
-                </div>
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 text-white pt-24 px-6">
+      <div className="max-w-6xl mx-auto bg-white/5 backdrop-blur-xl border border-white/10 p-10 rounded-2xl shadow-xl">
 
-                <button
-                  onClick={GeneratePdf}
-                 className="text-sm px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition">
-                  Download PDF
-                </button>
+        {!result ? (
+          <h2 className="text-xl font-semibold text-center animate-pulse">
+            Generating Result...
+          </h2>
+        ) : (
+          <>
+            {/* HEADER */}
+            <div className="flex justify-between items-center mb-10">
+              <div>
+                <h2 className="text-3xl font-bold">Interview Result 🎉</h2>
+                <p className="text-gray-400 text-sm">
+                  AI-powered performance analysis
+                </p>
               </div>
 
-              {/* Score + Level */}
-              <div className="grid md:grid-cols-2 gap-6 mb-8">
-                <div className="bg-blue-50 p-6 rounded-xl">
-                  <p className="text-gray-500 text-sm">Score</p>
-                  <p className="text-3xl font-bold text-blue-600">
-                    {result.score}/10
-                  </p>
-                </div>
+              <button
+                onClick={GeneratePdf}
+                className="px-5 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition"
+              >
+                Download PDF
+              </button>
+            </div>
 
-                <div className="bg-green-50 p-6 rounded-xl">
-                  <p className="text-gray-500 text-sm">Level</p>
-                  <p className="text-3xl font-bold text-green-600">
-                    {result.level}
-                  </p>
-                </div>
+            {/* SCORE */}
+            <div className="grid md:grid-cols-2 gap-6 mb-10">
+              <div className="bg-blue-500/10 border border-blue-400/20 p-6 rounded-xl">
+                <p className="text-gray-400 text-sm">Score</p>
+                <p className="text-4xl font-bold text-blue-400">
+                  {result.score}/10
+                </p>
               </div>
 
-              {/* Strengths and Weaknesses side by side */}
-              <div className="grid md:grid-cols-2 gap-8 mb-8">
-                {/* Strengths */}
-                <div>
-                  <h3 className="font-semibold text-gray-800 mb-3 text-lg">
-                    Strengths
-                  </h3>
+              <div className="bg-green-500/10 border border-green-400/20 p-6 rounded-xl">
+                <p className="text-gray-400 text-sm">Level</p>
+                <p className="text-4xl font-bold text-green-400">
+                  {result.level}
+                </p>
+              </div>
+            </div>
 
-                  <div className="space-y-2">
-                    {result.strengths?.map((s, i) => (
-                      <div
-                        key={i}
-                        className="bg-green-50 text-green-700 px-4 py-3 rounded-lg"
-                      >
-                        {s}
-                      </div>
-                    ))}
-                  </div>
-                </div>
+            {/* STRENGTHS & WEAKNESSES */}
+            <div className="grid md:grid-cols-2 gap-8 mb-10">
 
-                {/* Weaknesses */}
-                <div>
-                  <h3 className="font-semibold text-gray-800 mb-3 text-lg">
-                    Areas to Improve
-                  </h3>
-
-                  <div className="space-y-2">
-                    {result.weaknesses?.map((w, i) => (
-                      <div
-                        key={i}
-                        className="bg-red-50 text-red-700 px-4 py-3 rounded-lg"
-                      >
-                        {w}
-                      </div>
-                    ))}
-                  </div>
+              <div>
+                <h3 className="font-semibold mb-4 text-lg text-green-400">
+                  Strengths
+                </h3>
+                <div className="space-y-3">
+                  {result.strengths?.map((s, i) => (
+                    <div key={i} className="bg-green-500/10 p-3 rounded-lg">
+                      {s}
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              {/* Recommendation full width */}
-              <div className="mb-8">
-                <h3 className="font-semibold text-gray-800 mb-3 text-lg">
-                  Recommendation
+              <div>
+                <h3 className="font-semibold mb-4 text-lg text-red-400">
+                  Areas to Improve
+                </h3>
+                <div className="space-y-3">
+                  {result.weaknesses?.map((w, i) => (
+                    <div key={i} className="bg-red-500/10 p-3 rounded-lg">
+                      {w}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+
+            {/* RECOMMENDATION */}
+            <div className="mb-10">
+              <h3 className="font-semibold mb-3 text-lg">Recommendation</h3>
+              <div className="bg-white/10 p-5 rounded-lg">
+                {result.recommendation}
+              </div>
+            </div>
+
+            {/* COURSES */}
+            {result.suggestedCourses?.length > 0 && (
+              <div>
+                <h3 className="font-semibold mb-5 text-lg">
+                  Suggested Courses
                 </h3>
 
-                <div className="bg-gray-50 p-5 rounded-lg text-gray-700">
-                  {result.recommendation}
-                </div>
-              </div>
+                <div className="grid md:grid-cols-2 gap-6">
+                  {result.suggestedCourses.map((course, i) => (
+                    <div
+                      key={i}
+                      className="p-6 rounded-xl bg-white/5 border border-white/10 hover:scale-[1.02] transition"
+                    >
+                      <h4 className="text-lg font-semibold mb-2">
+                        {course.title}
+                      </h4>
 
-              {/* Suggested Courses full horizontal cards */}
-              {result.suggestedCourses?.length > 0 && (
-                <div>
-                  <h3 className="font-semibold text-gray-800 mb-4 text-lg">
-                    Suggested Courses to Improve
-                  </h3>
+                      <p className="text-gray-400 text-sm mb-4">
+                        {course.reason}
+                      </p>
 
-                  <div className="grid md:grid-cols-2 gap-6">
-                    {result.suggestedCourses.map((course, i) => (
-                      <div
-                        key={i}
-                        className="border border-gray-200 rounded-xl p-6 hover:shadow-md transition flex flex-col justify-between"
+                      <a
+                        href={course.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block bg-blue-600 px-4 py-2 rounded-lg hover:bg-blue-700 transition"
                       >
-                        <div>
-                          <h4 className="text-lg font-semibold text-gray-800 mb-2">
-                            {course.title}
-                          </h4>
-
-                          <p className="text-gray-600 text-sm mb-4">
-                            {course.reason}
-                          </p>
-                        </div>
-
-                        {/* Highlighted button */}
-                        <a
-                          href={course.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-block text-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium"
-                        >
-                          View Course →
-                        </a>
-                      </div>
-                    ))}
-                  </div>
+                        View Course →
+                      </a>
+                    </div>
+                  ))}
                 </div>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  /* ---------------- MAIN UI ---------------- */
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white w-full max-w-3xl p-6 rounded-xl shadow">
-        <h1 className="text-2xl font-bold text-center mb-4">
-          {courseTitle} Interview
-        </h1>
-        {interviewState === "idle" && (
-          <button
-            onClick={startInterview}
-            className="px-10 py-4 bg-black text-white rounded-full mx-auto block"
-          >
-            Start Interview
-          </button>
-        )}
-
-        {interviewState === "running" && (
-          <>
-            <div className="mb-4 text-sm">
-              <p>
-                Status: <b>{status}</b>
-              </p>
-              <p>
-                Answers:{" "}
-                <b>
-                  {answerCount}/{TOTAL_QUESTIONS}
-                </b>
-              </p>
-              <p>
-                Time Left: <b>{timeLeft}s</b>
-              </p>
-            </div>
-
-            <div className="space-y-4 max-h-[400px] overflow-y-auto">
-              {messages.map((m, i) => (
-                <div
-                  key={i}
-                  className={`p-4 rounded-xl ${
-                    m.role === "assistant"
-                      ? "bg-gray-100"
-                      : "bg-black text-white text-right"
-                  }`}
-                >
-                  <b>{m.role === "assistant" ? "Interviewer" : "You"}:</b>
-                  <p>{m.content}</p>
-                </div>
-              ))}
-            </div>
-
-            {status === "listening" && liveTranscript && (
-              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                <b>Live Answer:</b>
-                <p>{liveTranscript}</p>
               </div>
             )}
           </>
         )}
+      </div>
+    </div>
+  );
+}
+
+  /* ---------------- MAIN UI ---------------- */
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white flex justify-center px-4 py-20">
+      <div className="w-full max-w-4xl backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl shadow-2xl p-6 h-[85vh] flex flex-col overflow-hidden">
+        {/* HEADER */}
+        <div className="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
+          <h1 className="text-2xl font-bold tracking-wide">
+            🎤 {courseTitle} Interview
+          </h1>
+
+          {interviewState === "running" && (
+            <div className="flex items-center gap-6 text-sm">
+
+              <div>
+                <span className="text-gray-400">Answers</span>
+                <p className="font-bold">{answerCount}/{TOTAL_QUESTIONS}</p>
+              </div>
+
+              <div>
+                <span className="text-gray-400">Status</span>
+                <p className={`font-semibold ${status === "listening" ? "text-green-400 animate-pulse" :
+                  status === "speaking" ? "text-blue-400" :
+                    "text-gray-300"
+                  }`}>
+                  {status}
+                </p>
+              </div>
+
+              {/* TIMER */}
+              <div className="relative w-12 h-12">
+                <div className="absolute inset-0 flex items-center justify-center text-xs font-bold">
+                  {timeLeft}s
+                </div>
+                <div className={`w-full h-full rounded-full border-4 ${timeLeft < 10 ? "border-red-500 animate-pulse" : "border-blue-400"
+                  }`} />
+              </div>
+
+            </div>
+          )}
+        </div>
+
+        {/* START BUTTON */}
+        {interviewState === "idle" && (
+          <div className="flex flex-col items-center justify-center py-16">
+            <button
+              onClick={startInterview}
+              className="px-12 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:scale-105 transition rounded-full text-lg font-semibold shadow-lg"
+            >
+              Start AI Interview 🚀
+            </button>
+          </div>
+        )}
+
+        {/* CHAT AREA */}
+        {interviewState === "running" && (
+          <>
+            <div className="flex-1 overflow-y-auto space-y-4 pr-2 scrollbar-thin scrollbar-thumb-gray-700">
+
+              {messages.map((m, i) => (
+                <div
+                  key={i}
+                  className={`flex ${m.role === "assistant" ? "justify-start" : "justify-end"}`}
+                >
+                  <div
+                    className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-md ${m.role === "assistant"
+                      ? "bg-white/10 text-white rounded-bl-none"
+                      : "bg-blue-600 text-white rounded-br-none"
+                      }`}
+                  >
+                    <p className="text-xs opacity-70 mb-1">
+                      {m.role === "assistant" ? "Interviewer" : "You"}
+                    </p>
+                    {m.content}
+                  </div>
+                </div>
+              ))}
+
+            </div>
+
+            {/* LIVE TRANSCRIPT */}
+            {status === "listening" && (
+              <div className="mt-4 p-4 rounded-xl bg-green-500/10 border border-green-400/30">
+                <p className="text-green-300 text-sm mb-1">🎙 Listening...</p>
+                <p className="text-white">{liveTranscript || "Speak now..."}</p>
+              </div>
+            )}
+          </>
+        )}
+
       </div>
     </div>
   );

@@ -75,8 +75,8 @@ function App() {
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/student/dashboard/:id" element={<StudentDashboard />} />
         <Route path="/practice" element={<Practice />} />
-        <Route path="/practice/Java" element={<Java />} />
-        <Route path="/practice/oops" element={<Oops />} />
+        {/* <Route path="/practice/Java" element={<Java />} />
+        <Route path="/practice/oops" element={<Oops />} /> */}
         <Route path="/all/teachers" element={<Teachers />} />
         <Route path="/student/teacher/:teacherId" element={<TeacherProfile />} />
         <Route path="/quiz" element={<QuizPage />} />
