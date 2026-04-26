@@ -19,9 +19,7 @@ const CourseCard = ({ course }) => {
           {course.name}
         </h3>
 
-        <p className="text-gray-500 text-xs mb-3 italic">
-          by {course.teacher}
-        </p>
+        <p className="text-gray-500 text-xs mb-3 italic">by {course.teacher}</p>
 
         <p className="text-gray-600 text-sm mb-4 line-clamp-2 flex-grow">
           {course.description}
@@ -33,8 +31,16 @@ const CourseCard = ({ course }) => {
 
         <div className="flex justify-between items-center gap-2 mb-6 text-sm text-amber-500 font-medium">
           <div>
-            <span>⭐⭐⭐⭐⭐</span>
-            <span className="text-gray-400 text-xs ml-1">(4.5)</span>
+            <span className="text-amber-500">
+              {course.overallRating === 0
+                ? "No ratings yet"
+                : "⭐".repeat(Math.floor(course.overallRating))}
+            </span>
+            <span className="text-gray-400 text-xs ml-1">
+              {
+                course.overallRating > 0                 ? `(${course?.overallRating.toFixed(1)})`: " "
+              }
+            </span>
           </div>
 
           <p className="text-gray-500 text-[10px] border-l border-gray-200 pl-2 uppercase tracking-tight">
@@ -48,9 +54,7 @@ const CourseCard = ({ course }) => {
           </span>
 
           <button
-            onClick={() =>
-              navigate(`/student/course-details/${course.id}`)
-            }
+            onClick={() => navigate(`/student/course-details/${course.id}`)}
             className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 shadow-lg shadow-purple-100"
           >
             Enroll Now
@@ -70,7 +74,6 @@ const StudentFeed = () => {
   const [maxPrice, setMaxPrice] = useState(10000);
   const [maxLessons, setMaxLessons] = useState(50);
 
-  // 🔍 SEARCH STATE (ONLY ADDITION)
   const [search, setSearch] = useState("");
 
   const getLessonCount = (lessons) => {
@@ -82,7 +85,7 @@ const StudentFeed = () => {
     const getFeed = async () => {
       try {
         const response = await axios.post(
-          `${import.meta.env.VITE_BACKEND_URL}/student/feed`
+          `${import.meta.env.VITE_BACKEND_URL}/student/feed`,
         );
         if (response.data.success) {
           setFeed(response.data.data);
@@ -98,10 +101,7 @@ const StudentFeed = () => {
     getFeed();
   }, []);
 
-  const topics = useMemo(
-    () => ["All", ...feed.map((t) => t.topic)],
-    [feed]
-  );
+  const topics = useMemo(() => ["All", ...feed.map((t) => t.topic)], [feed]);
 
   // 🔍 SEARCH FILTER APPLIED HERE
   const filteredFeed = useMemo(() => {
@@ -148,8 +148,8 @@ const StudentFeed = () => {
       <div className="text-4xl md:text-6xl max-w-7xl mx-auto px-4 font-semibold text-gray-900 pt-16">
         Discover Your Next Learning Journey
         <div className="max-w-full md:max-w-[70%] mt-5 text-xl md:text-2xl text-gray-600">
-          Explore our comprehensive catalog of expert-led courses designed
-          to transform your career.
+          Explore our comprehensive catalog of expert-led courses designed to
+          transform your career.
         </div>
       </div>
 
@@ -194,7 +194,7 @@ const StudentFeed = () => {
 
               <div>
                 <label className="text-[10px] font-black uppercase text-slate-400">
-                  Budget
+                  Budget: ₹{maxPrice.toLocaleString("en-IN")}
                 </label>
                 <input
                   type="range"
@@ -209,7 +209,7 @@ const StudentFeed = () => {
 
               <div>
                 <label className="text-[10px] font-black uppercase text-slate-400">
-                  Complexity
+                  Lessons : {maxLessons}
                 </label>
                 <input
                   type="range"
@@ -228,9 +228,7 @@ const StudentFeed = () => {
         <main className="flex-1">
           {filteredFeed.map((topicBlock) => (
             <div key={topicBlock.topic} className="mb-20">
-              <h2 className="text-3xl font-black mb-10">
-                {topicBlock.topic}
-              </h2>
+              <h2 className="text-3xl font-black mb-10">{topicBlock.topic}</h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-10">
                 {topicBlock.course.map((course) => (

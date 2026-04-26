@@ -79,7 +79,6 @@ const StudentCourseDetails1 = () => {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      console.log(userId);
       if (token) {
         try {
           const res = await axios.post(
@@ -236,7 +235,6 @@ const StudentCourseDetails1 = () => {
         },
       );
 
-      // console.log("Course details response:", response.data.course);
 
       if (response.data.success) {
         setCourseDetails(response.data.course);
@@ -421,9 +419,22 @@ const StudentCourseDetails1 = () => {
             <div className="flex flex-wrap items-center gap-6 mb-10">
               <div className="flex items-center gap-3 bg-gradient-to-br from-amber-400/20 to-orange-400/20 backdrop-blur-sm px-5 py-3 rounded-2xl border border-amber-400/30 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
                 <Star className="w-6 h-6 fill-amber-400 text-amber-400 drop-shadow-lg" />
-                <span className="text-xl font-black text-amber-300">4.8</span>
+                <span className="text-xl font-black text-amber-300">
+                  {courseDetails?.ratings?.length
+                    ? (
+                        courseDetails.ratings.reduce(
+                          (sum, item) => sum + item.rating,
+                          0,
+                        ) / courseDetails.ratings.length
+                      ).toFixed(1)
+                    : null}
+                </span>
                 <span className="text-slate-300 text-sm font-medium">
-                  (12,430)
+                  {
+                    courseDetails?.ratings?.length > 0                      
+                    ? `${courseDetails.ratings.length} reviews`
+                      : "No reviews yet"
+                  }
                 </span>
               </div>
 
@@ -446,7 +457,17 @@ const StudentCourseDetails1 = () => {
 
             <div className="items-center gap-5 p-5 bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 inline-flex shadow-xl hover:shadow-2xl hover:bg-white/15 transition-all duration-300">
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center font-black text-3xl shadow-xl ring-4 ring-white/20">
-                {courseDetails?.teacher?.username?.charAt(0)}
+                {/* {courseDetails?.teacher?.username?.charAt(0)}
+                 */}
+                {courseDetails?.teacher?.profilePicture ? (
+                  <img
+                    src={courseDetails.teacher.profilePicture}
+                    alt={courseDetails?.teacher?.username}
+                    className="w-full h-full object-cover rounded-2xl"
+                  />
+                ) : (
+                  courseDetails?.teacher?.username?.charAt(0) || "T"
+                )}
               </div>
               <div>
                 <p className="text-sm font-semibold text-slate-400 mb-1">
@@ -857,6 +878,25 @@ const StudentCourseDetails1 = () => {
           onClose={() => setShowFeedbackModal(false)}
         />
       )}
+
+      {courseDetails?.ratings?.length > 0 && (
+        <div className="mt-16 max-w-7xl mx-auto px-6 pb-16">
+          {/* Header */}
+          <div className="flex items-center gap-5 mb-10">
+            <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-xl">
+              <Star className="w-8 h-8 text-white" />
+            </div>
+            <h2 className="text-5xl font-black text-slate-900">Reviews</h2>
+          </div>
+
+          {/* Reviews Container */}
+          <div className="bg-white flex flex-col gap-5 rounded-3xl p-10 shadow-[0_8px_32px_rgba(0,0,0,0.08)] border-2 border-slate-100">
+            {courseDetails.ratings.map((review) => (
+              <ReviewCard key={review._id} review={review} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -1189,4 +1229,64 @@ const FeedbackModal = ({ onClose, courseId }) => {
     </div>
   );
 };
+
+const ReviewCard = ({ review }) => {
+  const rating = review?.rating || 0;
+
+  return (
+    <div className="border border-gray-200 rounded-2xl p-5 bg-white shadow-sm hover:shadow-md transition-all duration-200">
+      {/* Header */}
+      <div className="flex items-center gap-4 mb-3">
+        {/* Avatar */}
+        <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 text-white flex items-center justify-center rounded-full font-semibold text-sm">
+          {review?.student?.profilePicture ? (
+            <img
+              src={review.student.profilePicture}
+              alt={review.student.username}
+              className="w-full h-full object-cover rounded-full"
+            />
+          ) : review?.student?.username ? (
+            review.student.username[0].toUpperCase()
+          ) : (
+            "U"
+          )}
+        </div>
+
+        {/* Name */}
+        <div>
+          <h3 className="font-semibold text-gray-800">
+            {review?.student?.username || "User"}
+          </h3>
+          <p className="text-gray-400 text-xs">
+            {review?.createdAt
+              ? new Date(review.createdAt).toLocaleDateString()
+              : "Recently"}
+          </p>
+        </div>
+      </div>
+
+      {/* ⭐ Rating */}
+      <div className="flex items-center gap-1 mb-3">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Star
+            key={star}
+            size={16}
+            className={`${
+              star <= Math.round(rating)
+                ? "fill-yellow-400 text-yellow-400"
+                : "text-gray-300"
+            }`}
+          />
+        ))}
+        <span className="text-sm text-gray-500 ml-2">{rating.toFixed(1)}</span>
+      </div>
+
+      {/* Comment */}
+      <p className="text-gray-600 text-sm leading-relaxed">
+        {review?.feedback || "No feedback provided."}
+      </p>
+    </div>
+  );
+};
+
 export default StudentCourseDetails1;
