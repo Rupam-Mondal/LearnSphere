@@ -18,12 +18,19 @@ import {
   TrendingUp,
   Sparkles,
   Send,
+  Lock,
+  ShieldCheck,
+  Loader2,
 } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { jwtDecode } from "jwt-decode";
 import { UserContext } from "../contexts/userContext";
 import { generateCertificate } from "../lib/cirtificateGenerator";
+
+const InlineSpinner = ({ className = "h-4 w-4" }) => (
+  <Loader2 className={`${className} animate-spin`} />
+);
 
 const VideoPlayerModal = ({ videoUrl, onClose }) => {
   const embedUrl = videoUrl
@@ -39,7 +46,7 @@ const VideoPlayerModal = ({ videoUrl, onClose }) => {
       <div className="bg-white w-full max-w-4xl p-6 rounded-2xl shadow-2xl relative">
         <button
           onClick={onClose}
-          className="absolute -top-3 -right-3 bg-red-600 text-white rounded-full p-2 hover:bg-red-700 transition-colors z-10"
+          className="absolute -top-3 -right-3 z-10 cursor-pointer rounded-full bg-red-600 p-2 text-white transition hover:-translate-y-0.5 hover:bg-red-700 hover:shadow-lg active:translate-y-0"
         >
           <X className="w-6 h-6" />
         </button>
@@ -78,6 +85,8 @@ const StudentCourseDetails1 = () => {
   const [doubtMessage, setDoubtMessage] = useState("");
   const [doubtSessions, setDoubtSessions] = useState([]);
   const [doubtLoading, setDoubtLoading] = useState(false);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [markingVideoId, setMarkingVideoId] = useState(null);
   const userId = user?.id;
 
   useEffect(() => {
@@ -174,7 +183,10 @@ const StudentCourseDetails1 = () => {
   };
 
   const handlePayment = async () => {
+    if (paymentLoading) return;
+
     try {
+      setPaymentLoading(true);
       const { data } = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/purchase/create-order`,
         { id: courseId },
@@ -215,7 +227,12 @@ const StudentCourseDetails1 = () => {
           } catch (error) {
             console.error("Verify error:", error);
             toast.error("Something went wrong during verification");
+          } finally {
+            setPaymentLoading(false);
           }
+        },
+        modal: {
+          ondismiss: () => setPaymentLoading(false),
         },
       };
       const rzp = new window.Razorpay(options);
@@ -223,6 +240,7 @@ const StudentCourseDetails1 = () => {
     } catch (error) {
       console.error(error);
       toast.error("Payment failed");
+      setPaymentLoading(false);
     }
   };
 
@@ -251,7 +269,7 @@ const StudentCourseDetails1 = () => {
       } else {
         setError(response.data.message);
       }
-    } catch (error) {
+    } catch {
       setError("Could not load course details. Please try again later.");
     } finally {
       setLoading(false);
@@ -318,9 +336,12 @@ const StudentCourseDetails1 = () => {
 
   async function makeItMark(courseId, videoId) {
     setClickedMark(true);
+    setMarkingVideoId(videoId);
     const token = localStorage.getItem("token");
     if (!token) {
       toast.error("Please log in to mark the lesson as completed.");
+      setClickedMark(false);
+      setMarkingVideoId(null);
       return;
     }
     try {
@@ -338,10 +359,11 @@ const StudentCourseDetails1 = () => {
       } else {
         toast.error(`Failed to mark lesson: ${response.data.message}`);
       }
-    } catch (error) {
+    } catch {
       toast.error("An error occurred while marking the lesson.");
     } finally {
       setClickedMark(false);
+      setMarkingVideoId(null);
     }
   }
 
@@ -461,552 +483,668 @@ const StudentCourseDetails1 = () => {
   const hasCompleted = progressPercentage === 100;
   const hasCertificate = enrolledCourse?.isValidforCertificate;
   const attempts = enrolledCourse?.attempts || 0;
+  const averageRating = courseDetails?.ratings?.length
+    ? (
+        courseDetails.ratings.reduce((sum, item) => sum + item.rating, 0) /
+        courseDetails.ratings.length
+      ).toFixed(1)
+    : "New";
+  const firstName = user?.username?.split(" ")[0] || "Learner";
+  const previewLessons = courseDetails?.lessons?.slice(0, 4) || [];
+  const nextLessonIndex = courseDetails?.lessons?.findIndex(
+    (lesson) => !completedLessons.includes(lesson.videoId),
+  );
+  const safeNextLessonIndex = nextLessonIndex >= 0 ? nextLessonIndex : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/40">
-      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 text-white pt-32 pb-20 px-6 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDE2YzAtNi42MjcgNS4zNzMtMTIgMTItMTJzMTIgNS4zNzMgMTIgMTItNS4zNzMgMTItMTIgMTItMTItNS4zNzMtMTItMTJ6bTAgMjRjMC02LjYyNyA1LjM3My0xMiAxMi0xMnMxMiA1LjM3MyAxMiAxMi01LjM3MyAxMi0xMiAxMi0xMi01LjM3My0xMi0xMnoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-30"></div>
+    <div className="min-h-screen bg-[#f7f8fb] text-slate-950">
+      <section className="relative overflow-hidden bg-slate-950 px-4 pt-28 pb-12 text-white sm:px-6 lg:pt-32">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(20,184,166,0.22),transparent_32%),radial-gradient(circle_at_82%_12%,rgba(245,158,11,0.16),transparent_28%),linear-gradient(135deg,#020617_0%,#111827_55%,#042f2e_100%)]" />
+        <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[#f7f8fb] to-transparent" />
 
-        <div className="absolute top-20 right-20 w-72 h-72 bg-cyan-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div
-          className="absolute bottom-20 left-20 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "1s" }}
-        ></div>
-
-        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between gap-12 relative z-10">
-          <div className="flex-1 lg:pr-8">
-            <div className="flex items-center gap-2 text-sm font-bold text-cyan-400 mb-8 uppercase tracking-wider">
-              <span className="bg-cyan-400/20 backdrop-blur-sm px-4 py-2 rounded-full border border-cyan-400/30 hover:bg-cyan-400/30 transition-all duration-300 shadow-lg">
-                {courseDetails?.topic}
+        <div className="relative z-10 mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1fr_420px] lg:items-start">
+          <div className="max-w-4xl">
+            <div className="mb-6 flex flex-wrap items-center gap-3 text-sm font-semibold">
+              <span className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-teal-100 backdrop-blur">
+                {courseDetails?.topic || "Featured course"}
               </span>
-              <ChevronRight className="w-4 h-4" />
-              <span className="text-slate-300">{courseDetails?.title}</span>
+              <span
+                className={`rounded-full px-4 py-2 ${
+                  enrolled
+                    ? "bg-emerald-400/15 text-emerald-100 ring-1 ring-emerald-300/25"
+                    : "bg-amber-400/15 text-amber-100 ring-1 ring-amber-300/25"
+                }`}
+              >
+                {enrolled ? "Enrolled learning space" : "Premium access"}
+              </span>
             </div>
 
-            <h1 className="text-6xl md:text-7xl font-black mb-8 leading-[1.1] bg-clip-text text-transparent bg-gradient-to-r from-white via-cyan-100 to-blue-200 animate-fadeIn">
-              {courseDetails?.title}
+            <h1 className="max-w-4xl text-4xl font-black leading-tight sm:text-5xl lg:text-6xl">
+              {enrolled
+                ? `Continue ${courseDetails?.title}`
+                : courseDetails?.title}
             </h1>
 
-            <p className="text-xl text-slate-300 mb-10 leading-relaxed max-w-3xl">
+            <p className="mt-6 max-w-3xl text-base leading-8 text-slate-300 sm:text-lg">
               {courseDetails?.description ||
-                "Master the fundamentals and advanced concepts in this comprehensive guide designed for all skill levels."}
+                "Build practical skills with guided lessons, resources, and teacher support."}
             </p>
 
-            <div className="flex flex-wrap items-center gap-6 mb-10">
-              <div className="flex items-center gap-3 bg-gradient-to-br from-amber-400/20 to-orange-400/20 backdrop-blur-sm px-5 py-3 rounded-2xl border border-amber-400/30 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
-                <Star className="w-6 h-6 fill-amber-400 text-amber-400 drop-shadow-lg" />
-                <span className="text-xl font-black text-amber-300">
+            <div className="mt-8 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur">
+                <div className="flex items-center gap-2 text-amber-300">
+                  <Star className="h-5 w-5 fill-amber-300" />
+                  <span className="text-2xl font-black">{averageRating}</span>
+                </div>
+                <p className="mt-1 text-sm text-slate-300">
                   {courseDetails?.ratings?.length
-                    ? (
-                        courseDetails.ratings.reduce(
-                          (sum, item) => sum + item.rating,
-                          0,
-                        ) / courseDetails.ratings.length
-                      ).toFixed(1)
-                    : null}
-                </span>
-                <span className="text-slate-300 text-sm font-medium">
-                  {
-                    courseDetails?.ratings?.length > 0                      
-                    ? `${courseDetails.ratings.length} reviews`
-                      : "No reviews yet"
-                  }
-                </span>
+                    ? `${courseDetails.ratings.length} learner reviews`
+                    : "No reviews yet"}
+                </p>
               </div>
-
-              <div className="flex items-center gap-3 text-slate-300 hover:text-white transition-colors">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 backdrop-blur-sm flex items-center justify-center border border-cyan-400/30 shadow-lg">
-                  <Users className="w-6 h-6 text-cyan-400" />
+              <div className="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur">
+                <div className="flex items-center gap-2 text-teal-200">
+                  <Users className="h-5 w-5" />
+                  <span className="text-2xl font-black">
+                    {courseDetails?.students?.length || 0}
+                  </span>
                 </div>
-                <span className="font-bold text-lg">
-                  {courseDetails?.students.length || 0} students
-                </span>
+                <p className="mt-1 text-sm text-slate-300">Students enrolled</p>
               </div>
-
-              <div className="flex items-center gap-3 text-slate-300 hover:text-white transition-colors">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-sm flex items-center justify-center border border-blue-400/30 shadow-lg">
-                  <Globe className="w-6 h-6 text-blue-400" />
+              <div className="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur">
+                <div className="flex items-center gap-2 text-sky-200">
+                  <BookOpen className="h-5 w-5" />
+                  <span className="text-2xl font-black">{totalLessons}</span>
                 </div>
-                <span className="font-bold text-lg">English [Auto]</span>
+                <p className="mt-1 text-sm text-slate-300">Video lessons</p>
               </div>
             </div>
 
-            <div className="items-center gap-5 p-5 bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 inline-flex shadow-xl hover:shadow-2xl hover:bg-white/15 transition-all duration-300">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center font-black text-3xl shadow-xl ring-4 ring-white/20">
-                {/* {courseDetails?.teacher?.username?.charAt(0)}
-                 */}
-                {courseDetails?.teacher?.profilePicture ? (
-                  <img
-                    src={courseDetails.teacher.profilePicture}
-                    alt={courseDetails?.teacher?.username}
-                    className="w-full h-full object-cover rounded-2xl"
+            {enrolled && (
+              <div className="mt-8 rounded-[2rem] border border-white/10 bg-white/[0.08] p-5 shadow-2xl backdrop-blur">
+                <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-bold uppercase text-teal-200">
+                      Welcome back, {firstName}
+                    </p>
+                    <h2 className="mt-1 text-2xl font-black text-white">
+                      {Math.round(progressPercentage)}% complete
+                    </h2>
+                    <p className="mt-1 text-sm text-slate-300">
+                      {completedLessons.length} of {totalLessons} lessons done
+                    </p>
+                  </div>
+                  <div className="flex h-24 w-24 items-center justify-center rounded-full border-[10px] border-emerald-400/25 bg-emerald-400/10 text-xl font-black text-emerald-200">
+                    {Math.round(progressPercentage)}%
+                  </div>
+                </div>
+                <div className="mt-5 h-3 overflow-hidden rounded-full bg-white/10">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-300 transition-all duration-700"
+                    style={{ width: `${progressPercentage}%` }}
                   />
-                ) : (
-                  courseDetails?.teacher?.username?.charAt(0) || "T"
-                )}
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-slate-400 mb-1">
-                  Created by
-                </p>
-                <p className="font-black text-xl text-cyan-400 hover:text-cyan-300 cursor-pointer transition-colors">
-                  {courseDetails?.teacher?.username}
-                </p>
-              </div>
-            </div>
-
-            <div className="w-full mt-16 bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-xl rounded-3xl p-10 shadow-2xl border border-slate-700/50 hover:border-slate-600/50 transition-all duration-500">
-              <div className="flex items-center gap-4 mb-10">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center shadow-xl">
-                  <TrendingUp className="w-7 h-7 text-white" />
                 </div>
-                <h2 className="text-4xl font-black text-white">
-                  What you'll learn
-                </h2>
               </div>
-
-              <ul className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {courseDetails?.topicCover.map((point, index) => (
-                  <li
-                    key={index}
-                    className="flex items-start gap-4 text-slate-200 text-base group hover:translate-x-2 transition-all duration-300"
-                  >
-                    <div className="w-7 h-7 rounded-xl bg-cyan-400/20 flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-cyan-400/40 group-hover:scale-110 transition-all duration-300 shadow-lg">
-                      <CheckCircle className="w-5 h-5 text-cyan-400" />
-                    </div>
-                    <span className="leading-relaxed">{point}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            )}
           </div>
 
-          <div className="lg:w-[38%]">
-            <div className="bg-white rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.2)] border border-slate-200 overflow-hidden sticky top-28 transform hover:scale-[1.02] transition-all duration-500 hover:shadow-[0_25px_70px_rgba(0,0,0,0.25)]">
-              <div className="relative group cursor-pointer overflow-hidden">
-                <img
-                  src={
-                    courseDetails?.thumbnail ||
-                    "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800"
-                  }
-                  alt="Preview"
-                  className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-700"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
-                <div
-                  onClick={() => setShowDemoModal(true)}
-                  className="absolute inset-0 bg-black/60 backdrop-blur-md flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500"
-                >
-                  <div className="w-24 h-24 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-500 shadow-2xl ring-4 ring-white/30">
-                    <PlayCircle className="w-14 h-14 text-white drop-shadow-lg" />
-                  </div>
-                  <span className="text-white font-black text-xl">
-                    Preview this course
-                  </span>
+          <aside className="rounded-[2rem] border border-white/10 bg-white p-3 text-slate-950 shadow-2xl lg:sticky lg:top-24">
+            <div
+              onClick={() => setShowDemoModal(true)}
+              className="group relative aspect-video cursor-pointer overflow-hidden rounded-[1.5rem] bg-slate-900"
+            >
+              <img
+                src={
+                  courseDetails?.thumbnail ||
+                  "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=900"
+                }
+                alt={courseDetails?.title}
+                className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/90 shadow-2xl transition group-hover:scale-105">
+                  <PlayCircle className="h-9 w-9 text-slate-950" />
                 </div>
               </div>
+              <p className="absolute bottom-4 left-5 text-sm font-bold text-white">
+                Watch course preview
+              </p>
+            </div>
 
-              <div className="p-8">
-                <div className="flex items-baseline gap-3 mb-8">
-                  <span className="text-6xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-cyan-600">
-                    ₹{courseDetails?.price || "499"}
-                  </span>
-                </div>
-
-                {enrolled ? (
-                  <>
-                    <button
-                      disabled
-                      className="w-full bg-gradient-to-r from-slate-300 to-slate-400 text-white py-5 rounded-2xl font-black text-lg mb-5 shadow-lg cursor-not-allowed relative overflow-hidden"
-                    >
-                      <span className="relative z-10 flex items-center justify-center gap-3">
-                        <CheckCircle className="w-6 h-6" />
-                        Already Enrolled
-                      </span>
-                    </button>
-
-                    <div className="mb-5 rounded-2xl border border-blue-100 bg-blue-50 p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <MessageCircle className="w-5 h-5 text-blue-700" />
-                        <p className="font-black text-blue-950">
-                          Need help from the teacher?
+            <div className="p-5">
+              {enrolled ? (
+                <div className="space-y-4">
+                  <div className="rounded-2xl bg-emerald-50 p-4 ring-1 ring-emerald-100">
+                    <div className="flex items-center gap-3">
+                      <ShieldCheck className="h-6 w-6 text-emerald-600" />
+                      <div>
+                        <p className="font-black text-emerald-950">
+                          You are enrolled
+                        </p>
+                        <p className="text-sm text-emerald-700">
+                          Lessons, resources, progress, and support unlocked.
                         </p>
                       </div>
-
-                      <div className="space-y-3">
-                        <textarea
-                          value={doubtMessage}
-                          onChange={(e) => setDoubtMessage(e.target.value)}
-                          placeholder="Briefly describe your doubt..."
-                          className="w-full rounded-xl border border-blue-100 bg-white p-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-blue-400"
-                          rows={3}
-                        />
-                        <button
-                          onClick={requestDoubtSession}
-                          disabled={doubtLoading}
-                          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white py-3 rounded-xl font-bold transition flex items-center justify-center gap-2"
-                        >
-                          <Send className="w-4 h-4" />
-                          {doubtLoading
-                            ? "Sending Request..."
-                            : "Ask for Video Session"}
-                        </button>
-
-                        {doubtSessions.length > 0 && (
-                          <div className="space-y-2 pt-2">
-                            {doubtSessions.map((session) => (
-                              <div
-                                key={session._id}
-                                className="rounded-xl border border-blue-100 bg-white p-3"
-                              >
-                                <div className="flex items-center justify-between gap-3">
-                                  <span className="text-sm font-bold text-slate-800">
-                                    {session.status === "LINK_SENT"
-                                      ? "Session scheduled"
-                                      : "Request sent"}
-                                  </span>
-                                  <span className="text-xs font-semibold text-blue-700">
-                                    {formatSessionTime(session.scheduledAt)}
-                                  </span>
-                                </div>
-                                {session.message && (
-                                  <p className="mt-2 text-sm text-slate-600">
-                                    {session.message}
-                                  </p>
-                                )}
-                                {session.status === "LINK_SENT" &&
-                                  session.roomId && (
-                                    <button
-                                      onClick={() =>
-                                        navigate(
-                                          `/video-chat?room=${encodeURIComponent(
-                                            session.roomId,
-                                          )}`,
-                                        )
-                                      }
-                                      className="mt-3 w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl font-bold transition"
-                                    >
-                                      Join Video Session
-                                    </button>
-                                  )}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
                     </div>
-                  </>
-                ) : (
+                  </div>
+
+                  <button
+                    onClick={() => setOpenLessonIndex(safeNextLessonIndex)}
+                    className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 py-4 font-black text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-xl active:translate-y-0"
+                  >
+                    <PlayCircle className="h-5 w-5" />
+                    Continue Learning
+                  </button>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                      <p className="text-2xl font-black text-slate-950">
+                        {completedLessons.length}/{totalLessons}
+                      </p>
+                      <p className="mt-1 text-xs font-bold uppercase text-slate-500">
+                        Lessons done
+                      </p>
+                    </div>
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                      <p className="text-2xl font-black text-slate-950">
+                        {attempts}/3
+                      </p>
+                      <p className="mt-1 text-xs font-bold uppercase text-slate-500">
+                        Attempts
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <div className="mb-5 flex items-end justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-bold uppercase text-slate-500">
+                        Course price
+                      </p>
+                      <p className="text-4xl font-black text-slate-950">
+                        Rs. {courseDetails?.price || "499"}
+                      </p>
+                    </div>
+                    <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-800">
+                      Premium
+                    </span>
+                  </div>
                   <button
                     onClick={handlePayment}
-                    className="w-full cursor-pointer bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-600 hover:from-blue-700 hover:via-blue-600 hover:to-cyan-700 text-white py-5 rounded-2xl font-black text-lg mb-5 shadow-[0_8px_24px_rgba(37,99,235,0.4)] hover:shadow-[0_12px_32px_rgba(37,99,235,0.5)] transition-all duration-300 transform hover:scale-[1.02] active:scale-95 relative overflow-hidden group"
+                    disabled={paymentLoading}
+                    className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-slate-950 via-teal-900 to-teal-700 px-5 py-4 font-black text-white shadow-[0_18px_40px_rgba(15,118,110,0.35)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_48px_rgba(15,118,110,0.45)] active:translate-y-0 disabled:cursor-wait disabled:opacity-80"
                   >
-                    <span className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-400 opacity-0 group-hover:opacity-30 transition-opacity duration-300"></span>
-                    <span className="relative z-10 flex items-center justify-center gap-2 cursor-pointer">
-                      Enroll Now
-                      <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                    </span>
-                  </button>
-                )}
-
-                <div className="space-y-5 pt-8 border-t-2 border-slate-100">
-                  <p className="font-black text-sm text-slate-700 mb-5 uppercase tracking-wide">
-                    This course includes:
-                  </p>
-                  <ul className="text-sm space-y-4 text-slate-600">
-                    <li className="flex items-center gap-4 group hover:translate-x-2 transition-all duration-300">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-50 to-rose-100 flex items-center justify-center group-hover:shadow-lg transition-all duration-300">
-                        <PlayCircle className="w-5 h-5 text-red-600" />
-                      </div>
-                      <span className="font-bold text-base">
-                        {courseDetails?.lessons.length || 0} video lectures
-                      </span>
-                    </li>
-                    <li className="flex items-center gap-4 group hover:translate-x-2 transition-all duration-300">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center group-hover:shadow-lg transition-all duration-300">
-                        <Award className="w-5 h-5 text-amber-600" />
-                      </div>
-                      <span className="font-bold text-base">
-                        Certificate of completion
-                      </span>
-                    </li>
-                    <li className="flex items-center gap-4 group hover:translate-x-2 transition-all duration-300">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-50 to-cyan-100 flex items-center justify-center group-hover:shadow-lg transition-all duration-300">
-                        <Clock className="w-5 h-5 text-blue-600" />
-                      </div>
-                      <span className="font-bold text-base">
-                        Lifetime access
-                      </span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {enrolled &&
-        courseDetails.lessons &&
-        courseDetails.lessons.length > 0 && (
-          <div className="mt-16 max-w-7xl mx-auto px-6 pb-16">
-            <div className="flex items-center gap-5 mb-10">
-              <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-xl">
-                <BookOpen className="w-8 h-8 text-white" />
-              </div>
-              <h2 className="text-5xl font-black text-slate-900">
-                Course Content
-              </h2>
-            </div>
-
-            <div className="bg-white flex flex-col gap-3 rounded-3xl p-10 shadow-[0_8px_32px_rgba(0,0,0,0.08)] border-2 border-slate-100 mb-10 hover:shadow-[0_12px_40px_rgba(0,0,0,0.12)] transition-all duration-300">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 via-green-500 to-emerald-600 flex items-center justify-center shadow-lg">
-                    <TrendingUp className="w-7 h-7 text-white" />
-                  </div>
-                  <div>
-                    <span className="text-sm font-black text-slate-600 block uppercase tracking-wide mb-1">
-                      Your Progress
-                    </span>
-                    <span className="text-3xl font-black text-slate-900">
-                      {completedLessons.length}/{courseDetails.lessons.length}
-                    </span>
-                  </div>
-                </div>
-                <span className="text-4xl font-black text-emerald-600">
-                  {Math.round(progressPercentage)}%
-                </span>
-              </div>
-
-              <div className="relative w-full bg-slate-200 rounded-full h-5 overflow-hidden shadow-inner">
-                <div
-                  className="h-5 rounded-full bg-gradient-to-r from-emerald-400 via-green-500 to-emerald-600 transition-all duration-1000 ease-out relative overflow-hidden shadow-lg"
-                  style={{ width: `${progressPercentage}%` }}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer"></div>
-                </div>
-              </div>
-
-              {courseDetails.lessons.map((lesson, index) => (
-                <div
-                  key={index}
-                  className="border border-gray-200 rounded-xl overflow-hidden shadow-sm"
-                >
-                  <button
-                    className={`w-full text-left p-5 flex justify-between items-center transition-colors duration-200
-                                        ${
-                                          openLessonIndex === index
-                                            ? "bg-blue-50"
-                                            : "bg-gray-50 hover:bg-gray-100"
-                                        }`}
-                    onClick={() => toggleLesson(index)}
-                  >
-                    <span className="text-lg font-semibold text-gray-800 flex-1">
-                      <span className="text-blue-600 mr-2">
-                        Lecture {index + 1}:
-                      </span>{" "}
-                      {lesson.title}
-                    </span>
-                    {completedLessons.includes(lesson.videoId) && (
-                      <CheckCircle className="w-6 h-6 text-green-600" />
-                    )}
-                    {openLessonIndex === index ? (
-                      <ChevronUp className="w-6 h-6 text-blue-600" />
+                    {paymentLoading ? (
+                      <>
+                        <InlineSpinner />
+                        Opening Secure Payment
+                      </>
                     ) : (
-                      <ChevronDown className="w-6 h-6 text-gray-500" />
+                      <>
+                        Enroll Now
+                        <ChevronRight className="h-5 w-5" />
+                      </>
                     )}
                   </button>
-
-                  {openLessonIndex === index && (
-                    <div className="p-5 bg-white border-t border-gray-200">
-                      {lesson.videoUrl ? (
-                        <ul className="space-y-4">
-                          {lesson.videoUrl ? (
-                            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 border rounded-xl bg-white shadow-sm">
-                              <div className="flex items-center gap-3 flex-1">
-                                <PlayCircle className="w-6 h-6 text-red-600 flex-shrink-0" />
-                                <span className="text-gray-900 font-semibold text-sm sm:text-base truncate">
-                                  {lesson.title || `Video ${index + 1}`}
-                                </span>
-                              </div>
-
-                              <div className="flex flex-row md:flex-col items-center gap-3 w-full md:w-auto">
-                                <button
-                                  onClick={() =>
-                                    openLessonVideo(lesson.videoUrl)
-                                  }
-                                  className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-full hover:bg-red-700 transition-all shadow-md hover:shadow-lg w-full md:w-auto"
-                                >
-                                  <PlayCircle className="w-4 h-4" />
-                                  Show Video
-                                </button>
-
-                                {completedLessons.includes(lesson.videoId) ? (
-                                  <button
-                                    disabled
-                                    className="px-4 py-2 text-sm font-medium rounded-full hover:bg-gray-500 transition-all shadow-sm hover:shadow w-full md:w-auto bg-gray-500 text-white hover:text-white cursor-not-allowed flex items-center justify-center gap-2"
-                                  >
-                                    Mark as Done
-                                  </button>
-                                ) : (
-                                  <button
-                                    onClick={() => {
-                                      makeItMark(courseId, lesson.videoId);
-                                    }}
-                                    className="px-4 py-2 text-sm font-medium rounded-full hover:bg-gray-100 transition-all shadow-sm hover:shadow w-full md:w-auto bg-blue-500 text-white hover:text-black cursor-pointer flex items-center justify-center gap-2"
-                                  >
-                                    Mark as Done
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                          ) : (
-                            <>
-                              <div className="flex items-center gap-3 flex-1">
-                                <FileText className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                                <a
-                                  href={lesson.otherUrl || "#"}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-blue-700 hover:text-blue-800 font-medium truncate"
-                                >
-                                  {lesson.title ||
-                                    `Resource Link ${resIndex + 1}`}
-                                </a>
-                              </div>
-                              <span className="text-sm text-gray-500 flex-shrink-0">
-                                Document/Link
-                              </span>
-                            </>
-                          )}
-                        </ul>
-                      ) : (
-                        <p className="text-gray-500 italic p-3">
-                          No resources available for this lesson.
-                        </p>
-                      )}
-                      {lesson.resources.length > 0 ? (
-                        <ul className="space-y-4">
-                          {lesson.resources.map((resource, resIndex) => (
-                            <li key={resIndex}>
-                              <div className="flex items-center gap-3 flex-1">
-                                <FileText className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                                <a
-                                  href={resource || "#"}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-blue-700 hover:text-blue-800 font-medium truncate"
-                                >
-                                  {" "}
-                                  click here to view resource
-                                </a>
-                              </div>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="text-gray-500 italic p-3">
-                          No additional resources available for this lesson.
-                        </p>
-                      )}
+                  <div className="mt-5 grid grid-cols-3 gap-2 text-center">
+                    <div className="rounded-xl bg-slate-50 p-3">
+                      <PlayCircle className="mx-auto h-5 w-5 text-rose-600" />
+                      <p className="mt-1 text-xs font-bold text-slate-700">
+                        Lessons
+                      </p>
                     </div>
-                  )}
+                    <div className="rounded-xl bg-slate-50 p-3">
+                      <Award className="mx-auto h-5 w-5 text-amber-600" />
+                      <p className="mt-1 text-xs font-bold text-slate-700">
+                        Certificate
+                      </p>
+                    </div>
+                    <div className="rounded-xl bg-slate-50 p-3">
+                      <Clock className="mx-auto h-5 w-5 text-teal-600" />
+                      <p className="mt-1 text-xs font-bold text-slate-700">
+                        Lifetime
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              ))}
+              )}
             </div>
+          </aside>
+        </div>
+      </section>
+
+      <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
+        {!enrolled && (
+          <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
+            <section className="space-y-8">
+              <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+                <div className="mb-6 flex items-center gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-50 text-teal-700">
+                    <TrendingUp className="h-6 w-6" />
+                  </div>
+                  <h2 className="text-2xl font-black sm:text-3xl">
+                    What you will learn
+                  </h2>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  {(courseDetails?.topicCover || []).map((point, index) => (
+                    <div
+                      key={index}
+                      className="flex gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4"
+                    >
+                      <CheckCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-teal-600" />
+                      <p className="text-sm font-semibold leading-6 text-slate-700">
+                        {point}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+                <div className="mb-6 flex items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-2xl font-black sm:text-3xl">
+                      Curriculum preview
+                    </h2>
+                    <p className="mt-1 text-sm text-slate-500">
+                      Enroll to unlock videos, resources, progress tracking, and support.
+                    </p>
+                  </div>
+                  <Lock className="h-6 w-6 text-slate-400" />
+                </div>
+                <div className="space-y-3">
+                  {previewLessons.map((lesson, index) => (
+                    <div
+                      key={lesson.videoId || index}
+                      className="flex items-center justify-between gap-4 rounded-2xl border border-slate-100 bg-slate-50 p-4"
+                    >
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-white text-slate-500 ring-1 ring-slate-200">
+                          <Lock className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate font-bold text-slate-900">
+                            {lesson.title || `Lesson ${index + 1}`}
+                          </p>
+                          <p className="text-xs font-semibold text-slate-500">
+                            Lecture {index + 1}
+                          </p>
+                        </div>
+                      </div>
+                      <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-500 ring-1 ring-slate-200">
+                        Locked
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            <aside className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+              <h3 className="text-xl font-black">Designed for outcomes</h3>
+              <div className="mt-5 space-y-4">
+                {[
+                  [
+                    "Structured path",
+                    "Learn in the right sequence without guessing what comes next.",
+                  ],
+                  [
+                    "Teacher access",
+                    "Request a live doubt session after enrollment.",
+                  ],
+                  [
+                    "Proof of skill",
+                    "Finish every lesson and clear assessment for certification.",
+                  ],
+                ].map(([title, text]) => (
+                  <div key={title} className="rounded-2xl bg-slate-50 p-4">
+                    <p className="font-black text-slate-900">{title}</p>
+                    <p className="mt-1 text-sm leading-6 text-slate-600">
+                      {text}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </aside>
           </div>
         )}
 
-      {enrolled && totalLessons > 0 && hasCompleted && (
-        <>
-          {hasCertificate ? (
-            // 🎓 CERTIFICATE AVAILABLE
-            <div className="mt-10 p-6 bg-green-100 border border-green-300 text-center">
-              <h2 className="text-2xl font-bold text-green-800 mb-2">
-                🎉 Congratulations! You have Cleared the Course! 🎉
-              </h2>
+        {enrolled && courseDetails.lessons && courseDetails.lessons.length > 0 && (
+          <section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">
+            <section className="min-w-0">
+              <div className="mb-6 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+                <div>
+                  <p className="text-sm font-black uppercase text-teal-700">
+                    Course content
+                  </p>
+                  <h2 className="text-3xl font-black sm:text-4xl">
+                    Continue your lessons
+                  </h2>
+                </div>
+                <p className="text-sm font-semibold text-slate-500">
+                  {totalLessons} lessons available
+                </p>
+              </div>
 
-              <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <div className="space-y-4">
+                {courseDetails.lessons.map((lesson, index) => {
+                  const isCompleted = completedLessons.includes(lesson.videoId);
+                  const isOpen = openLessonIndex === index;
+
+                  return (
+                    <div
+                      key={lesson.videoId || index}
+                      className={`overflow-hidden rounded-[1.5rem] border bg-white shadow-sm transition ${
+                        isOpen ? "border-teal-200 shadow-md" : "border-slate-200"
+                      }`}
+                    >
+                      <button
+                        className="flex w-full cursor-pointer items-center justify-between gap-4 p-5 text-left transition hover:bg-slate-50"
+                        onClick={() => toggleLesson(index)}
+                      >
+                        <div className="flex min-w-0 items-center gap-4">
+                          <div
+                            className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl ${
+                              isCompleted
+                                ? "bg-emerald-100 text-emerald-700"
+                                : "bg-slate-100 text-slate-600"
+                            }`}
+                          >
+                            {isCompleted ? (
+                              <CheckCircle className="h-6 w-6" />
+                            ) : (
+                              <PlayCircle className="h-6 w-6" />
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-black uppercase text-slate-400">
+                              Lesson {index + 1}
+                            </p>
+                            <h3 className="truncate text-lg font-black text-slate-950">
+                              {lesson.title}
+                            </h3>
+                          </div>
+                        </div>
+                        {isOpen ? (
+                          <ChevronUp className="h-6 w-6 flex-shrink-0 text-teal-700" />
+                        ) : (
+                          <ChevronDown className="h-6 w-6 flex-shrink-0 text-slate-400" />
+                        )}
+                      </button>
+
+                      {isOpen && (
+                        <div className="border-t border-slate-100 bg-slate-50 p-5">
+                          <div className="flex flex-col gap-4 rounded-2xl bg-white p-4 ring-1 ring-slate-100 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="flex min-w-0 items-center gap-3">
+                              <PlayCircle className="h-6 w-6 flex-shrink-0 text-rose-600" />
+                              <div className="min-w-0">
+                                <p className="truncate font-bold text-slate-900">
+                                  {lesson.title || `Video ${index + 1}`}
+                                </p>
+                                <p className="text-sm text-slate-500">
+                                  Video lesson
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex flex-col gap-3 sm:flex-row">
+                              {lesson.videoUrl && (
+                                <button
+                                  onClick={() => openLessonVideo(lesson.videoUrl)}
+                                  className="flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-lg active:translate-y-0"
+                                >
+                                  <PlayCircle className="h-4 w-4" />
+                                  Watch
+                                </button>
+                              )}
+                              <button
+                                onClick={() =>
+                                  !isCompleted && makeItMark(courseId, lesson.videoId)
+                                }
+                                disabled={isCompleted || markingVideoId === lesson.videoId}
+                                className={`flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold transition ${
+                                  isCompleted
+                                    ? "cursor-not-allowed bg-emerald-100 text-emerald-700"
+                                    : "cursor-pointer bg-teal-600 text-white hover:-translate-y-0.5 hover:bg-teal-700 hover:shadow-lg active:translate-y-0 disabled:cursor-wait disabled:opacity-80"
+                                }`}
+                              >
+                                {markingVideoId === lesson.videoId ? (
+                                  <>
+                                    <InlineSpinner />
+                                    Saving
+                                  </>
+                                ) : isCompleted ? (
+                                  "Completed"
+                                ) : (
+                                  "Mark Done"
+                                )}
+                              </button>
+                            </div>
+                          </div>
+
+                          {lesson.resources?.length > 0 ? (
+                            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                              {lesson.resources.map((resource, resIndex) => (
+                                <a
+                                  key={resIndex}
+                                  href={resource || "#"}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 text-sm font-bold text-slate-700 transition hover:-translate-y-0.5 hover:border-teal-200 hover:text-teal-700 hover:shadow-sm"
+                                >
+                                  <FileText className="h-5 w-5 text-teal-600" />
+                                  Resource {resIndex + 1}
+                                </a>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="mt-4 rounded-xl bg-white p-3 text-sm font-semibold text-slate-500 ring-1 ring-slate-100">
+                              No additional resources available for this lesson.
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+
+            <aside className="h-fit space-y-5 lg:sticky lg:top-24">
+              <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+                <div className="mb-4 flex items-center gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-50 text-teal-700">
+                    <MessageCircle className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-black uppercase text-teal-700">
+                      Teacher support
+                    </p>
+                    <h3 className="text-xl font-black text-slate-950">
+                      Request live help
+                    </h3>
+                  </div>
+                </div>
+                <textarea
+                  value={doubtMessage}
+                  onChange={(e) => setDoubtMessage(e.target.value)}
+                  placeholder="Briefly describe your doubt..."
+                  className="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-medium text-slate-800 outline-none transition focus:border-teal-400 focus:bg-white focus:ring-4 focus:ring-teal-100"
+                  rows={4}
+                />
+                <button
+                  onClick={requestDoubtSession}
+                  disabled={doubtLoading}
+                  className="mt-3 flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-teal-600 py-3.5 font-black text-white shadow-lg shadow-teal-600/20 transition hover:-translate-y-0.5 hover:bg-teal-700 hover:shadow-xl active:translate-y-0 disabled:cursor-wait disabled:opacity-75"
+                >
+                  {doubtLoading ? (
+                    <>
+                      <InlineSpinner />
+                      Sending Request
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4" />
+                      Ask for Video Session
+                    </>
+                  )}
+                </button>
+
+                <div className="mt-5 space-y-3">
+                  {doubtSessions.length > 0 ? (
+                    doubtSessions.map((session) => (
+                      <div
+                        key={session._id}
+                        className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-sm font-black text-slate-800">
+                            {session.status === "LINK_SENT"
+                              ? "Session scheduled"
+                              : "Request sent"}
+                          </span>
+                          <span className="text-xs font-bold text-teal-700">
+                            {formatSessionTime(session.scheduledAt)}
+                          </span>
+                        </div>
+                        {session.message && (
+                          <p className="mt-2 text-sm leading-6 text-slate-600">
+                            {session.message}
+                          </p>
+                        )}
+                        {session.status === "LINK_SENT" && session.roomId && (
+                          <button
+                            onClick={() =>
+                              navigate(
+                                `/video-chat?room=${encodeURIComponent(
+                                  session.roomId,
+                                )}`,
+                              )
+                            }
+                            className="mt-3 w-full cursor-pointer rounded-xl bg-emerald-600 py-2.5 font-bold text-white transition hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-lg active:translate-y-0"
+                          >
+                            Join Video Session
+                          </button>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm font-semibold leading-6 text-slate-500">
+                      No support requests yet. Send a doubt and your teacher can
+                      schedule a video session.
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+                <p className="text-sm font-black uppercase text-slate-500">
+                  Learning dashboard
+                </p>
+                <h2 className="mt-2 text-2xl font-black">Your progress</h2>
+                <div className="mt-5 rounded-2xl bg-slate-950 p-5 text-white">
+                  <div className="flex items-end justify-between">
+                    <div>
+                      <p className="text-sm text-slate-300">Completed</p>
+                      <p className="text-3xl font-black">
+                        {completedLessons.length}/{totalLessons}
+                      </p>
+                    </div>
+                    <p className="text-3xl font-black text-emerald-300">
+                      {Math.round(progressPercentage)}%
+                    </p>
+                  </div>
+                  <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/15">
+                    <div
+                      className="h-full rounded-full bg-emerald-400 transition-all duration-700"
+                      style={{ width: `${progressPercentage}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </aside>
+          </section>
+        )}
+
+        {enrolled && totalLessons > 0 && hasCompleted && (
+          <div className="mt-12 rounded-[2rem] border border-emerald-200 bg-emerald-50 p-6 text-center shadow-sm">
+            {hasCertificate ? (
+              <>
+                <h2 className="text-2xl font-black text-emerald-950">
+                  Congratulations, you cleared the course.
+                </h2>
+                <div className="mt-5 flex flex-col justify-center gap-4 sm:flex-row">
+                  <button
+                    onClick={() =>
+                      generateCertificate({
+                        studentName: user.username,
+                        courseName: courseDetails.title,
+                        teacherName: courseDetails.teacherName,
+                        percentage: enrolledCourse?.percentageGained + "%",
+                        certificateId: "LS-" + enrolledCourse?.dateOfCompletion,
+                        date: enrolledCourse?.dateOfCompletion,
+                      })
+                    }
+                    className="cursor-pointer rounded-xl bg-emerald-600 px-6 py-3 font-bold text-white shadow-lg transition hover:bg-emerald-700"
+                  >
+                    Download Certificate
+                  </button>
+                  <button
+                    onClick={() => setShowFeedbackModal(true)}
+                    className="cursor-pointer rounded-xl bg-slate-950 px-6 py-3 font-bold text-white shadow-lg transition hover:bg-slate-800"
+                  >
+                    Give Feedback
+                  </button>
+                </div>
+              </>
+            ) : attempts <= 3 ? (
+              <>
+                <h2 className="text-2xl font-black text-emerald-950">
+                  You completed every lesson.
+                </h2>
+                <p className="mt-3 text-emerald-700">
+                  You are now eligible for the {courseDetails.assessmentType}.
+                  You have used {attempts} of 3 attempts.
+                </p>
                 <button
                   onClick={() =>
-                    generateCertificate({
-                      studentName: user.username,
-                      courseName: courseDetails.title,
-                      teacherName: courseDetails.teacherName,
-                      percentage: enrolledCourse?.percentageGained + "%",
-                      certificateId: "LS-" + enrolledCourse?.dateOfCompletion,
-                      date: enrolledCourse?.dateOfCompletion,
-                    })
+                    assessmentController(courseDetails.assessmentType)
                   }
-                  className="px-6 py-3 bg-green-600 text-white cursor-pointer rounded-xl hover:bg-green-700 transition shadow-lg font-semibold"
+                  className="mt-5 cursor-pointer rounded-xl bg-emerald-600 px-6 py-3 font-bold text-white transition hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-lg active:translate-y-0"
                 >
-                  🎓 Download Certificate
+                  Proceed to {courseDetails.assessmentType.toUpperCase()}
                 </button>
-
-                <button
-                  onClick={() => setShowFeedbackModal(true)}
-                  className="px-6 py-3 cursor-pointer bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl hover:from-blue-700 hover:to-cyan-700 transition shadow-lg font-semibold"
-                >
-                  ⭐ Give Feedback
-                </button>
-              </div>
-            </div>
-          ) : attempts <= 3 ? (
-            // 📝 ELIGIBLE FOR ASSESSMENT
-            <div className="mt-10 p-6 bg-green-100 border border-green-300 text-center">
-              <h2 className="text-2xl font-bold text-green-800 mb-2">
-                🎉 Congratulations! You have Completed the Course! 🎉
-              </h2>
-
-              <p className="text-green-700">
-                You are now eligible for the {courseDetails.assessmentType}.
-                <br />
-                You have 3 total attempts.
-                <br />
-                You attempted {attempts} times.
-                <br />
-                <br />
-                Best of luck, {user?.username?.split(" ")[0]}!
-              </p>
-
-              <button
-                onClick={() =>
-                  assessmentController(courseDetails.assessmentType)
-                }
-                className="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-              >
-                Proceed to {courseDetails.assessmentType.toUpperCase()}
-              </button>
-            </div>
-          ) : (
-            // ❌ ATTEMPTS EXHAUSTED
-            <div className="mt-10 p-6 bg-red-100 border border-red-300 text-center">
-              <h2 className="text-2xl font-bold text-red-800 mb-2">
-                ❌ You have exhausted all attempts for the{" "}
-                {courseDetails.assessmentType}.
-              </h2>
-
-              <p className="text-red-700">
-                You have used all 3 attempts. You are no longer eligible to
-                receive the certificate for this course.
-              </p>
-            </div>
-          )}
-        </>
-      )}
-
-      {enrolled && (
-        <div className="max-w-7xl mx-auto px-6 pb-20 mt-10">
-          <div className="flex items-center gap-5 mb-10">
-            <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center shadow-xl">
-              <MessageCircle className="w-8 h-8 text-white" />
-            </div>
-            <h2 className="text-5xl font-black text-slate-900">Discussion</h2>
+              </>
+            ) : (
+              <>
+                <h2 className="text-2xl font-black text-red-900">
+                  Assessment attempts exhausted.
+                </h2>
+                <p className="mt-3 text-red-700">
+                  You have used all 3 attempts and are no longer eligible to
+                  receive the certificate for this course.
+                </p>
+              </>
+            )}
           </div>
-          <CommentSection courseId={courseId} />
-        </div>
-      )}
+        )}
+
+        {enrolled && (
+          <div className="mt-12 pb-10">
+            <div className="mb-6 flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-600 shadow-lg">
+                <MessageCircle className="h-6 w-6 text-white" />
+              </div>
+              <h2 className="text-3xl font-black text-slate-900">
+                Discussion
+              </h2>
+            </div>
+            <CommentSection courseId={courseId} />
+          </div>
+        )}
+      </main>
 
       {showDemoModal && (
         <VideoPlayerModal
@@ -1029,17 +1167,14 @@ const StudentCourseDetails1 = () => {
       )}
 
       {courseDetails?.ratings?.length > 0 && (
-        <div className="mt-16 max-w-7xl mx-auto px-6 pb-16">
-          {/* Header */}
-          <div className="flex items-center gap-5 mb-10">
-            <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-xl">
-              <Star className="w-8 h-8 text-white" />
+        <div className="mx-auto max-w-7xl px-4 pb-16 sm:px-6">
+          <div className="mb-6 flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500 shadow-lg">
+              <Star className="h-6 w-6 text-white" />
             </div>
-            <h2 className="text-5xl font-black text-slate-900">Reviews</h2>
+            <h2 className="text-3xl font-black text-slate-900">Reviews</h2>
           </div>
-
-          {/* Reviews Container */}
-          <div className="bg-white flex flex-col gap-5 rounded-3xl p-10 shadow-[0_8px_32px_rgba(0,0,0,0.08)] border-2 border-slate-100">
+          <div className="flex flex-col gap-5 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
             {courseDetails.ratings.map((review) => (
               <ReviewCard key={review._id} review={review} />
             ))}
@@ -1048,6 +1183,7 @@ const StudentCourseDetails1 = () => {
       )}
     </div>
   );
+
 };
 
 const CommentSection = ({ courseId }) => {
@@ -1056,6 +1192,8 @@ const CommentSection = ({ courseId }) => {
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyText, setReplyText] = useState("");
   const [loading, setLoading] = useState(true);
+  const [commentPosting, setCommentPosting] = useState(false);
+  const [replyPostingId, setReplyPostingId] = useState(null);
   const [userRole, setUserRole] = useState(null);
 
   const token = localStorage.getItem("token");
@@ -1095,13 +1233,14 @@ const CommentSection = ({ courseId }) => {
   }, [courseId]);
 
   const handleAddComment = async () => {
-    if (!newComment.trim()) return;
+    if (!newComment.trim() || commentPosting) return;
     if (!token) {
       console.error("Please log in to post a comment.");
       return;
     }
 
     try {
+      setCommentPosting(true);
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/comment/add`,
         { courseID: courseId, text: newComment.trim() },
@@ -1114,17 +1253,20 @@ const CommentSection = ({ courseId }) => {
       }
     } catch (error) {
       console.error("Error adding comment:", error);
+    } finally {
+      setCommentPosting(false);
     }
   };
 
   const handleAddReply = async (commentId) => {
-    if (!replyText.trim()) return;
+    if (!replyText.trim() || replyPostingId) return;
     if (!token) {
       console.error("Please log in to reply.");
       return;
     }
 
     try {
+      setReplyPostingId(commentId);
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/comment/add-reply`,
         { commentID: commentId, text: replyText.trim() },
@@ -1138,17 +1280,19 @@ const CommentSection = ({ courseId }) => {
       }
     } catch (error) {
       console.error("Error adding reply:", error);
+    } finally {
+      setReplyPostingId(null);
     }
   };
 
   return (
-    <div className="bg-gray-50 rounded-2xl p-6 shadow-inner">
+    <div className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <textarea
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
           placeholder="Add a public comment..."
-          className="flex-1 border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none text-gray-800 resize-none"
+          className="flex-1 resize-none rounded-2xl border border-slate-200 bg-slate-50 p-4 text-slate-800 outline-none transition focus:border-teal-400 focus:bg-white focus:ring-4 focus:ring-teal-100"
           rows={3}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
@@ -1159,33 +1303,52 @@ const CommentSection = ({ courseId }) => {
         />
         <button
           onClick={handleAddComment}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl font-semibold transition-colors shadow-md self-end sm:self-start"
+          disabled={commentPosting || !newComment.trim()}
+          className="flex cursor-pointer items-center justify-center gap-2 rounded-2xl bg-slate-950 px-6 py-3 font-black text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-xl active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60 sm:self-start"
         >
-          Comment
+          {commentPosting ? (
+            <>
+              <InlineSpinner />
+              Posting
+            </>
+          ) : (
+            <>
+              <Send className="h-4 w-4" />
+              Comment
+            </>
+          )}
         </button>
       </div>
 
       {loading ? (
-        <p className="text-gray-500 italic">Loading comments...</p>
+        <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 font-semibold text-slate-500">
+          <InlineSpinner className="h-5 w-5" />
+          Loading comments...
+        </div>
       ) : comments.length === 0 ? (
-        <p className="text-gray-500 italic">
+        <p className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5 text-sm font-semibold text-slate-500">
           No comments yet. Be the first to comment!
         </p>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {comments.map((comment) => (
-            <div key={comment._id} className="border-b border-gray-200 pb-4">
+            <div
+              key={comment._id}
+              className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+            >
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 bg-blue-500 text-white flex items-center justify-center rounded-full font-bold">
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-teal-600 font-bold text-white">
                   {comment.userID?.username
                     ? comment.userID.username[0].toUpperCase()
                     : "U"}
                 </div>
-                <div className="flex-1">
-                  <p className="font-semibold text-gray-900">
+                <div className="min-w-0 flex-1">
+                  <p className="font-black text-slate-900">
                     {comment.userID?.username || "Unknown User"}
                   </p>
-                  <p className="text-gray-700">{comment.text}</p>
+                  <p className="mt-1 leading-6 text-slate-700">
+                    {comment.text}
+                  </p>
 
                   {userRole === "teacher" && (
                     <button
@@ -1194,7 +1357,7 @@ const CommentSection = ({ courseId }) => {
                           replyingTo === comment._id ? null : comment._id,
                         )
                       }
-                      className="text-sm text-blue-600 mt-1 hover:underline"
+                      className="mt-2 cursor-pointer text-sm font-bold text-teal-700 transition hover:text-teal-900 hover:underline"
                     >
                       Reply
                     </button>
@@ -1205,18 +1368,18 @@ const CommentSection = ({ courseId }) => {
                       {comment.replies.map((reply) => (
                         <div
                           key={reply._id}
-                          className="flex items-start gap-3 bg-gray-100 p-3 rounded-xl"
+                          className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-3"
                         >
-                          <div className="w-8 h-8 bg-gray-400 text-white flex items-center justify-center rounded-full text-sm font-bold">
+                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-slate-800 text-sm font-bold text-white">
                             {reply.user?.username
                               ? reply.user.username[0].toUpperCase()
                               : "U"}
                           </div>
                           <div>
-                            <p className="font-semibold text-gray-800">
+                            <p className="font-bold text-slate-800">
                               {reply.user?.username || "User"}
                             </p>
-                            <p className="text-gray-700 text-sm">
+                            <p className="text-sm leading-6 text-slate-600">
                               {reply.text}
                             </p>
                           </div>
@@ -1231,13 +1394,21 @@ const CommentSection = ({ courseId }) => {
                         value={replyText}
                         onChange={(e) => setReplyText(e.target.value)}
                         placeholder="Write a reply..."
-                        className="flex-1 border border-gray-300 rounded-xl p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        className="flex-1 rounded-xl border border-slate-200 bg-white p-3 outline-none transition focus:border-teal-400 focus:ring-4 focus:ring-teal-100"
                       />
                       <button
                         onClick={() => handleAddReply(comment._id)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow"
+                        disabled={replyPostingId === comment._id || !replyText.trim()}
+                        className="flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-teal-600 px-4 py-2 text-sm font-bold text-white shadow transition hover:-translate-y-0.5 hover:bg-teal-700 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
                       >
-                        Reply
+                        {replyPostingId === comment._id ? (
+                          <>
+                            <InlineSpinner />
+                            Replying
+                          </>
+                        ) : (
+                          "Reply"
+                        )}
                       </button>
                     </div>
                   )}
@@ -1303,7 +1474,7 @@ const FeedbackModal = ({ onClose, courseId }) => {
 
       toast.success(res.data.message);
       onClose();
-    } catch (error) {
+    } catch {
       toast.error("Failed to submit feedback.");
     } finally {
       setSubmitting(false);
@@ -1315,7 +1486,7 @@ const FeedbackModal = ({ onClose, courseId }) => {
       <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl p-10 relative animate-scaleIn">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full"
+          className="absolute right-4 top-4 cursor-pointer rounded-full bg-red-500 p-2 text-white transition hover:-translate-y-0.5 hover:bg-red-600 hover:shadow-lg active:translate-y-0"
         >
           <X className="w-5 h-5" />
         </button>
@@ -1369,9 +1540,16 @@ const FeedbackModal = ({ onClose, courseId }) => {
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="w-full mt-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white py-3 rounded-xl font-bold shadow-lg transition-all"
+            className="mt-4 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 py-3 font-bold text-white shadow-lg transition-all hover:-translate-y-0.5 hover:from-blue-700 hover:to-cyan-700 hover:shadow-xl active:translate-y-0 disabled:cursor-wait disabled:opacity-75"
           >
-            {submitting ? "Submitting..." : "Submit Feedback"}
+            {submitting ? (
+              <>
+                <InlineSpinner />
+                Submitting
+              </>
+            ) : (
+              "Submit Feedback"
+            )}
           </button>
         </div>
       </div>
