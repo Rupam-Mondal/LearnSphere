@@ -283,9 +283,55 @@ const deleteLesson = async (req, res) => {
 
 const GetAllTeachers = async (req, res) => {
   try {
-    const teachers = await User.find({
-      role: "TEACHER",
-    });
+    const teachers = await User.aggregate([
+      {
+        $match: {
+          role: "TEACHER",
+          $expr: {
+            $eq: [{ $toLower: "$teacherDetails.approved" }, "approved"],
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "courses",
+          let: { teacherId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ["$teacher", "$$teacherId"] },
+                status: "APPROVED",
+              },
+            },
+            {
+              $project: {
+                title: 1,
+                topic: 1,
+                thumbnail: 1,
+                price: 1,
+                overallRating: 1,
+                students: 1,
+              },
+            },
+            { $sort: { overallRating: -1, createdAt: -1 } },
+          ],
+          as: "courses",
+        },
+      },
+      {
+        $project: {
+          password: 0,
+          __v: 0,
+          "courses.__v": 0,
+        },
+      },
+      {
+        $sort: {
+          "teacherDetails.rating": -1,
+          username: 1,
+        },
+      },
+    ]);
 
     res.status(200).json({
       success: true,

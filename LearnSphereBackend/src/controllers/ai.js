@@ -15,34 +15,45 @@ function buildGeminiPrompt(userPrompt, courses) {
       ? courses
           .map(
             (c, i) =>
-              `${i + 1}. ${c.title} - ${process.env.FRONTEND_URL}/student/course-details/${c._id}`,
+              `${i + 1}. Title: ${c.title}
+Topic: ${c.topic || "General"}
+Price: ${c.price || "N/A"}
+Rating: ${c.overallRating || 0}/5
+Description: ${c.description || "No description available"}
+Link: ${process.env.FRONTEND_URL}/student/course-details/${c._id}`,
           )
-          .join("\n")
+          .join("\n\n")
       : "No courses available.";
 
   return `
-You are a friendly assistant for an education website.
+You are LearnSphere AI, a concise premium course advisor for an education platform.
 
 User message:
 "${userPrompt}"
 
-Below is the COMPLETE list of courses available on our platform:
+Available approved courses:
 ${courseList}
 
 STRICT OUTPUT RULES (VERY IMPORTANT):
-- If the user is NOT asking about learning or courses, reply normally like a human
-- If the user wants to learn something:
-    - Recommend ONLY from the list above
-    - Include ONLY ONE link per course
-    - Output links as PLAIN TEXT (no brackets, no markdown, no parentheses)
-    - DO NOT repeat the link
-    - DO NOT wrap links in [ ], ( ), or markdown
-- If no relevant course exists, reply politely that the course is not available
-- Keep the response short, clean, and human-like
+- If the user is not asking about learning, skills, courses, interviews, career preparation, or study help, answer briefly and naturally.
+- If the user asks what to learn or requests a course recommendation:
+  - Recommend the 1 to 3 most relevant courses ONLY from the list above.
+  - Rank the strongest match first.
+  - For each course, include:
+    1. Course title on its own line.
+    2. One short reason based on the user's goal.
+    3. The course link on its own line.
+  - Include each link exactly once.
+  - Output links as plain text only. No markdown links, no brackets, no parentheses.
+- If no relevant course exists, say that LearnSphere does not currently have a matching course and suggest a nearby available topic if one exists.
+- Do not invent courses, teachers, prices, ratings, or links.
+- Keep the answer compact and easy to scan.
 
 EXAMPLE GOOD OUTPUT:
-"You can check out our Java Programming course here:
-http://localhost:5173/student/course-details/123"
+Best match:
+Java Programming
+Good for building strong fundamentals before moving into backend development.
+http://localhost:5173/student/course-details/123
 
 EXAMPLE BAD OUTPUT (DO NOT DO THIS):
 "[http://localhost:5173/student/course-details/123]"
@@ -63,9 +74,9 @@ export default async function getResponse(req, res) {
 
   try {
     // 1️⃣ Fetch ALL approved courses
-    const courses = await Course.find({ status: "APPROVED" }).select(
-      "_id title topic",
-    );
+    const courses = await Course.find({ status: "APPROVED" })
+      .select("_id title topic description price overallRating")
+      .lean();
 
     // 2️⃣ Build Gemini prompt with full course list
     const geminiPrompt = buildGeminiPrompt(prompt, courses);
