@@ -31,16 +31,33 @@ function Practice() {
       <Navbar />
 
       {/* ================= HERO ================= */}
-      <div className="relative pt-32 pb-20 px-6 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-100 via-cyan-100 to-blue-100 blur-3xl opacity-70" />
+      <div className="relative bg-[#0b0f19] pt-32 pb-44 px-6 overflow-hidden border-b border-slate-800">
+        {/* Abstract Background Artwork */}
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
+        <div className="absolute -top-40 -right-40 w-[800px] h-[800px] bg-gradient-to-br from-indigo-600/30 via-purple-600/20 to-transparent rounded-full blur-[100px] pointer-events-none"></div>
+        <div className="absolute -bottom-40 -left-20 w-[600px] h-[600px] bg-gradient-to-tr from-blue-600/20 to-transparent rounded-full blur-[100px] pointer-events-none"></div>
 
-        <div className="relative max-w-5xl mx-auto text-center animate-fade-up">
-          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-4">
-            Practice & Improve
+        <div className="relative max-w-5xl mx-auto text-center flex flex-col items-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-indigo-300 text-xs font-bold uppercase tracking-wider mb-8 backdrop-blur-md shadow-2xl animate-[fadeUp_0.6s_ease-out_forwards]">
+            {/* <Sparkles className="w-4 h-4" /> */}
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-indigo-400">
+              Practice Arena
+            </span>
+          </div>
+
+          <h1 className="text-5xl md:text-7xl lg:text-[5rem] font-black text-white mb-6 tracking-tight leading-[1.1] animate-[fadeUp_0.8s_ease-out_forwards]">
+            Master the <br />
+            <span className="relative inline-block mt-2">
+              <span className="relative text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400">
+                Craft of Coding
+              </span>
+            </span>
           </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Sharpen your skills with curated practice tests designed to boost
-            your confidence
+
+          <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed animate-[fadeUp_1s_ease-out_forwards]">
+            Step into the arena. Push your boundaries with curated, real-world
+            simulation tests designed to evaluate your readiness and boost your
+            confidence.
           </p>
         </div>
       </div>
