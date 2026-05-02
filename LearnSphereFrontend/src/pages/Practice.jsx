@@ -1,28 +1,48 @@
+import {
+  Sparkles,
+  Code2,
+  Layers,
+  ArrowRight,
+  BrainCircuit,
+  TerminalSquare,
+} from "lucide-react";
 import Navbar from "../Components/Navbar/Navbar";
 import { FaSadTear, FaUserTie } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import Footer from "../Components/Landing/Footer";
+import Testimonials from "../Components/Landing/Testimonials";
 
 function Practice() {
   const navigate = useNavigate();
 
   const tests = [
     {
-      title: "Java Test",
+      title: "Java Masterclass",
       description:
-        "Assess your Java programming skills with practical coding questions and real-world scenarios.",
-      gradient: "from-yellow-400/20 via-yellow-300/20 to-orange-300/20",
-      iconBg: "bg-yellow-100",
-      icon: <FaSadTear className="text-yellow-500 text-3xl" />,
+        "Assess your Java programming skills with practical coding questions, threading, and real-world scenarios. Optimize and debug challenging scripts.",
+      gradient: "from-orange-500/20 via-orange-400/10 to-amber-500/20",
+      iconBg:
+        "bg-gradient-to-br from-orange-100 to-orange-50 text-orange-600 border border-orange-200",
+      borderGlow:
+        "group-hover:border-orange-300 group-hover:shadow-[0_0_40px_-10px_rgba(251,146,60,0.3)] hover:shadow-orange-200",
+      icon: <TerminalSquare className="w-8 h-8" />,
       route: "/interview/Java",
+      tags: ["Core Java", "Advanced", "Algorithms"],
+      level: "Intermediate",
     },
     {
-      title: "OOPs Test",
+      title: "OOPs Architecture",
       description:
-        "Evaluate your understanding of Object-Oriented Programming concepts with structured challenges.",
-      gradient: "from-blue-400/20 via-cyan-300/20 to-blue-300/20",
-      iconBg: "bg-blue-100",
-      icon: <FaUserTie className="text-blue-500 text-3xl" />,
+        "Evaluate your understanding of Object-Oriented Programming concepts, SOLID principles, and structured design in modern software engineering.",
+      gradient: "from-blue-500/20 via-indigo-400/10 to-purple-500/20",
+      iconBg:
+        "bg-gradient-to-br from-blue-100 to-indigo-50 text-blue-600 border border-blue-200",
+      borderGlow:
+        "group-hover:border-blue-300 group-hover:shadow-[0_0_40px_-10px_rgba(59,130,246,0.3)] hover:shadow-blue-200",
+      icon: <Layers className="w-8 h-8" />,
       route: "/interview/oops",
+      tags: ["System Design", "Concepts", "Architecture"],
+      level: "Beginner",
     },
   ];
 
@@ -63,7 +83,8 @@ function Practice() {
       </div>
 
       {/* ================= CARDS ================= */}
-      <div className="max-w-6xl mx-auto px-6 pb-24 grid grid-cols-1 sm:grid-cols-2 gap-10">
+      <div className="relative max-w-5xl mx-auto px-6 py-10 z-10 animate-[fadeUp_1.2s_ease-out_forwards]">
+        <div className="max-w-6xl mx-auto px-6 pb-24 grid grid-cols-1 sm:grid-cols-2 gap-10">
         {tests.map((test, index) => (
           <div
             key={index}
@@ -71,9 +92,12 @@ function Practice() {
             style={{ animationDelay: `${index * 120}ms` }}
           >
             {/* Glow */}
-            <div
+            {/* <div
               className={`absolute inset-0 rounded-3xl bg-gradient-to-r ${test.gradient} opacity-0 group-hover:opacity-100 blur-xl transition duration-500`}
-            />
+            /> */}
+            <div
+                className={`absolute inset-0 bg-gradient-to-br ${test.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none`}
+              />
 
             <div className="relative flex flex-col h-full">
               {/* ICON */}
@@ -131,6 +155,7 @@ function Practice() {
             </div>
           </div>
         ))}
+        </div>
       </div>
 
       {/* ================= ANIMATIONS ================= */}
@@ -166,6 +191,8 @@ function Practice() {
           opacity: 0;
         }
       `}</style>
+      <Testimonials />
+      <Footer/>
     </div>
   );
 }
