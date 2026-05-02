@@ -4,6 +4,7 @@ import demo from "../../assets/demo/demo.jpg";
 import { UserContext } from "../../contexts/userContext";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { Bell } from "lucide-react";
 
 const TeacherDashboard = () => {
   const { id } = useParams();
@@ -11,6 +12,7 @@ const TeacherDashboard = () => {
   const { token, setToken, user, setUser } = useContext(UserContext);
 
   const [courses, setCourses] = useState([]);
+  const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -48,8 +50,27 @@ const TeacherDashboard = () => {
       }
     };
 
+    const fetchNotifications = async () => {
+      try {
+        const authToken = token || localStorage.getItem("token");
+        if (!authToken) return;
+
+        const response = await axios.post(
+          `${import.meta.env.VITE_BACKEND_URL}/teacher/doubt-session/notifications`,
+          { token: authToken }
+        );
+
+        if (response.data.success) {
+          setNotifications(response.data.notifications || []);
+        }
+      } catch (error) {
+        console.error("Error fetching doubt notifications:", error);
+      }
+    };
+
     if (token || localStorage.getItem("token")) {
       fetchCourses();
+      fetchNotifications();
     }
   }, [token]);
 
@@ -83,6 +104,15 @@ const TeacherDashboard = () => {
     }
     return totalPendings;
   }
+
+  const formatSessionTime = (value) => {
+    if (!value) return "Time not set";
+
+    return new Date(value).toLocaleString([], {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+  };
 
   if (!user || !user.username) {
     return (
@@ -163,6 +193,55 @@ const TeacherDashboard = () => {
           )
         }
       </section>
+
+      {notifications.length > 0 && (
+        <section className="max-w-6xl mx-auto mb-12">
+          <div className="bg-white border border-blue-100 rounded-2xl shadow-xl p-6">
+            <div className="flex items-center justify-between gap-4 mb-5">
+              <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <Bell className="w-6 h-6 text-blue-600" />
+                Doubt Session Notifications
+              </h2>
+              <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-bold">
+                {notifications.length}
+              </span>
+            </div>
+
+            <div className="space-y-3">
+              {notifications.map((item) => (
+                <div
+                  key={item._id}
+                  className="border border-gray-100 rounded-xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3"
+                >
+                  <div>
+                    <p className="font-semibold text-gray-900">
+                      {item.status === "REQUESTED"
+                        ? `${item.student?.username || "A student"} requested a video session`
+                        : `Session link sent to ${item.student?.username || "student"}`}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Course: {item.course?.title || "Course"}
+                    </p>
+                    {item.status === "LINK_SENT" && (
+                      <p className="text-sm text-blue-700 font-semibold">
+                        Join time: {formatSessionTime(item.scheduledAt)}
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() =>
+                      navigate(`/teacher-dashboard/${id}/course/${item.course?._id}`)
+                    }
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                  >
+                    Open Course
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {loading ? (
         <div className="text-center text-xl text-gray-500 mt-10 animate-pulse">

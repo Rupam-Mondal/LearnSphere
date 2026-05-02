@@ -26,10 +26,9 @@ const adminLogin = (req, res) => {
 
 const pendingCourses = async (req, res) => {
   try {
-    const courses = await Course.find({ status: "PENDING" }).populate(
-      "teacher",
-      "username email"
-    );
+    const courses = await Course.find({ status: "PENDING" })
+      .populate("teacher", "username email")
+      .populate("ratings.student", "username email profilePicture");
     res.status(200).json({ success: true, courses });
   } catch (error) {
     console.error("Error fetching pending courses:", error);

@@ -19,17 +19,67 @@ const SocketProvider = ({ children }) => {
   const myVideo = useRef();
   const userVideo = useRef();
   const connectionRef = useRef();
+  const streamRef = useRef(null);
+
+  const startLocalStream = async () => {
+    if (streamRef.current) return streamRef.current;
+
+    const currentStream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: true,
+    });
+
+    streamRef.current = currentStream;
+    setStream(currentStream);
+    if (myVideo.current) {
+      myVideo.current.srcObject = currentStream;
+    }
+
+    return currentStream;
+  };
+
+  const stopLocalStream = () => {
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+    setStream(null);
+    setIsMuted(false);
+    setIsSharingScreen(false);
+
+    if (myVideo.current) {
+      myVideo.current.srcObject = null;
+    }
+    if (userVideo.current) {
+      userVideo.current.srcObject = null;
+    }
+  };
+
+  const startCall = (targetId) => {
+    if (!targetId || !stream) return;
+
+    const peer = new Peer({ initiator: true, trickle: false, stream });
+
+    peer.on("signal", (data) => {
+      socket.emit("callUser", {
+        userToCall: targetId,
+        signalData: data,
+        from: me,
+        name,
+      });
+    });
+
+    peer.on("stream", (currentStream) => {
+      userVideo.current.srcObject = currentStream;
+    });
+
+    socket.once("callAccepted", (signal) => {
+      setCallAccepted(true);
+      peer.signal(signal);
+    });
+
+    connectionRef.current = peer;
+  };
 
   useEffect(() => {
-    navigator.mediaDevices
-      .getUserMedia({ video: true, audio: true })
-      .then((currentStream) => {
-        setStream(currentStream);
-        if (myVideo.current) {
-          myVideo.current.srcObject = currentStream;
-        }
-      });
-
     socket.on("me", setMe);
 
     socket.on("callUser", ({ from, name: callerName, signal }) => {
@@ -46,6 +96,19 @@ const SocketProvider = ({ children }) => {
       socket.off("callUser");
     };
   }, []);
+
+  useEffect(() => {
+    const handleRoomPeerJoined = ({ peerId }) => {
+      setIdToCall(peerId);
+      startCall(peerId);
+    };
+
+    socket.on("roomPeerJoined", handleRoomPeerJoined);
+
+    return () => {
+      socket.off("roomPeerJoined", handleRoomPeerJoined);
+    };
+  }, [stream, me, name]);
 
   const answerCall = () => {
     setCallAccepted(true);
@@ -65,32 +128,18 @@ const SocketProvider = ({ children }) => {
   };
 
   const callUser = () => {
-    const peer = new Peer({ initiator: true, trickle: false, stream });
+    startCall(idToCall);
+  };
 
-    peer.on("signal", (data) => {
-      socket.emit("callUser", {
-        userToCall: idToCall,
-        signalData: data,
-        from: me,
-        name,
-      });
-    });
-
-    peer.on("stream", (currentStream) => {
-      userVideo.current.srcObject = currentStream;
-    });
-
-    socket.once("callAccepted", (signal) => {
-      setCallAccepted(true);
-      peer.signal(signal);
-    });
-
-    connectionRef.current = peer;
+  const joinVideoRoom = (roomId) => {
+    if (!roomId) return;
+    socket.emit("joinVideoRoom", roomId);
   };
 
   const leaveCall = () => {
     setCallEnded(true);
     connectionRef.current?.destroy();
+    stopLocalStream();
     window.location.reload();
   };
   const toggleMute = () => {
@@ -148,6 +197,8 @@ const SocketProvider = ({ children }) => {
         myVideo,
         userVideo,
         stream,
+        startLocalStream,
+        stopLocalStream,
         name,
         setName,
         idToCall,
@@ -155,6 +206,7 @@ const SocketProvider = ({ children }) => {
         callEnded,
         me,
         callUser,
+        joinVideoRoom,
         leaveCall,
         answerCall,
         toggleMute,

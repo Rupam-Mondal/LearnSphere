@@ -9,6 +9,9 @@ import {
   teacherRegistration,
   teacherLogin,
   getTeacherWithCourses,
+  getDoubtSessionRequests,
+  getDoubtSessionNotifications,
+  sendDoubtSessionLink,
 } from "../controllers/teacherController.js";
 
 const teacherRouter = express.Router(); 
@@ -27,6 +30,9 @@ teacherRouter.post("/get-courses", getCourses);
 teacherRouter.post("/get-course-info", getCourseInfo);
 teacherRouter.post("/upload-lesson", uploadLesson);
 teacherRouter.post("/delete-lesson", deleteLesson);
+teacherRouter.post("/doubt-session/requests", getDoubtSessionRequests);
+teacherRouter.post("/doubt-session/notifications", getDoubtSessionNotifications);
+teacherRouter.post("/doubt-session/send-link", sendDoubtSessionLink);
 teacherRouter.get("/all_teachers", GetAllTeachers);
 teacherRouter.get("/:teacherId/details", getTeacherWithCourses);
 

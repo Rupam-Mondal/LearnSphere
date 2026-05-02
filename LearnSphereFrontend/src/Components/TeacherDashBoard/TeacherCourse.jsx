@@ -10,6 +10,7 @@ import {
   BookOpen, // Added for content section
   Edit2, // Added for the edit/upload button
   X, // Close icon for modal
+  Link,
 } from "lucide-react";
 import UploadCourses from "./UploadCourses";
 import { jwtDecode } from "jwt-decode";
@@ -22,6 +23,9 @@ const TeacherCourse = () => {
   const [error, setError] = useState(null);
   const [userType, setUserType] = useState("STUDENT");
   const [showModal, setShowModal] = useState(false);
+  const [doubtRequests, setDoubtRequests] = useState([]);
+  const [doubtLoading, setDoubtLoading] = useState(false);
+  const [scheduleByRequest, setScheduleByRequest] = useState({});
   const { user } = useContext(UserContext);
   // const [lessons, setLessons] = useState([]);
 
@@ -100,6 +104,83 @@ const TeacherCourse = () => {
       setUserType("GUEST");
     }
   }, []);
+
+  const fetchDoubtRequests = async () => {
+    const token = localStorage.getItem("token");
+    if (!token || !courseId) return;
+
+    try {
+      setDoubtLoading(true);
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/teacher/doubt-session/requests`,
+        { token, courseId }
+      );
+
+      if (response.data.success) {
+        setDoubtRequests(response.data.requests || []);
+      }
+    } catch (error) {
+      console.error("Error fetching doubt session requests:", error);
+    } finally {
+      setDoubtLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (userType === "TEACHER" && courseId) {
+      fetchDoubtRequests();
+    }
+  }, [userType, courseId]);
+
+  const buildSessionLink = (roomId) => {
+    return `${window.location.origin}/video-chat?room=${encodeURIComponent(roomId)}`;
+  };
+
+  const formatSessionTime = (value) => {
+    if (!value) return "Time not set";
+
+    return new Date(value).toLocaleString([], {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+  };
+
+  const sendSessionLink = async (requestId) => {
+    const token = localStorage.getItem("token");
+    const scheduledAt = scheduleByRequest[requestId];
+    if (!token) return;
+    if (!scheduledAt) {
+      toast.error("Please choose the session time first.");
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/teacher/doubt-session/send-link`,
+        { token, requestId, scheduledAt }
+      );
+
+      if (response.data.success) {
+        setDoubtRequests((prev) =>
+          prev.map((request) =>
+            request._id === requestId ? response.data.request : request
+          )
+        );
+        setScheduleByRequest((prev) => {
+          const next = { ...prev };
+          delete next[requestId];
+          return next;
+        });
+        toast.success(response.data.message);
+      } else {
+        toast.error(response.data.message || "Could not send session link.");
+      }
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Could not send session link."
+      );
+    }
+  };
 
   if (loading) {
     return (
@@ -321,6 +402,92 @@ const TeacherCourse = () => {
           </div>
         </div>
         {/* --- End Content Management Section --- */}
+        {userType === "TEACHER" && (
+          <div className="bg-white shadow-2xl rounded-2xl p-8 border-t-4 border-blue-500">
+            <h2 className="text-3xl font-bold text-gray-800 mb-6 flex items-center">
+              <Link className="w-8 h-8 mr-3 text-blue-600" />
+              Doubt Video Sessions
+            </h2>
+
+            {doubtLoading ? (
+              <p className="text-gray-500">Loading requests...</p>
+            ) : doubtRequests.length === 0 ? (
+              <p className="text-gray-500">
+                No students have requested a video doubt session for this
+                course yet.
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {doubtRequests.map((request) => (
+                  <div
+                    key={request._id}
+                    className="rounded-xl border border-gray-200 p-5 flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between"
+                  >
+                    <div className="flex items-start gap-4">
+                      <img
+                        src={
+                          request.student?.profilePicture ||
+                          "https://t4.ftcdn.net/jpg/03/64/21/11/360_F_364211147_1qgLVxv1Tcq0Ohz3FawUfrtONzz8nq3e.jpg"
+                        }
+                        alt={request.student?.username || "Student"}
+                        className="w-12 h-12 rounded-full object-cover border"
+                      />
+                      <div>
+                        <p className="font-bold text-gray-900">
+                          {request.student?.username || "Student"}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {request.student?.email}
+                        </p>
+                        {request.message && (
+                          <p className="mt-2 text-gray-700">
+                            {request.message}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {request.roomId ? (
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <span className="px-4 py-2 rounded-lg bg-blue-50 text-blue-700 font-semibold text-center">
+                          Link sent: {formatSessionTime(request.scheduledAt)}
+                        </span>
+                        <button
+                          onClick={() =>
+                            window.open(buildSessionLink(request.roomId), "_blank")
+                          }
+                          className="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 font-semibold"
+                        >
+                          Join Room
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <input
+                          type="datetime-local"
+                          value={scheduleByRequest[request._id] || ""}
+                          onChange={(event) =>
+                            setScheduleByRequest((prev) => ({
+                              ...prev,
+                              [request._id]: event.target.value,
+                            }))
+                          }
+                          className="rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <button
+                          onClick={() => sendSessionLink(request._id)}
+                          className="px-5 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 font-bold"
+                        >
+                          Send Link to Student
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
       <div>
         <div>

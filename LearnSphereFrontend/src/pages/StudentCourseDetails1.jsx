@@ -75,6 +75,9 @@ const StudentCourseDetails1 = () => {
   const [clickedMark, setClickedMark] = useState(false);
   const { token, user, setUser } = useContext(UserContext);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [doubtMessage, setDoubtMessage] = useState("");
+  const [doubtSessions, setDoubtSessions] = useState([]);
+  const [doubtLoading, setDoubtLoading] = useState(false);
   const userId = user?.id;
 
   useEffect(() => {
@@ -124,6 +127,12 @@ const StudentCourseDetails1 = () => {
     const token = localStorage.getItem("token");
     fetchCourseDetails(token);
   }, [courseId]);
+
+  useEffect(() => {
+    if (enrolled) {
+      fetchDoubtSession();
+    }
+  }, [enrolled, courseId]);
 
   const toggleLesson = (index) => {
     setOpenLessonIndex(openLessonIndex === index ? null : index);
@@ -249,6 +258,64 @@ const StudentCourseDetails1 = () => {
     }
   };
 
+  const fetchDoubtSession = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/student/doubt-session`,
+        { courseId },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (response.data.success) {
+        setDoubtSessions(response.data.sessions || []);
+      }
+    } catch (error) {
+      console.error("Error fetching doubt session:", error);
+    }
+  };
+
+  const requestDoubtSession = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("Please log in to request a session.");
+      return;
+    }
+
+    try {
+      setDoubtLoading(true);
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/student/doubt-session/request`,
+        { courseId, message: doubtMessage },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (response.data.success) {
+        setDoubtSessions((prev) => [response.data.session, ...prev]);
+        setDoubtMessage("");
+        toast.success(response.data.message);
+      } else {
+        toast.error(response.data.message || "Could not request session.");
+      }
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Could not request session.",
+      );
+    } finally {
+      setDoubtLoading(false);
+    }
+  };
+
   async function makeItMark(courseId, videoId) {
     setClickedMark(true);
     const token = localStorage.getItem("token");
@@ -306,6 +373,15 @@ const StudentCourseDetails1 = () => {
     } else {
       toast.error("Please complete all lessons to proceed to the assessment.");
     }
+  };
+
+  const formatSessionTime = (value) => {
+    if (!value) return "Time not set yet";
+
+    return new Date(value).toLocaleString([], {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
   };
 
   if (loading) {
@@ -538,15 +614,88 @@ const StudentCourseDetails1 = () => {
                 </div>
 
                 {enrolled ? (
-                  <button
-                    disabled
-                    className="w-full bg-gradient-to-r from-slate-300 to-slate-400 text-white py-5 rounded-2xl font-black text-lg mb-5 shadow-lg cursor-not-allowed relative overflow-hidden"
-                  >
-                    <span className="relative z-10 flex items-center justify-center gap-3">
-                      <CheckCircle className="w-6 h-6" />
-                      Already Enrolled
-                    </span>
-                  </button>
+                  <>
+                    <button
+                      disabled
+                      className="w-full bg-gradient-to-r from-slate-300 to-slate-400 text-white py-5 rounded-2xl font-black text-lg mb-5 shadow-lg cursor-not-allowed relative overflow-hidden"
+                    >
+                      <span className="relative z-10 flex items-center justify-center gap-3">
+                        <CheckCircle className="w-6 h-6" />
+                        Already Enrolled
+                      </span>
+                    </button>
+
+                    <div className="mb-5 rounded-2xl border border-blue-100 bg-blue-50 p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <MessageCircle className="w-5 h-5 text-blue-700" />
+                        <p className="font-black text-blue-950">
+                          Need help from the teacher?
+                        </p>
+                      </div>
+
+                      <div className="space-y-3">
+                        <textarea
+                          value={doubtMessage}
+                          onChange={(e) => setDoubtMessage(e.target.value)}
+                          placeholder="Briefly describe your doubt..."
+                          className="w-full rounded-xl border border-blue-100 bg-white p-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-blue-400"
+                          rows={3}
+                        />
+                        <button
+                          onClick={requestDoubtSession}
+                          disabled={doubtLoading}
+                          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white py-3 rounded-xl font-bold transition flex items-center justify-center gap-2"
+                        >
+                          <Send className="w-4 h-4" />
+                          {doubtLoading
+                            ? "Sending Request..."
+                            : "Ask for Video Session"}
+                        </button>
+
+                        {doubtSessions.length > 0 && (
+                          <div className="space-y-2 pt-2">
+                            {doubtSessions.map((session) => (
+                              <div
+                                key={session._id}
+                                className="rounded-xl border border-blue-100 bg-white p-3"
+                              >
+                                <div className="flex items-center justify-between gap-3">
+                                  <span className="text-sm font-bold text-slate-800">
+                                    {session.status === "LINK_SENT"
+                                      ? "Session scheduled"
+                                      : "Request sent"}
+                                  </span>
+                                  <span className="text-xs font-semibold text-blue-700">
+                                    {formatSessionTime(session.scheduledAt)}
+                                  </span>
+                                </div>
+                                {session.message && (
+                                  <p className="mt-2 text-sm text-slate-600">
+                                    {session.message}
+                                  </p>
+                                )}
+                                {session.status === "LINK_SENT" &&
+                                  session.roomId && (
+                                    <button
+                                      onClick={() =>
+                                        navigate(
+                                          `/video-chat?room=${encodeURIComponent(
+                                            session.roomId,
+                                          )}`,
+                                        )
+                                      }
+                                      className="mt-3 w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl font-bold transition"
+                                    >
+                                      Join Video Session
+                                    </button>
+                                  )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </>
                 ) : (
                   <button
                     onClick={handlePayment}

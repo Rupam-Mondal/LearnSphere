@@ -9,6 +9,9 @@ import {
   markAsDone,
   checkForProgress,
   sendFeedback,
+  getDoubtSession,
+  getDoubtSessionNotifications,
+  requestDoubtSession,
 } from "../controllers/studentController.js";
 
 const studentRouter = express.Router();
@@ -22,5 +25,8 @@ studentRouter.post('/get-teacher-name', getTeacherName);
 studentRouter.post("/mark-as-done", markAsDone);
 studentRouter.post("/check-progress", checkForProgress);
 studentRouter.post("/send-feedback", sendFeedback);
+studentRouter.post("/doubt-session", getDoubtSession);
+studentRouter.get("/doubt-session/notifications", getDoubtSessionNotifications);
+studentRouter.post("/doubt-session/request", requestDoubtSession);
 
 export default studentRouter;

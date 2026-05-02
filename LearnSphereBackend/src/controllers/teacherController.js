@@ -3,6 +3,8 @@ import User from "../models/userModel.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
+import crypto from "node:crypto";
+import DoubtSession from "../models/doubtSessionModel.js";
 
 const createCourse = async (req, res) => {
   try {
@@ -460,6 +462,159 @@ const getTeacherWithCourses = async (req, res) => {
   }
 };
 
+const getDoubtSessionRequests = async (req, res) => {
+  try {
+    const { token, courseId } = req.body;
+
+    if (!token || !courseId) {
+      return res.status(400).json({
+        success: false,
+        message: "Token and Course ID are required",
+      });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (decoded.role !== "TEACHER") {
+      return res.status(403).json({
+        success: false,
+        message: "Only teachers can view doubt session requests",
+      });
+    }
+
+    const course = await Course.findOne({
+      _id: courseId,
+      teacher: decoded.id,
+    });
+
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found for this teacher",
+      });
+    }
+
+    const requests = await DoubtSession.find({
+      course: courseId,
+      teacher: decoded.id,
+      status: { $in: ["REQUESTED", "LINK_SENT"] },
+    })
+      .populate("student", "username email profilePicture")
+      .sort({ updatedAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      requests,
+    });
+  } catch (error) {
+    console.error("Error fetching doubt session requests:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+const getDoubtSessionNotifications = async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: "Token is required",
+      });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (decoded.role !== "TEACHER") {
+      return res.status(403).json({
+        success: false,
+        message: "Only teachers can view doubt session notifications",
+      });
+    }
+
+    const notifications = await DoubtSession.find({
+      teacher: decoded.id,
+      status: { $in: ["REQUESTED", "LINK_SENT"] },
+    })
+      .populate("course", "title")
+      .populate("student", "username profilePicture")
+      .sort({ updatedAt: -1 })
+      .limit(10)
+      .lean();
+
+    return res.status(200).json({
+      success: true,
+      notifications,
+    });
+  } catch (error) {
+    console.error("Error fetching teacher notifications:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+const sendDoubtSessionLink = async (req, res) => {
+  try {
+    const { token, requestId, scheduledAt } = req.body;
+
+    if (!token || !requestId || !scheduledAt) {
+      return res.status(400).json({
+        success: false,
+        message: "Token, request ID, and session time are required",
+      });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (decoded.role !== "TEACHER") {
+      return res.status(403).json({
+        success: false,
+        message: "Only teachers can send session links",
+      });
+    }
+
+    const request = await DoubtSession.findById(requestId);
+    if (!request || request.teacher.toString() !== decoded.id.toString()) {
+      return res.status(404).json({
+        success: false,
+        message: "Doubt session request not found",
+      });
+    }
+
+    const parsedScheduledAt = new Date(scheduledAt);
+    if (Number.isNaN(parsedScheduledAt.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid session time",
+      });
+    }
+
+    const roomId =
+      request.roomId ||
+      `doubt-${request.course.toString()}-${crypto.randomBytes(6).toString("hex")}`;
+
+    request.roomId = roomId;
+    request.scheduledAt = parsedScheduledAt;
+    request.status = "LINK_SENT";
+    await request.save();
+    await request.populate("student", "username email profilePicture");
+
+    return res.status(200).json({
+      success: true,
+      message: "Video session link sent to the student",
+      request,
+    });
+  } catch (error) {
+    console.error("Error sending doubt session link:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
 export {
   teacherLogin,
   GetAllTeachers,
@@ -470,4 +625,7 @@ export {
   deleteLesson,
   teacherRegistration,
   getTeacherWithCourses,
+  getDoubtSessionRequests,
+  getDoubtSessionNotifications,
+  sendDoubtSessionLink,
 };

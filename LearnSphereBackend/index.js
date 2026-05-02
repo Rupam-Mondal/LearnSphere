@@ -30,6 +30,19 @@ io.on('connection', (socket) => {
         io.to(data.to).emit("callAccepted", data.signal);
     }); 
 
+    socket.on("joinVideoRoom", (roomId) => {
+        if (!roomId) return;
+
+        const room = io.sockets.adapter.rooms.get(roomId);
+        const peerIds = room ? [...room].filter((id) => id !== socket.id) : [];
+
+        socket.join(roomId);
+
+        if (peerIds.length > 0) {
+            io.to(peerIds[0]).emit("roomPeerJoined", { peerId: socket.id });
+        }
+    });
+
 });
 
 await connectDB();

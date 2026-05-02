@@ -6,12 +6,14 @@ import {
   ArrowRight,
   GraduationCap,
   Sparkles,
+  Bell,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const StudentDashboard = () => {
   const [feed, setFeed] = useState([]);
+  const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
@@ -54,12 +56,43 @@ const StudentDashboard = () => {
       }
     };
 
+    const fetchNotifications = async () => {
+      try {
+        if (!token) return;
+
+        const response = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/student/doubt-session/notifications`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+
+        if (isMounted && response.data.success) {
+          setNotifications(response.data.notifications || []);
+        }
+      } catch (err) {
+        console.error("Error fetching doubt notifications:", err);
+      }
+    };
+
     fetchCourses();
+    fetchNotifications();
 
     return () => {
       isMounted = false;
     };
   }, [token]);
+
+  const formatSessionTime = (value) => {
+    if (!value) return "Time not set";
+
+    return new Date(value).toLocaleString([], {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+  };
 
   return (
     <div className="min-h-screen bg-[#f8fafc] px-4 md:px-8 pt-28 pb-20 font-sans">
@@ -133,6 +166,68 @@ const StudentDashboard = () => {
               Try Again
             </button>
           </div>
+        )}
+
+        {!loading && !error && notifications.length > 0 && (
+          <section className="mb-10 bg-white border border-indigo-100 rounded-[2rem] shadow-xl shadow-indigo-500/5 p-6">
+            <div className="flex items-center justify-between gap-4 mb-5">
+              <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                <Bell className="w-6 h-6 text-indigo-600" />
+                Doubt Session Notifications
+              </h2>
+              <span className="bg-indigo-600 text-white px-3 py-1 rounded-full text-sm font-bold">
+                {notifications.length}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {notifications.map((item) => (
+                <div
+                  key={item._id}
+                  className="border border-slate-100 rounded-2xl p-4 bg-slate-50"
+                >
+                  <p className="font-bold text-slate-900">
+                    {item.status === "LINK_SENT"
+                      ? "Teacher responded with a video session"
+                      : "Your video session request was sent"}
+                  </p>
+                  <p className="text-sm text-slate-600 mt-1">
+                    Course: {item.course?.title || "Course"}
+                  </p>
+                  <p className="text-sm text-slate-500">
+                    Teacher: {item.teacher?.username || "Teacher"}
+                  </p>
+                  {item.status === "LINK_SENT" && (
+                    <p className="text-sm text-indigo-700 font-semibold mt-2">
+                      Join time: {formatSessionTime(item.scheduledAt)}
+                    </p>
+                  )}
+                  <div className="mt-4 flex gap-3">
+                    <button
+                      onClick={() =>
+                        navigate(`/student/course-details/${item.course?._id}`)
+                      }
+                      className="px-4 py-2 bg-white text-slate-900 rounded-xl border border-slate-200 font-semibold hover:border-indigo-300 transition"
+                    >
+                      Open Course
+                    </button>
+                    {item.status === "LINK_SENT" && item.roomId && (
+                      <button
+                        onClick={() =>
+                          navigate(
+                            `/video-chat?room=${encodeURIComponent(item.roomId)}`,
+                          )
+                        }
+                        className="px-4 py-2 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition"
+                      >
+                        Join
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
         )}
 
         {!loading && !error && feed.length === 0 && (

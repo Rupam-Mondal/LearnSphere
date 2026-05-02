@@ -1,4 +1,5 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { socketContext } from "../../contexts/socketContext";
 import {
   Phone,
@@ -17,12 +18,16 @@ import {
 } from "lucide-react";
 
 const Video = () => {
+  const [searchParams] = useSearchParams();
+  const roomId = searchParams.get("room");
   const {
     call,
     callAccepted,
     myVideo,
     userVideo,
     stream,
+    startLocalStream,
+    stopLocalStream,
     name,
     setName,
     callEnded,
@@ -32,6 +37,7 @@ const Video = () => {
     answerCall,
     idToCall,
     setIdToCall,
+    joinVideoRoom,
     toggleMute,
     isMuted,
     toggleScreenShare,
@@ -40,6 +46,22 @@ const Video = () => {
 
   const [pinnedUser, setPinnedUser] = useState(null);
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    startLocalStream().catch((error) => {
+      console.error("Could not start camera and microphone:", error);
+    });
+
+    return () => {
+      stopLocalStream();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (roomId && stream && me) {
+      joinVideoRoom(roomId);
+    }
+  }, [roomId, stream, me]);
 
   const copyId = () => {
     navigator.clipboard.writeText(me);
@@ -60,7 +82,9 @@ const Video = () => {
           </div>
           <div>
             <h1 className="text-lg font-black tracking-tight text-white leading-none">learn Sphere</h1>
-            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Doubt Solving Sessions</span>
+            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+              {roomId ? `Room ${roomId.slice(-8)}` : "Doubt Solving Sessions"}
+            </span>
           </div>
         </div>
 

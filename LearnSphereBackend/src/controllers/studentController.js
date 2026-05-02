@@ -3,6 +3,7 @@ import Progress from "../models/Progress.js";
 import mongoose from "mongoose";
 import User from "../models/userModel.js";
 import jwt, { decode } from "jsonwebtoken";
+import DoubtSession from "../models/doubtSessionModel.js";
 
 const getTokenFromHeader = (req) => {
   const authHeader = req.headers.authorization;
@@ -580,6 +581,149 @@ const sendFeedback = async (req, res) => {
   }
 };
 
+const getDoubtSession = async (req, res) => {
+  try {
+    const token = getTokenFromHeader(req);
+    const { courseId } = req.body;
+
+    if (!token || !courseId) {
+      return res.status(400).json({
+        success: false,
+        message: "Token and Course ID are required",
+      });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (decoded.role !== "STUDENT") {
+      return res.status(403).json({
+        success: false,
+        message: "Only students can view doubt session requests",
+      });
+    }
+
+    const sessions = await DoubtSession.find({
+      course: courseId,
+      student: decoded.id,
+    })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return res.status(200).json({
+      success: true,
+      sessions,
+      session: sessions[0] || null,
+    });
+  } catch (error) {
+    console.error("Error fetching doubt session:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+const getDoubtSessionNotifications = async (req, res) => {
+  try {
+    const token = getTokenFromHeader(req);
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: "Token is required",
+      });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (decoded.role !== "STUDENT") {
+      return res.status(403).json({
+        success: false,
+        message: "Only students can view doubt session notifications",
+      });
+    }
+
+    const notifications = await DoubtSession.find({
+      student: decoded.id,
+      status: { $in: ["REQUESTED", "LINK_SENT"] },
+    })
+      .populate("course", "title")
+      .populate("teacher", "username profilePicture")
+      .sort({ updatedAt: -1 })
+      .limit(10)
+      .lean();
+
+    return res.status(200).json({
+      success: true,
+      notifications,
+    });
+  } catch (error) {
+    console.error("Error fetching student notifications:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+const requestDoubtSession = async (req, res) => {
+  try {
+    const token = getTokenFromHeader(req);
+    const { courseId, message } = req.body;
+
+    if (!token || !courseId) {
+      return res.status(400).json({
+        success: false,
+        message: "Token and Course ID are required",
+      });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (decoded.role !== "STUDENT") {
+      return res.status(403).json({
+        success: false,
+        message: "Only students can request doubt sessions",
+      });
+    }
+
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found",
+      });
+    }
+
+    const isEnrolled = course.students.some(
+      (studentId) => studentId.toString() === decoded.id.toString(),
+    );
+
+    if (!isEnrolled) {
+      return res.status(403).json({
+        success: false,
+        message: "Purchase this course before requesting a doubt session",
+      });
+    }
+
+    const session = await DoubtSession.create({
+      course: courseId,
+      teacher: course.teacher,
+      student: decoded.id,
+      message: message?.trim() || "",
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Doubt session request sent to the teacher",
+      session,
+    });
+  } catch (error) {
+    console.error("Error requesting doubt session:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
 export {
   getAllCourse,
   getCourseDetails,
@@ -590,4 +734,7 @@ export {
   markAsDone,
   checkForProgress,
   sendFeedback,
+  getDoubtSession,
+  getDoubtSessionNotifications,
+  requestDoubtSession,
 };
