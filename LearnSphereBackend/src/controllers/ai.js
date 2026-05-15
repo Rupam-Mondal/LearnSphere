@@ -1,12 +1,18 @@
 import { generateText } from "../models/aiModel.js";
 import Course from "../models/courseModel.js";
+import OpenAI from "openai";
 
 import { GoogleGenAI } from "@google/genai";
 import { checkAnswer, generateQuiz } from "../models/quizAiModel.js";
 import User from "../models/userModel.js";
 import CourseAli from "../models/courseModel.js";
-const ai = new GoogleGenAI({
-  apiKey: process.env.GOOGLE_GEMINI_KEY,
+// const ai = new GoogleGenAI({
+//   apiKey: process.env.GOOGLE_GEMINI_KEY,
+// });
+
+const client = new OpenAI({
+  apiKey: process.env.GROQ_API_KEY,
+  baseURL: "https://api.groq.com/openai/v1",
 });
 
 function buildGeminiPrompt(userPrompt, courses) {
@@ -161,14 +167,14 @@ Respond like a real interviewer.
 Ask the next question only.
 `;
 
-    const response = await ai.models.generateContent({
-      model: "gemma-3n-e4b-it", // ✅ FREE + instruction tuned
-      contents: prompt,
+    const response = await client.responses.create({
+      model: "openai/gpt-oss-20b",
+      input: prompt,
     });
 
     return res.status(200).json({
       success: true,
-      reply: response.text,
+      reply: response.output_text,
     });
   } catch (error) {
     console.error("❌ Gemini Interview Error:", error);
@@ -241,12 +247,21 @@ Available Courses:
 ${courseListForAI}
 `;
 
-    const response = await ai.models.generateContent({
-      model: "gemma-3n-e4b-it",
-      contents: prompt,
+    const response = await client.responses.create({
+      model: "openai/gpt-oss-20b",
+      input: prompt,
+      text: {
+        format: {
+          type: "json_object",
+        },
+      },
     });
 
-    let text = response.text.trim();
+    let text = response.output_text.trim();
+
+
+
+    console.log("RAW AI RESPONSE:\n", text);
 
     // Remove code fences if present
     if (text.startsWith("```")) {

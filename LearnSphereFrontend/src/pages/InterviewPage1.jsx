@@ -360,14 +360,14 @@ export default function InterviewPage() {
                         {course.reason}
                       </p>
 
-                      <a
+                      {/* <a
                         href={course.link}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-block bg-blue-600 px-4 py-2 rounded-lg hover:bg-blue-700 transition"
                       >
                         View Course →
-                      </a>
+                      </a> */}
                     </div>
                   ))}
                 </div>
